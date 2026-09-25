@@ -1,0 +1,52 @@
+name: Production Deployment Rehearsal
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/production-deployment.yml"
+      - "backend/**"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+jobs:
+  rehearsal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build --tag universal-task-ai:rehearsal .
+      - name: Validate Compose
+        run: docker compose -f docker-compose.prod.yml config
+      - name: Create ephemeral secrets
+        run: |
+          mkdir -p secrets
+          printf 'rehearsal-api-key' > secrets/universal_task_ai_api_key
+          printf 'rehearsal-search-key' > secrets/brave_search_api_key
+      - name: Start production stack
+        run: docker compose -f docker-compose.prod.yml up -d --build
+      - name: Health check
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.prod.yml logs
+          exit 1
+      - name: Verify container hardening
+        run: |
+          set -euo pipefail
+          cid=$(docker compose -f docker-compose.prod.yml ps -q app)
+          test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}}' "$cid")" = "true"
+          test "$(docker inspect -f '{{.HostConfig.Privileged}}' "$cid")" = "false"
+      - name: Cleanup
+        if: always()
+        run: docker compose -f docker-compose.prod.yml down -v
