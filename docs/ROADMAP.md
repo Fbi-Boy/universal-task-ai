@@ -84,7 +84,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Network egress allowlist
 - [x] Resource quotas
 - [x] Database migrations
-- [ ] Distributed queue
+- [x] Distributed queue
 - [ ] Secret management integration
 - [ ] Full integration/security CI
 
