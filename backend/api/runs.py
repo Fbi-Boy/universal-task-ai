@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from backend.core.state_store import SQLiteRunStateStore
 
 router = APIRouter(prefix="/v1/runs", tags=["runs"])
-_store = SQLiteRunStateStore(Path(".universal_task_ai_runs.sqlite3"))
+_store = SQLiteRunStateStore(Path(os.environ.get("UTA_RUN_STATE_DB", "/data/runs.sqlite3")))
 
 
 @router.get("")
