@@ -1,8 +1,28 @@
 services:
+  volume-init:
+    image: ${UTA_IMAGE:-universal-task-ai:local}
+    user: "0:0"
+    command: ["sh", "-c", "chown 10001:10001 /data"]
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - run_state:/data
+    restart: "no"
+
   app:
+    image: ${UTA_IMAGE:-universal-task-ai:local}
     build: .
     restart: unless-stopped
+    depends_on:
+      volume-init:
+        condition: service_completed_successfully
     read_only: true
+    environment:
+      UTA_RUN_STATE_DB: /data/runs.sqlite3
+    volumes:
+      - run_state:/data
     tmpfs:
       - /tmp
     cap_drop: [ALL]
@@ -13,6 +33,9 @@ services:
     secrets:
       - universal_task_ai_api_key
       - brave_search_api_key
+
+volumes:
+  run_state:
 
 secrets:
   universal_task_ai_api_key:
