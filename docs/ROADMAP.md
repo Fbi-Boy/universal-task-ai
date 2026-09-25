@@ -85,7 +85,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Resource quotas
 - [x] Database migrations
 - [x] Distributed queue
-- [ ] Secret management integration
+- [x] Secret management integration
 - [ ] Full integration/security CI
 
 ## Engineering rule
