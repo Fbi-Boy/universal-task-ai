@@ -32,7 +32,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Calculator
 - [x] File reader policy
 - [ ] Web search provider implementation
-- [ ] Web reader / resolved-address policy
+- [x] Web reader / resolved-address policy
 - [x] Python execution only inside a real container sandbox
 
 ## Phase 3 — Review and Reliability
@@ -79,7 +79,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 ## Phase 7 — Production Hardening
 
 - [ ] Real external search adapter
-- [ ] Safe HTTP reader with resolved-address revalidation
+- [x] Safe HTTP reader with resolved-address revalidation
 - [x] Docker/OCI execution sandbox
 - [ ] Network egress allowlist
 - [x] Resource quotas
