@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import subprocess
 from typing import Sequence
+import re
 
 
 @dataclass(frozen=True)
