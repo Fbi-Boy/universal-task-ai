@@ -58,7 +58,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 
 - [x] Local permission broker
 - [x] Filesystem root containment policy
-- [ ] Network policy enforcement
+- [x] Network policy enforcement
 - [ ] Process/resource limits enforced by sandbox
 - [x] Secret redaction primitive
 - [x] Local persistent audit sink
@@ -70,7 +70,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [ ] Web UI
 - [ ] Task/run history UI
 - [ ] Live execution events
-- [ ] Artifact management
+- [x] Artifact management
 - [ ] User settings
 - [ ] Authentication
 - [ ] Rate limits
