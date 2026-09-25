@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from urllib.request import Request, urlopen
 
 from backend.core.egress import EgressPolicy
+from backend.core.secret_provider import SecretProvider
 from backend.tools.search import SearchResult
 
 
@@ -21,6 +22,7 @@ class BraveSearchProvider:
     max_response_bytes: int = 1_000_000
     timeout_seconds: float = 8.0
     egress_policy: EgressPolicy = EgressPolicy(frozenset({"api.search.brave.com"}))
+    secret_provider: SecretProvider = SecretProvider()
 
     def search(self, query: str, *, limit: int = 10) -> list[SearchResult]:
         if not isinstance(query, str) or not query.strip() or len(query) > 500:
@@ -28,7 +30,7 @@ class BraveSearchProvider:
         if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 20:
             raise ValueError("invalid result limit")
 
-        api_key = os.environ.get(self.api_key_env)
+        api_key = self.secret_provider.get("brave_search_api_key", env_name=self.api_key_env, required=False)
         if not api_key:
             raise RuntimeError("search provider is not configured")
 
