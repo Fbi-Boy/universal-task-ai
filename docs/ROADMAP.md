@@ -59,7 +59,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Local permission broker
 - [x] Filesystem root containment policy
 - [x] Network policy enforcement
-- [ ] Process/resource limits enforced by sandbox
+- [x] Process/resource limits enforced by sandbox
 - [x] Secret redaction primitive
 - [x] Local persistent audit sink
 - [ ] Approval UI
@@ -73,7 +73,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Artifact management
 - [ ] User settings
 - [ ] Authentication
-- [ ] Rate limits
+- [x] Rate limits
 - [ ] Production deployment
 
 ## Phase 7 — Production Hardening
