@@ -25,3 +25,8 @@ def test_calculator_rejects_empty_expression() -> None:
 def test_calculator_division_by_zero() -> None:
     result = CalculatorTool().run({"expression": "1 / 0"})
     assert not result.success
+
+
+def test_calculator_bounds_exponent() -> None:
+    result = CalculatorTool().run({"expression": "2 ** 1001"})
+    assert not result.success
