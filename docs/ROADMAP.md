@@ -51,7 +51,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Durable task/run state
 - [x] Retention policy primitive
 - [x] Bounded background job runner
-- [ ] Long-term semantic memory
+- [x] Long-term semantic memory
 - [x] Resume orchestration after interruption
 
 ## Phase 5 — Local Agent
@@ -71,7 +71,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Task/run history UI
 - [x] Live execution events
 - [x] Artifact management
-- [ ] User settings
+- [x] User settings
 - [x] Authentication
 - [x] Rate limits
 - [ ] Production deployment
