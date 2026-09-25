@@ -15,11 +15,11 @@ This roadmap is intentionally changeable. New requirements can add, remove, reor
 
 ## Phase 1 — Understanding and Planning
 
-- [ ] Task Analyzer
-- [ ] Requirement extraction
-- [ ] Ambiguity classification
-- [ ] Planner schema
-- [ ] Plan validation
+- [x] Task Analyzer
+- [x] Requirement extraction
+- [x] Ambiguity classification
+- [x] Planner schema
+- [x] Plan validation
 - [ ] Router policy
 - [ ] Execution budget / max turns
 
