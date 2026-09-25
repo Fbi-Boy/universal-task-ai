@@ -62,13 +62,13 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Process/resource limits enforced by sandbox
 - [x] Secret redaction primitive
 - [x] Local persistent audit sink
-- [ ] Approval UI
+- [x] Approval UI
 
 ## Phase 6 — Product
 
 - [x] Minimal FastAPI API
-- [ ] Web UI
-- [ ] Task/run history UI
+- [x] Web UI
+- [x] Task/run history UI
 - [ ] Live execution events
 - [x] Artifact management
 - [ ] User settings
