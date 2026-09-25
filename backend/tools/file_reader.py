@@ -22,12 +22,15 @@ class FileReaderTool(Tool):
         relative = arguments.get("path")
         if not isinstance(relative, str) or not relative.strip():
             return ToolResult(success=False, error="path must be a non-empty string")
-        candidate = (self._root / relative).resolve()
+        raw_candidate = self._root / relative
+        if raw_candidate.is_symlink():
+            return ToolResult(success=False, error="symlink paths are not allowed")
+        candidate = raw_candidate.resolve()
         try:
             candidate.relative_to(self._root)
         except ValueError:
             return ToolResult(success=False, error="path escapes configured root")
-        if candidate.is_symlink() or not candidate.is_file():
+        if not candidate.is_file():
             return ToolResult(success=False, error="path is not an allowed regular file")
         try:
             if candidate.stat().st_size > _MAX_BYTES:
