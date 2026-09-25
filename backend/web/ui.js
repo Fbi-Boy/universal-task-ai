@@ -9,3 +9,6 @@ async function refresh() {
 }
 document.querySelector('#analyze').onclick=async()=>{const task=document.querySelector('#task').value;try{document.querySelector('#analysis').textContent=JSON.stringify(await json('/v1/tasks/analyze',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({task})}),null,2);}catch(e){document.querySelector('#analysis').textContent=String(e);}};
 refresh();
+
+let eventTimer;
+document.querySelector('#watch').onclick=()=>{clearInterval(eventTimer);const id=document.querySelector('#run-id').value.trim();let after=0;const poll=async()=>{if(!id)return;try{const events=await json('/v1/runs/'+encodeURIComponent(id)+'/events?after='+after);if(events.length){document.querySelector('#events').textContent+=events.map(e=>e.sequence+' '+e.kind+' '+e.detail).join('\\n')+'\\n';after=events[events.length-1].sequence;}}catch(e){document.querySelector('#events').textContent=String(e);}};poll();eventTimer=setInterval(poll,1000);};
