@@ -4,6 +4,8 @@ services:
     build: .
     restart: unless-stopped
     read_only: true
+    environment:
+      UTA_RUN_STATE_DB: /data/runs.sqlite3
     volumes:
       - run_state:/data
     tmpfs:
