@@ -1,11 +1,11 @@
 from pathlib import Path
 import pytest
-from backend.core.network_policy import NetworkPolicy
+from backend.core.network_policy import NetworkPolicy\nfrom backend.core.egress import EgressPolicy
 from backend.tools.http_reader import SafeHttpReader
 
 
 def test_reader_rejects_private_resolution() -> None:
-    reader=SafeHttpReader(NetworkPolicy(), resolver=lambda *args, **kwargs: [(None,None,None,None,("127.0.0.1",0))])
+    reader=SafeHttpReader(NetworkPolicy(), egress=EgressPolicy(frozenset({"example.com","internal.example"})), resolver=lambda *args, **kwargs: [(None,None,None,None,("127.0.0.1",0))])
     with pytest.raises(PermissionError): reader.read("https://example.com")
 
 
