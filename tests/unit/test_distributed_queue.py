@@ -16,7 +16,7 @@ class FakeRedis:
         self.ready.append(encoded)
         return 1
 
-    def blmove(self, src, dst, timeout, *, src=None, dest=None):
+    def blmove(self, source, destination, timeout, *, src=None, dest=None):
         if not self.ready:
             return None
         value = self.ready.pop(0)
