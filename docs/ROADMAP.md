@@ -72,7 +72,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Live execution events
 - [x] Artifact management
 - [ ] User settings
-- [ ] Authentication
+- [x] Authentication
 - [x] Rate limits
 - [ ] Production deployment
 
