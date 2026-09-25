@@ -1,7 +1,6 @@
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 
 @dataclass(frozen=True)
@@ -28,3 +27,11 @@ class SQLiteRunStateStore:
     def get(self, run_id: str) -> RunState | None:
         row = self._conn.execute("SELECT run_id,status,payload FROM runs WHERE run_id=?", (run_id,)).fetchone()
         return RunState(*row) if row else None
+
+    def list(self, *, limit: int = 50) -> list[RunState]:
+        if limit < 1 or limit > 100:
+            raise ValueError("limit must be between 1 and 100")
+        rows = self._conn.execute(
+            "SELECT run_id,status,payload FROM runs ORDER BY rowid DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [RunState(*row) for row in rows]
