@@ -83,7 +83,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Docker/OCI execution sandbox
 - [ ] Network egress allowlist
 - [x] Resource quotas
-- [ ] Database migrations
+- [x] Database migrations
 - [ ] Distributed queue
 - [ ] Secret management integration
 - [ ] Full integration/security CI
