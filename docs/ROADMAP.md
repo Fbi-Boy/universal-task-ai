@@ -82,7 +82,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [ ] Safe HTTP reader with resolved-address revalidation
 - [x] Docker/OCI execution sandbox
 - [ ] Network egress allowlist
-- [ ] Resource quotas
+- [x] Resource quotas
 - [ ] Database migrations
 - [ ] Distributed queue
 - [ ] Secret management integration
