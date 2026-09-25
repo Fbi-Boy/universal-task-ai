@@ -32,7 +32,7 @@ def test_run_uses_tokenized_argv_and_timeout() -> None:
     kwargs = run.call_args.kwargs
     assert kwargs["timeout"] == 7
     assert kwargs["shell"] if "shell" in kwargs else False is False
-    assert run.call_args.args[0][-4:] == ["image", "python", "-c", "print(1)"]
+    assert run.call_args.args[0][-4:] == ["image@sha256:" + "a" * 64, "python", "-c", "print(1)"]
 
 
 def test_runtime_errors_are_wrapped() -> None:
