@@ -81,7 +81,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [ ] Real external search adapter
 - [x] Safe HTTP reader with resolved-address revalidation
 - [x] Docker/OCI execution sandbox
-- [ ] Network egress allowlist
+- [x] Network egress allowlist
 - [x] Resource quotas
 - [x] Database migrations
 - [ ] Distributed queue
