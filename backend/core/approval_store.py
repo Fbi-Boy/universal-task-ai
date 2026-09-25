@@ -31,6 +31,10 @@ class ApprovalStore:
             self._requests[approval_id] = updated
             return updated
 
+    def list(self) -> list[ApprovalRequest]:
+        with self._lock:
+            return list(self._requests.values())
+
     def reject(self, approval_id: UUID) -> ApprovalRequest:
         with self._lock:
             current = self._requests.get(approval_id)

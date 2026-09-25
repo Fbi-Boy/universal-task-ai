@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.core.analyzer import TaskAnalysis
@@ -8,6 +9,21 @@ from backend.api.runs import router as runs_router
 app = FastAPI(title="Universal Task AI", version="0.1.0")
 app.include_router(approval_router)
 app.include_router(runs_router)
+
+
+@app.get("/", include_in_schema=False)
+def web_ui() -> FileResponse:
+    return FileResponse("backend/web/index.html")
+
+
+@app.get("/ui.js", include_in_schema=False)
+def web_js() -> FileResponse:
+    return FileResponse("backend/web/ui.js")
+
+
+@app.get("/ui.css", include_in_schema=False)
+def web_css() -> FileResponse:
+    return FileResponse("backend/web/ui.css")
 
 
 class AnalyzeRequest(BaseModel):

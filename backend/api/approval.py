@@ -21,6 +21,11 @@ def create_approval(request: ApprovalCreate):
     return store.create(request.task_id, request.action)
 
 
+@router.get("")
+def list_approvals():
+    return store.list()
+
+
 @router.get("/{approval_id}")
 def get_approval(approval_id: UUID):
     request = store.get(approval_id)
