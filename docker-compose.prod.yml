@@ -10,5 +10,12 @@ services:
       - no-new-privileges:true
     ports:
       - "8000:8000"
-    environment:
-      UNIVERSAL_TASK_AI_API_KEY: ${UNIVERSAL_TASK_AI_API_KEY:?set API key}
+    secrets:
+      - universal_task_ai_api_key
+      - brave_search_api_key
+
+secrets:
+  universal_task_ai_api_key:
+    file: ./secrets/universal_task_ai_api_key
+  brave_search_api_key:
+    file: ./secrets/brave_search_api_key
