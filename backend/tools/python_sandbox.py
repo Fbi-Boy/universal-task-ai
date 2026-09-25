@@ -11,8 +11,6 @@ class PythonSandboxTool(Tool):
         risk_level="high",
         requires_approval=True,
         requires_network=False,
-        requires_filesystem=False,
-        requires_process=True,
     )
 
     def __init__(self, sandbox: DockerSandbox, *, max_code_bytes: int = 20_000, max_output_bytes: int = 100_000) -> None:
