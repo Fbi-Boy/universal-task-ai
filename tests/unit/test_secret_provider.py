@@ -3,8 +3,7 @@ from backend.core.secret_provider import SecretNotConfigured, SecretProvider
 
 
 def test_secret_provider_reads_mounted_secret_before_environment(tmp_path, monkeypatch):
-    (tmp_path / "api_key").write_text("file-secret
-", encoding="utf-8")
+    (tmp_path / "api_key").write_text("file-secret\\n", encoding="utf-8")
     monkeypatch.setenv("TEST_SECRET", "env-secret")
     provider = SecretProvider(secret_dir=tmp_path)
     assert provider.get("api_key", env_name="TEST_SECRET") == "file-secret"
