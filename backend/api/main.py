@@ -6,11 +6,13 @@ from backend.core.analyzer import TaskAnalysis
 from backend.api.approval import router as approval_router
 from backend.api.runs import router as runs_router
 from backend.api.events import router as events_router
+from backend.api.settings import router as settings_router
 
 app = FastAPI(title="Universal Task AI", version="0.1.0")
 app.include_router(approval_router)
 app.include_router(runs_router)
 app.include_router(events_router)
+app.include_router(settings_router)
 
 
 @app.get("/", include_in_schema=False)
