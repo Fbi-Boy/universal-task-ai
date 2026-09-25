@@ -2,11 +2,20 @@ import hmac
 from dataclasses import dataclass
 
 from fastapi import Header, HTTPException
+import os
 
 
 @dataclass(frozen=True)
 class AuthConfig:
     api_key: str
+
+
+def configured_auth() -> AuthConfig:
+    return AuthConfig(os.environ.get("UNIVERSAL_TASK_AI_API_KEY", ""))
+
+
+def require_configured_api_key(authorization: str | None = Header(default=None)) -> None:
+    require_api_key(configured_auth(), authorization)
 
 
 def require_api_key(config: AuthConfig, authorization: str | None = Header(default=None)) -> None:

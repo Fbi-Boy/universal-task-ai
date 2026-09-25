@@ -1,18 +1,20 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
+from fastapi import Depends
 
 from backend.core.analyzer import TaskAnalysis
 from backend.api.approval import router as approval_router
 from backend.api.runs import router as runs_router
 from backend.api.events import router as events_router
 from backend.api.settings import router as settings_router
+from backend.api.auth import require_configured_api_key
 
 app = FastAPI(title="Universal Task AI", version="0.1.0")
-app.include_router(approval_router)
-app.include_router(runs_router)
-app.include_router(events_router)
-app.include_router(settings_router)
+app.include_router(approval_router, dependencies=[Depends(require_configured_api_key)])
+app.include_router(runs_router, dependencies=[Depends(require_configured_api_key)])
+app.include_router(events_router, dependencies=[Depends(require_configured_api_key)])
+app.include_router(settings_router, dependencies=[Depends(require_configured_api_key)])
 
 
 @app.get("/", include_in_schema=False)
