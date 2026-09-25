@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.core.analyzer import TaskAnalysis
+from backend.api.approval import router as approval_router
 
 app = FastAPI(title="Universal Task AI", version="0.1.0")
+app.include_router(approval_router)
 
 
 class AnalyzeRequest(BaseModel):
