@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "8000:8000"
+    environment:
+      UNIVERSAL_TASK_AI_API_KEY: ${UNIVERSAL_TASK_AI_API_KEY:?set API key}
