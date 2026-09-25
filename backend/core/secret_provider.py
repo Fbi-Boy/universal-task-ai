@@ -22,7 +22,7 @@ class SecretProvider:
     allow_environment_fallback: bool = True
 
     def get(self, name: str, *, env_name: str | None = None, required: bool = True) -> str | None:
-        if not name or "/" in name or "\" in name or name in {".", ".."}:
+        if not name or "/" in name or "\\" in name or name in {".", ".."}:
             raise ValueError("invalid secret name")
 
         path = self.secret_dir / name
