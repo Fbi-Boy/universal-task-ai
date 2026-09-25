@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${UTA_IMAGE:-universal-task-ai:local}
     build: .
     restart: unless-stopped
     read_only: true
