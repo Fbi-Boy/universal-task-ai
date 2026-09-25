@@ -69,7 +69,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Minimal FastAPI API
 - [x] Web UI
 - [x] Task/run history UI
-- [ ] Live execution events
+- [x] Live execution events
 - [x] Artifact management
 - [ ] User settings
 - [ ] Authentication
