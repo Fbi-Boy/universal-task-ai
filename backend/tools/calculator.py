@@ -13,6 +13,8 @@ _ALLOWED_BINOPS = {
     ast.Mod: op.mod,
 }
 _ALLOWED_UNARYOPS = {ast.UAdd: op.pos, ast.USub: op.neg}
+_MAX_ABS_RESULT = 1e100
+_MAX_POW_EXPONENT = 1000
 
 
 class CalculatorTool(Tool):
@@ -41,7 +43,18 @@ class CalculatorTool(Tool):
         if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and not isinstance(node.value, bool):
             return node.value
         if isinstance(node, ast.BinOp) and type(node.op) in _ALLOWED_BINOPS:
-            return _ALLOWED_BINOPS[type(node.op)](self._evaluate(node.left), self._evaluate(node.right))
+            left = self._evaluate(node.left)
+            right = self._evaluate(node.right)
+            if isinstance(node.op, ast.Pow):
+                if abs(right) > _MAX_POW_EXPONENT:
+                    raise ValueError("exponent is too large")
+            value = _ALLOWED_BINOPS[type(node.op)](left, right)
+            if abs(value) > _MAX_ABS_RESULT:
+                raise ValueError("result is too large")
+            return value
         if isinstance(node, ast.UnaryOp) and type(node.op) in _ALLOWED_UNARYOPS:
-            return _ALLOWED_UNARYOPS[type(node.op)](self._evaluate(node.operand))
+            value = _ALLOWED_UNARYOPS[type(node.op)](self._evaluate(node.operand))
+            if abs(value) > _MAX_ABS_RESULT:
+                raise ValueError("result is too large")
+            return value
         raise ValueError("unsupported expression")
