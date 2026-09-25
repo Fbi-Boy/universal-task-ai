@@ -23,6 +23,7 @@ dev = [
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+markers = ["integration: cross-component security boundary tests"]
 
 [tool.setuptools.packages.find]
 include = ["backend*"]
