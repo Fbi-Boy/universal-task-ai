@@ -43,7 +43,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Idempotency primitive
 - [x] Human approval state machine
 - [x] Run state persistence
-- [ ] Reviewer agent integration
+- [x] Reviewer agent integration
 
 ## Phase 4 — Memory and Long-Running Work
 
@@ -52,16 +52,16 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Retention policy primitive
 - [x] Bounded background job runner
 - [ ] Long-term semantic memory
-- [ ] Resume orchestration after interruption
+- [x] Resume orchestration after interruption
 
 ## Phase 5 — Local Agent
 
-- [ ] Local permission broker
+- [x] Local permission broker
 - [x] Filesystem root containment policy
 - [ ] Network policy enforcement
 - [ ] Process/resource limits enforced by sandbox
 - [x] Secret redaction primitive
-- [ ] Local persistent audit sink
+- [x] Local persistent audit sink
 - [ ] Approval UI
 
 ## Phase 6 — Product
