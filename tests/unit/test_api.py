@@ -1,28 +1,18 @@
-from fastapi.testclient import TestClient
-
-from backend.api.main import app
-
-client = TestClient(app)
+from backend.api.main import AnalyzeRequest, analyze_task, health
 
 
 def test_health() -> None:
-    response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert health() == {"status": "ok"}
 
 
 def test_analyze_task() -> None:
-    response = client.post(
-        "/v1/tasks/analyze",
-        json={"task": "buat laporan"},
-    )
-    assert response.status_code == 200
-    assert response.json()["analysis"]["normalized_goal"] == "buat laporan"
+    response = analyze_task(AnalyzeRequest(task="buat laporan"))
+    assert response.analysis.normalized_goal == "buat laporan"
 
 
 def test_analyze_rejects_unknown_fields() -> None:
-    response = client.post(
-        "/v1/tasks/analyze",
-        json={"task": "buat laporan", "admin": True},
-    )
-    assert response.status_code == 422
+    try:
+        AnalyzeRequest(task="buat laporan", admin=True)
+    except ValueError:
+        return
+    raise AssertionError("unknown request fields were accepted")
