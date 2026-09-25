@@ -4,6 +4,8 @@ services:
     build: .
     restart: unless-stopped
     read_only: true
+    volumes:
+      - run_state:/data
     tmpfs:
       - /tmp
     cap_drop: [ALL]
@@ -14,6 +16,9 @@ services:
     secrets:
       - universal_task_ai_api_key
       - brave_search_api_key
+
+volumes:
+  run_state:
 
 secrets:
   universal_task_ai_api_key:
