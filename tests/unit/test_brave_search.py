@@ -58,3 +58,12 @@ def test_brave_search_rejects_unbounded_response(monkeypatch):
     provider = BraveSearchProvider(max_response_bytes=100)
     with pytest.raises(RuntimeError, match="size limit"):
         provider.search("hello")
+
+
+def test_brave_search_can_use_mounted_secret(monkeypatch, tmp_path):
+    from backend.core.secret_provider import SecretProvider
+
+    (tmp_path / "brave_search_api_key").write_text("mounted-secret", encoding="utf-8")
+    monkeypatch.delenv("BRAVE_SEARCH_API_KEY", raising=False)
+    provider = BraveSearchProvider(secret_provider=SecretProvider(secret_dir=tmp_path))
+    assert provider.secret_provider.get("brave_search_api_key", required=False) == "mounted-secret"
