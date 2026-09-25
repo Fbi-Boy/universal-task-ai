@@ -1,0 +1,35 @@
+name: Integration and Security
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  integration-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Upgrade build tooling
+        run: python -m pip install "setuptools>=83,<84"
+      - name: Install project
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Run integration security tests
+        run: python -m pytest -m integration
+      - name: Run full regression suite
+        run: python -m pytest
+      - name: Compile Python
+        run: python -m compileall -q backend tests
+      - name: Audit dependencies
+        run: python -m pip install pip-audit && python -m pip_audit --skip-editable
