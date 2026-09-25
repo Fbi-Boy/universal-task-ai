@@ -24,7 +24,7 @@ def test_permission_denies_unlisted_tool() -> None:
     try:
         from backend.core.permissions import authorize_tool
         from backend.core.tools import ToolMetadata
-        authorize_tool(ToolMetadata(name="missing", description=""), ToolPermission(frozenset()))
+        authorize_tool(ToolPermission(frozenset()), "missing")
     except PermissionDenied:
         return
     raise AssertionError("permission check did not fail closed")
