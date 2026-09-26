@@ -17,3 +17,10 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 A denied or malformed invocation fails the run and emits tool_denied plus task_failed. A tool returning success=false also fails the run.
 
 Approval is a state-machine concern and must never be smuggled through arbitrary tool arguments.
+
+
+## Approval resume integrity
+
+Approval-gated tool manifests are persisted with the waiting run so resume validation can bind the approval to the exact task and plan. The approval store atomically transitions an approved execution to consumed before tool execution, preventing duplicate resume. Execution manifests are bounded and reject common secret-bearing argument fields before persistence.
+
+Resume requests require a non-empty bounded actor identity. The actor is recorded on the approval-consumed and subsequent tool lifecycle audit events.
