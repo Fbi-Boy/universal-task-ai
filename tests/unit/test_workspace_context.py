@@ -25,3 +25,16 @@ def test_limits_discovery(tmp_path: Path) -> None:
         (tmp_path / f"file{index}.py").write_text(str(index), encoding="utf-8")
     reader = ProjectContextReader(WorkspacePolicy((tmp_path,), max_files=2))
     assert len(reader.collect().files) == 2
+
+def test_explicit_request_cannot_bypass_ignored_directories(tmp_path: Path) -> None:
+    dependency = tmp_path / "node_modules"
+    dependency.mkdir()
+    (dependency / "package.py").write_text("secret-ish dependency", encoding="utf-8")
+    reader = ProjectContextReader(WorkspacePolicy((tmp_path,)))
+    assert reader.collect(("node_modules/package.py",)).files == ()
+
+
+def test_rejects_nul_path(tmp_path: Path) -> None:
+    reader = ProjectContextReader(WorkspacePolicy((tmp_path,)))
+    with pytest.raises(ValueError, match="NUL"):
+        reader.collect(("safe.py\x00evil",))
