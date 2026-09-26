@@ -1,5 +1,5 @@
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -140,8 +140,7 @@ def test_approved_tool_executes_once_and_duplicate_resume_is_rejected(tmp_path: 
         _plan(contract.task_id),
         tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "approved"}),),
     )
-    approvals.approve(uuid4()) if False else None
-    approvals.approve(__import__("uuid").UUID(waiting.approval_id))
+    approvals.approve(UUID(waiting.approval_id))
     resumed = executor.resume_approved(
         contract,
         _plan(contract.task_id),
