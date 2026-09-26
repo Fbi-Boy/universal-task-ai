@@ -135,9 +135,10 @@ def test_approved_tool_executes_once_and_duplicate_resume_is_rejected(tmp_path: 
         InMemoryAuditSink(),
         approvals,
     )
+    plan = _plan(contract.task_id)
     waiting = executor.execute(
         contract,
-        _plan(contract.task_id),
+        plan,
         tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "approved"}),),
     )
     approvals.approve(UUID(waiting.approval_id))
@@ -155,7 +156,7 @@ def test_approved_tool_executes_once_and_duplicate_resume_is_rejected(tmp_path: 
     with pytest.raises(ValueError, match="run is not waiting for approval"):
         executor.resume_approved(
             contract,
-            _plan(contract.task_id),
+            plan,
             run_id=waiting.run_id,
             approval_id=waiting.approval_id,
             actor_id="test-user",
