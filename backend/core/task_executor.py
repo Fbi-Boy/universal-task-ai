@@ -109,7 +109,7 @@ class TaskExecutor:
             if has_tool_stage:
                 if self._tool_boundary is None:
                     raise RuntimeError(
-                        "tool execution requires a configured runtime tool boundary"
+                        "tool execution requires a configured side-effect boundary"
                     )
                 if not tool_invocations:
                     raise RuntimeError(
