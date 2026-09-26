@@ -82,6 +82,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Structured bounded tool invocation API
 - [x] Injectable application runtime for integration testing
 - [x] Authenticated web task execution and runtime tool catalog
+- [x] Bounded model-assisted task understanding with strict output validation
 - [ ] Production deployment
 
 ## Phase 7 — Production Hardening
@@ -95,6 +96,10 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Distributed queue
 - [x] Secret management integration
 - [x] Full integration/security CI
+
+## Model authority rule
+
+A model may enrich task understanding, but model output must never grant tools, permissions, approvals, secrets, or unrestricted execution authority. All capabilities remain enforced by deterministic runtime boundaries.
 
 ## Engineering rule
 
