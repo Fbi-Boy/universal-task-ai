@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 AuditEventType = Literal["task_started", "tool_authorized", "tool_started", "tool_finished", "tool_denied", "approval_pending", "task_finished", "task_failed"]
 
+
 class AuditEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -22,16 +23,17 @@ class AuditEvent(BaseModel):
         """Recursively remove common secret-bearing keys before persistence/export."""
         blocked = {"password", "token", "secret", "api_key", "authorization", "cookie"}
 
-        def redact(value: Any) -> Any:
+        def sanitize(value: Any) -> Any:
             if isinstance(value, dict):
                 return {
-                    str(key): "[REDACTED]" if str(key).lower() in blocked else redact(item)
+                    str(key): sanitize(item)
                     for key, item in value.items()
+                    if str(key).lower() not in blocked
                 }
             if isinstance(value, list):
-                return [redact(item) for item in value]
+                return [sanitize(item) for item in value]
             if isinstance(value, tuple):
-                return [redact(item) for item in value]
+                return [sanitize(item) for item in value]
             return value
 
-        return redact(self.metadata)
+        return sanitize(self.metadata)
