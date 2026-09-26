@@ -83,8 +83,8 @@ def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
     return AnalyzeResponse(analysis=TaskAnalysis.from_task_text(request.task))
 
 
-def run_task(request: TaskRequest, http_request: Request | None = None) -> TaskResponse:
-    service = http_request.app.state.task_service if http_request is not None else app.state.task_service
+def _run_task_endpoint(request: TaskRequest, http_request: Request) -> TaskResponse:
+    service = http_request.app.state.task_service
     try:
         result = service.run(
             request.task,
@@ -100,6 +100,10 @@ def run_task(request: TaskRequest, http_request: Request | None = None) -> TaskR
         plan_id=str(result.execution.plan.plan_id),
         approval_id=result.execution.approval_id,
     )
+
+
+def run_task(request: TaskRequest) -> TaskResponse:
+    return _run_task_endpoint(request, app)
 
 
 def create_app(*, task_service: TaskService | None = None) -> FastAPI:
@@ -127,7 +131,7 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application.add_api_route("/v1/tasks/analyze", analyze_task, methods=["POST"], response_model=AnalyzeResponse)
     application.add_api_route(
         "/v1/tasks",
-        run_task,
+        _run_task_endpoint,
         methods=["POST"],
         response_model=TaskResponse,
         dependencies=[Depends(require_configured_api_key)],
