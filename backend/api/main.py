@@ -77,8 +77,6 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     return application
 
 
-app = create_app()
-
 
 @app.get("/health")
 def health() -> dict[str, str]:
