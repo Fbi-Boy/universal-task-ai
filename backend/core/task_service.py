@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from backend.core.task_executor import ExecutionResult, TaskExecutor
 from backend.core.task_intake import TaskIntakeService
+from backend.core.task_planner import TaskPlanner
 from backend.core.tool_invocation import ToolInvocation
 
 
@@ -14,7 +15,7 @@ class TaskRunResult:
 class TaskService:
     """Application service connecting intake, planning, execution, and resume."""
 
-    def __init__(self, intake: TaskIntakeService, planner: object, executor: TaskExecutor) -> None:
+    def __init__(self, intake: TaskIntakeService, planner: TaskPlanner, executor: TaskExecutor) -> None:
         self._intake = intake
         self._planner = planner
         self._executor = executor
