@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+import re
 import subprocess
 from typing import Sequence
-import re
+
+
+_IMAGE_DIGEST_RE = re.compile(r"^.+@sha256:[0-9a-fA-F]{64}$")
 
 
 @dataclass(frozen=True)
@@ -15,6 +18,8 @@ class SandboxConfig:
     def __post_init__(self) -> None:
         if not self.image or any(ch in self.image for ch in "\n\r"):
             raise ValueError("image must be a non-empty single-line reference")
+        if not _IMAGE_DIGEST_RE.fullmatch(self.image):
+            raise ValueError("sandbox image must use an immutable sha256 digest")
         if self.timeout_seconds < 1 or self.timeout_seconds > 300:
             raise ValueError("timeout_seconds must be between 1 and 300")
         if self.pids_limit < 1 or self.pids_limit > 1024:

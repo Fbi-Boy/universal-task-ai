@@ -34,6 +34,8 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Web search provider implementation
 - [x] Web reader / resolved-address policy
 - [x] Python execution only inside a real container sandbox
+- [x] Sandbox images pinned to immutable sha256 digests
+- [x] Opt-in approval-gated Python runtime tool
 
 ## Phase 3 — Review and Reliability
 
