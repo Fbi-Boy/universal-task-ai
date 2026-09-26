@@ -28,6 +28,7 @@ class ApprovalStore:
         self._machine = machine or ApprovalMachine()
         self._lock = Lock()
         self._conn = sqlite3.connect(str(path), check_same_thread=False)
+        self._conn.execute("PRAGMA foreign_keys=ON")
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS approvals (
@@ -76,6 +77,7 @@ class ApprovalStore:
             raise ValueError("approval execution requires at least one invocation")
         for invocation in invocations:
             invocation.validate_bounds()
+            self._reject_secret_arguments(invocation.arguments)
 
         request = self._machine.request(task_id, action)
         payload = json.dumps([invocation.model_dump(mode="json") for invocation in invocations], separators=(",", ":"))
@@ -189,6 +191,22 @@ class ApprovalStore:
                 "SELECT approval_id,task_id,action,state FROM approvals ORDER BY rowid DESC"
             ).fetchall()
         return [self._request_from_row(row) for row in rows]
+
+    @staticmethod
+    def _reject_secret_arguments(arguments: object) -> None:
+        blocked = {"password", "token", "secret", "api_key", "authorization", "cookie"}
+        def walk(value: object, depth: int = 0) -> None:
+            if depth > 8:
+                return
+            if isinstance(value, dict):
+                for key, item in value.items():
+                    if str(key).lower() in blocked:
+                        raise ValueError("approval execution arguments must not contain secret-bearing fields")
+                    walk(item, depth + 1)
+            elif isinstance(value, (list, tuple)):
+                for item in value:
+                    walk(item, depth + 1)
+        walk(arguments)
 
     @staticmethod
     def _request_from_row(row: tuple[object, ...]) -> ApprovalRequest:
