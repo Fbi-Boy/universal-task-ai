@@ -174,3 +174,41 @@ def test_tool_failure_is_not_a_boundary_denial(tmp_path: Path) -> None:
         executor.execute(contract, _plan(contract.task_id), tool_invocations=(ToolInvocation(tool_name="failing"),))
     assert not any(event.event_type == "tool_denied" for event in audit.events)
     assert any(event.event_type == "tool_finished" and event.success is False for event in audit.events)
+
+
+
+class ApprovalRequiredTool(EchoTool):
+    metadata = ToolMetadata(
+        name="browser_worker",
+        description="approval-required browser test tool",
+        requires_network=True,
+        requires_approval=True,
+    )
+
+
+def test_executor_derives_approval_from_tool_metadata(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"approval_required": False})
+    registry = ToolRegistry()
+    registry.register(ApprovalRequiredTool())
+    boundary = RuntimeToolBoundary(
+        registry,
+        ToolPermission(frozenset({"browser_worker"}), allow_network=True),
+    )
+    approvals = ApprovalStore(tmp_path / "approvals.db")
+    audit = InMemoryAuditSink()
+    executor = TaskExecutor(
+        SQLiteRunStateStore(tmp_path / "runs.db"),
+        boundary,
+        audit,
+        approvals,
+    )
+    waiting = executor.execute(
+        contract,
+        _plan(contract.task_id),
+        tool_invocations=(
+            ToolInvocation(tool_name="browser_worker", arguments={"value": "safe"}),
+        ),
+    )
+    assert waiting.status.value == "waiting_approval"
+    assert waiting.approval_id is not None
+    assert not any(event.event_type == "tool_started" for event in audit.events)
