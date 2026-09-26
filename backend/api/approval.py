@@ -29,7 +29,7 @@ class ApprovalResumeResponse(BaseModel):
     plan_id: UUID
 
 
-def create_router(store: ApprovalStore) -> APIRouter:
+store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))\n\n\ndef create_router(store: ApprovalStore) -> APIRouter:
     """Build approval routes against the exact store used by task execution."""
     router = APIRouter(prefix="/v1/approvals", tags=["approvals"])
 
@@ -96,3 +96,40 @@ def create_router(store: ApprovalStore) -> APIRouter:
 router = create_router(
     ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))
 )
+
+
+# Backward-compatible direct handlers for existing internal callers/tests.
+_default_router_store = store
+
+
+def create_approval(request: ApprovalCreate):
+    return _default_router_store.create(request.task_id, request.action)
+
+
+def list_approvals():
+    return _default_router_store.list()
+
+
+def get_approval(approval_id: UUID):
+    approval = _default_router_store.get(approval_id)
+    if approval is None:
+        raise HTTPException(status_code=404, detail="approval not found")
+    return approval
+
+
+def approve(approval_id: UUID):
+    try:
+        return _default_router_store.approve(approval_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="approval not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+def reject(approval_id: UUID):
+    try:
+        return _default_router_store.reject(approval_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="approval not found")
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
