@@ -38,4 +38,4 @@ def test_run_uses_tokenized_argv_and_timeout() -> None:
 def test_runtime_errors_are_wrapped() -> None:
     with patch("backend.core.sandbox.subprocess.run", side_effect=OSError("missing docker")):
         with pytest.raises(SandboxError):
-            DockerSandbox(SandboxConfig("image")).run(["python", "-c", "pass"])
+            DockerSandbox(SandboxConfig("image@sha256:" + "a" * 64)).run(["python", "-c", "pass"])
