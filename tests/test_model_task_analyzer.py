@@ -52,4 +52,4 @@ def test_model_task_analyzer_does_not_allow_model_to_change_runtime_request() ->
     joined = "\n".join(message.content for message in gateway.request.messages).lower()
     assert "tools_allowed" not in joined
     assert "approval_required" not in joined
-    assert "credentials" not in joined
+    assert "grant" not in joined
