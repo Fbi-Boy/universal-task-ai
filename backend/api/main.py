@@ -46,6 +46,15 @@ class TaskResponse(BaseModel):
     approval_id: str | None = None
 
 
+class ToolCatalogItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str
+    description: str
+    risk_level: str
+    requires_network: bool
+    requires_approval: bool
+
+
 def build_task_service(
     run_state_path: Path,
     approval_path: Path,
@@ -78,6 +87,11 @@ def web_css() -> FileResponse:
 
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def list_tools(http_request: Request) -> list[ToolCatalogItem]:
+    service = http_request.app.state.task_service
+    return [ToolCatalogItem(**metadata.__dict__) for metadata in service.tool_catalog]
 
 
 def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
@@ -153,6 +167,13 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application.add_api_route("/ui.js", web_js, include_in_schema=False)
     application.add_api_route("/ui.css", web_css, include_in_schema=False)
     application.add_api_route("/health", health)
+    application.add_api_route(
+        "/v1/tools",
+        list_tools,
+        methods=["GET"],
+        response_model=list[ToolCatalogItem],
+        dependencies=[Depends(require_configured_api_key)],
+    )
     application.add_api_route(
         "/v1/tasks/analyze",
         analyze_task,
