@@ -37,6 +37,10 @@ class TaskExecutor:
         self._audit = audit_sink
         self._approvals = approval_store
 
+    @property
+    def approval_store(self) -> ApprovalStore | None:
+        return self._approvals
+
     def _audit_event(
         self,
         event_type: str,
