@@ -121,6 +121,7 @@ class ApprovalStore:
                 (updated.state.value, str(approval_id), ApprovalState.PENDING.value),
             )
             if cursor.rowcount != 1:
+                self._conn.rollback()
                 raise ValueError("approval state changed concurrently")
             self._conn.commit()
             return updated
