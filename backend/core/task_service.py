@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from backend.core.approval_store import ApprovalStore
 from backend.core.task_executor import ExecutionResult, TaskExecutor
 from backend.core.task_intake import TaskIntakeService
 from backend.core.task_planner import TaskPlanner
@@ -19,6 +20,11 @@ class TaskService:
         self._intake = intake
         self._planner = planner
         self._executor = executor
+
+    @property
+    def approval_store(self) -> ApprovalStore | None:
+        """Expose the executor's approval store for API composition."""
+        return self._executor.approval_store
 
     def run(
         self,
