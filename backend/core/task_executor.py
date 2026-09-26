@@ -73,9 +73,7 @@ class TaskExecutor:
             RunState(
                 run_id,
                 status.value,
-                json.dumps(
-                    {"task_id": str(contract.task_id), "plan_id": str(plan.plan_id)}
-                ),
+                json.dumps({"task_id": str(contract.task_id), "plan_id": str(plan.plan_id)}),
             )
         )
         try:
@@ -83,9 +81,7 @@ class TaskExecutor:
             has_agent_stage = any(step.kind == "agent" for step in plan.steps)
 
             if has_agent_stage:
-                raise RuntimeError(
-                    "agent execution requires a registered side-effect boundary"
-                )
+                raise RuntimeError("agent execution requires a registered side-effect boundary")
 
             if has_tool_stage and contract.approval_required:
                 status = transition(status, RunStatus.WAITING_APPROVAL)
@@ -102,34 +98,20 @@ class TaskExecutor:
                         ),
                     )
                 )
-                return ExecutionResult(
-                    run_id, status, "Execution is waiting for approval.", plan
-                )
+                return ExecutionResult(run_id, status, "Execution is waiting for approval.", plan)
 
             if has_tool_stage:
                 if self._tool_boundary is None:
-                    raise RuntimeError(
-                        "tool execution requires a configured side-effect boundary"
-                    )
+                    raise RuntimeError("tool execution requires a configured runtime tool boundary")
                 if not tool_invocations:
-                    raise RuntimeError(
-                        "tool plan requires at least one explicit tool invocation"
-                    )
+                    raise RuntimeError("tool plan requires at least one explicit tool invocation")
 
                 outputs: list[str] = []
                 for invocation in tool_invocations:
                     invocation.validate_bounds()
-                    self._audit_event(
-                        "tool_started",
-                        contract.task_id,
-                        run_id=run_id,
-                        tool_name=invocation.tool_name,
-                    )
                     try:
-                        result = self._tool_boundary.execute(
-                            invocation.tool_name, invocation.arguments
-                        )
-                    except (ToolBoundaryDenied, ValueError) as exc:
+                        authorized_tool = self._tool_boundary.authorize(invocation.tool_name)
+                    except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
                         self._audit_event(
                             "tool_denied",
                             contract.task_id,
@@ -145,6 +127,28 @@ class TaskExecutor:
                         run_id=run_id,
                         tool_name=invocation.tool_name,
                     )
+                    self._audit_event(
+                        "tool_started",
+                        contract.task_id,
+                        run_id=run_id,
+                        tool_name=invocation.tool_name,
+                    )
+                    try:
+                        result = self._tool_boundary.execute_authorized(
+                            authorized_tool,
+                            invocation.arguments,
+                        )
+                    except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
+                        self._audit_event(
+                            "tool_denied",
+                            contract.task_id,
+                            run_id=run_id,
+                            tool_name=invocation.tool_name,
+                            success=False,
+                            metadata={"reason": str(exc)[:200]},
+                        )
+                        raise
+
                     self._audit_event(
                         "tool_finished",
                         contract.task_id,
@@ -171,9 +175,7 @@ class TaskExecutor:
                         ),
                     )
                 )
-                self._audit_event(
-                    "task_finished", contract.task_id, run_id=run_id, success=True
-                )
+                self._audit_event("task_finished", contract.task_id, run_id=run_id, success=True)
                 return ExecutionResult(run_id, status, output, plan)
 
             if contract.approval_required:
@@ -191,14 +193,12 @@ class TaskExecutor:
                         ),
                     )
                 )
-                return ExecutionResult(
-                    run_id, status, "Execution is waiting for approval.", plan
-                )
+                return ExecutionResult(run_id, status, "Execution is waiting for approval.", plan)
 
             status = transition(status, RunStatus.SUCCEEDED)
             output = (
-                "Task contract validated and execution completed through the safe "
-                "baseline runtime. No external tools or side effects were invoked."
+                "Task contract validated and execution completed through the safe baseline runtime. "
+                "No external tools or side effects were invoked."
             )
             self._store.save(
                 RunState(
