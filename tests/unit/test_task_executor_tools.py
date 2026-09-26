@@ -62,8 +62,8 @@ def test_executor_runs_tool_only_through_boundary(tmp_path: Path) -> None:
     assert result.output == "ok"
     assert [event.event_type for event in audit.events] == [
         "task_started",
-        "tool_started",
         "tool_authorized",
+        "tool_started",
         "tool_finished",
         "task_finished",
     ]
@@ -84,3 +84,4 @@ def test_executor_denies_tool_and_audits_failure(tmp_path: Path) -> None:
         )
     assert any(event.event_type == "tool_denied" for event in audit.events)
     assert any(event.event_type == "task_failed" for event in audit.events)
+    assert not any(event.event_type == "tool_authorized" for event in audit.events)
