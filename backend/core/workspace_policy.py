@@ -1,0 +1,58 @@
+from dataclasses import dataclass
+from pathlib import Path
+
+DEFAULT_IGNORED_DIRS = frozenset({".git", ".venv", "venv", "node_modules", "__pycache__", ".pytest_cache"})
+DEFAULT_EXTENSIONS = frozenset({".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".yaml", ".yml", ".toml", ".md", ".sql", ".html", ".css"})
+
+class WorkspaceDenied(PermissionError):
+    pass
+
+@dataclass(frozen=True)
+class WorkspacePolicy:
+    roots: tuple[Path, ...]
+    max_files: int = 200
+    max_file_bytes: int = 128 * 1024
+    allowed_extensions: frozenset[str] = DEFAULT_EXTENSIONS
+    ignored_dirs: frozenset[str] = DEFAULT_IGNORED_DIRS
+
+    def __post_init__(self) -> None:
+        if not self.roots:
+            raise ValueError("at least one workspace root is required")
+        if not 1 <= self.max_files <= 1000:
+            raise ValueError("max_files must be between 1 and 1000")
+        if not 1 <= self.max_file_bytes <= 2_000_000:
+            raise ValueError("max_file_bytes must be between 1 and 2000000")
+        object.__setattr__(self, "roots", tuple(root.resolve() for root in self.roots))
+        object.__setattr__(self, "allowed_extensions", frozenset(x.lower() for x in self.allowed_extensions))
+
+    def resolve_relative(self, relative_path: str) -> Path:
+        if not isinstance(relative_path, str) or not relative_path.strip():
+            raise ValueError("path must be a non-empty string")
+        if "\x00" in relative_path:
+            raise ValueError("path contains a NUL byte")
+        for root in self.roots:
+            candidate = root / relative_path
+            if candidate.is_symlink():
+                raise WorkspaceDenied("symlink paths are not allowed")
+            resolved = candidate.resolve()
+            try:
+                resolved.relative_to(root)
+            except ValueError:
+                continue
+            if resolved.is_symlink():
+                raise WorkspaceDenied("symlink targets are not allowed")
+            return resolved
+        raise WorkspaceDenied("path is outside configured workspace roots")
+
+    def is_allowed_file(self, path: Path) -> bool:
+        if not path.is_file() or path.suffix.lower() not in self.allowed_extensions:
+            return False
+        for root in self.roots:
+            try:
+                relative = path.resolve().relative_to(root)
+            except ValueError:
+                continue
+            if any(part in self.ignored_dirs for part in relative.parts[:-1]):
+                return False
+            return True
+        return False
