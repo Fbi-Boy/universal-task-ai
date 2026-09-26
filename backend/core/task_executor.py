@@ -92,6 +92,18 @@ class TaskExecutor:
                 outputs: list[str] = []
                 for invocation in tool_invocations:
                     invocation.validate_bounds()
+                    try:
+                        authorized_tool = self._tool_boundary.authorize(invocation.tool_name)
+                    except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
+                        self._audit_event(
+                            "tool_denied",
+                            contract.task_id,
+                            run_id=run_id,
+                            tool_name=invocation.tool_name,
+                            success=False,
+                            metadata={"reason": str(exc)[:200]},
+                        )
+                        raise
                     self._audit_event(
                         "tool_authorized",
                         contract.task_id,
@@ -105,8 +117,8 @@ class TaskExecutor:
                         tool_name=invocation.tool_name,
                     )
                     try:
-                        result = self._tool_boundary.execute(
-                            invocation.tool_name,
+                        result = self._tool_boundary.execute_authorized(
+                            authorized_tool,
                             invocation.arguments,
                         )
                     except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
