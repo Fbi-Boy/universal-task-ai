@@ -6,6 +6,10 @@ The API may accept structured tool invocations, but accepting a tool name does n
 
 The default runtime currently registers only the bounded calculator tool. It grants no network, filesystem, or process capability.
 
+## Agent boundary
+
+Agent runtimes must receive a RuntimeToolBoundary rather than a raw ToolRegistry. A raw registry is an implementation detail and must never become an execution authority. Agent-side tool execution therefore cannot bypass capability checks or approval requirements.
+
 ## Bounds
 
 - Maximum 8 tool invocations per task.
