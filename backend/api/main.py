@@ -83,9 +83,10 @@ def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
     return AnalyzeResponse(analysis=TaskAnalysis.from_task_text(request.task))
 
 
-def run_task(request: TaskRequest, http_request: Request) -> TaskResponse:
+def run_task(request: TaskRequest, http_request: Request | None = None) -> TaskResponse:
+    service = http_request.app.state.task_service if http_request is not None else app.state.task_service
     try:
-        result = http_request.app.state.task_service.run(
+        result = service.run(
             request.task,
             tool_invocations=tuple(request.tool_invocations),
             approval_required=request.approval_required,
