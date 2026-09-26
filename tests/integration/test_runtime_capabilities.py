@@ -14,4 +14,8 @@ def test_runtime_adds_local_read_only_capability_when_configured(monkeypatch, tm
     monkeypatch.setenv("UTA_LOCAL_ROOTS", str(tmp_path))
     monkeypatch.delenv("UTA_BROWSER_ENABLED", raising=False)
     boundary = build_runtime_tool_boundary()
-    assert boundary.allowed_tools() == ("calculator", "filesystem.read_text")
+    assert boundary.allowed_tools() == (
+        "calculator",
+        "filesystem.read_text",
+        "filesystem.project_context",
+    )
