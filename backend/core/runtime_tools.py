@@ -4,6 +4,8 @@ from pathlib import Path
 from backend.core.audit_sink import SQLiteAuditSink
 from backend.core.browser_policy import BrowserPolicy
 from backend.core.permissions import ToolPermission
+from backend.core.project_context import ProjectContextReader
+from backend.core.workspace_policy import WorkspacePolicy
 from backend.core.sandbox import DockerSandbox, SandboxConfig
 from backend.core.tool_boundary import RuntimeToolBoundary
 from backend.core.tools import ToolRegistry
@@ -13,6 +15,7 @@ from backend.tools.calculator import CalculatorTool
 from backend.tools.local_filesystem import LocalFilesystemReadTool
 from backend.tools.playwright_worker import PlaywrightBrowserWorker
 from backend.tools.python_sandbox import PythonSandboxTool
+from backend.tools.project_context import ProjectContextTool
 
 
 def _local_roots() -> tuple[Path, ...]:
@@ -41,7 +44,8 @@ def build_runtime_tool_boundary() -> RuntimeToolBoundary:
     if roots:
         broker = LocalCapabilityBroker(LocalCapabilityPolicy(roots))
         registry.register(LocalFilesystemReadTool(broker))
-        allowed.add("filesystem.read_text")
+        registry.register(ProjectContextTool(ProjectContextReader(WorkspacePolicy(roots))))
+        allowed.update({"filesystem.read_text", "filesystem.project_context"})
         allow_filesystem = True
 
     browser_enabled = os.environ.get("UTA_BROWSER_ENABLED", "").lower() == "true"
