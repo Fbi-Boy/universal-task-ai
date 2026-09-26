@@ -1,9 +1,11 @@
+import hashlib
 import json
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 from backend.core.audit import AuditEvent
 from backend.core.audit_sink import AuditSink
+from backend.core.approval import ApprovalMachine, ApprovalState
 from backend.core.planner import ExecutionPlan
 from backend.core.run_lifecycle import RunStatus, transition
 from backend.core.schemas import TaskContract
@@ -18,6 +20,7 @@ class ExecutionResult:
     status: RunStatus
     output: str
     plan: ExecutionPlan
+    approval_id: str | None = None
 
 
 class TaskExecutor:
@@ -32,6 +35,7 @@ class TaskExecutor:
         self._store = store
         self._tool_boundary = tool_boundary
         self._audit = audit_sink
+        self._approvals = ApprovalMachine()
 
     def _audit_event(
         self,
@@ -42,6 +46,7 @@ class TaskExecutor:
         tool_name: str | None = None,
         success: bool | None = None,
         metadata: dict | None = None,
+        actor: str = "orchestrator",
     ) -> None:
         if self._audit is None:
             return
@@ -49,11 +54,25 @@ class TaskExecutor:
             AuditEvent(
                 event_type=event_type,
                 task_id=task_id,
+                actor=actor,
                 tool_name=tool_name,
                 success=success,
                 metadata={"run_id": run_id, **(metadata or {})},
             )
         )
+
+    @staticmethod
+    def _arguments_hash(invocation: ToolInvocation) -> str:
+        canonical = json.dumps(
+            invocation.arguments,
+            sort_keys=True,
+            separators=(",", ":"),
+            default=lambda value: repr(value),
+        ).encode("utf-8")
+        return hashlib.sha256(canonical).hexdigest()
+
+    def _save(self, run_id: str, status: RunStatus, payload: dict) -> None:
+        self._store.save(RunState(run_id, status.value, json.dumps(payload, sort_keys=True)))
 
     def execute(
         self,
@@ -64,18 +83,10 @@ class TaskExecutor:
     ) -> ExecutionResult:
         run_id = str(uuid4())
         status = RunStatus.CREATED
-        self._store.save(
-            RunState(run_id, status.value, json.dumps({"task_id": str(contract.task_id)}))
-        )
+        self._save(run_id, status, {"task_id": str(contract.task_id)})
         self._audit_event("task_started", contract.task_id, run_id=run_id)
         status = transition(status, RunStatus.RUNNING)
-        self._store.save(
-            RunState(
-                run_id,
-                status.value,
-                json.dumps({"task_id": str(contract.task_id), "plan_id": str(plan.plan_id)}),
-            )
-        )
+        self._save(run_id, status, {"task_id": str(contract.task_id), "plan_id": str(plan.plan_id)})
         try:
             has_tool_stage = any(step.kind == "tool" for step in plan.steps)
             has_agent_stage = any(step.kind == "agent" for step in plan.steps)
@@ -93,89 +104,83 @@ class TaskExecutor:
                 for invocation in tool_invocations:
                     invocation.validate_bounds()
                     try:
-                        authorized_tool = self._tool_boundary.authorize(invocation.tool_name)
+                        prepared_tool = self._tool_boundary.prepare(invocation.tool_name)
                     except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
                         self._audit_event(
-                            "tool_denied",
-                            contract.task_id,
-                            run_id=run_id,
-                            tool_name=invocation.tool_name,
-                            success=False,
-                            metadata={"reason": str(exc)[:200]},
-                        )
-                        raise
-                    self._audit_event(
-                        "tool_authorized",
-                        contract.task_id,
-                        run_id=run_id,
-                        tool_name=invocation.tool_name,
-                    )
-                    self._audit_event(
-                        "tool_started",
-                        contract.task_id,
-                        run_id=run_id,
-                        tool_name=invocation.tool_name,
-                    )
-                    try:
-                        result = self._tool_boundary.execute_authorized(
-                            authorized_tool,
-                            invocation.arguments,
-                        )
-                    except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
-                        self._audit_event(
-                            "tool_denied",
-                            contract.task_id,
-                            run_id=run_id,
-                            tool_name=invocation.tool_name,
-                            success=False,
+                            "tool_denied", contract.task_id, run_id=run_id,
+                            tool_name=invocation.tool_name, success=False,
                             metadata={"reason": str(exc)[:200]},
                         )
                         raise
 
+                    if prepared_tool.metadata.requires_approval:
+                        approval = self._approvals.request(
+                            contract.task_id,
+                            f"execute tool {invocation.tool_name}",
+                        )
+                        self._save(
+                            run_id,
+                            transition(status, RunStatus.WAITING_APPROVAL),
+                            {
+                                "task_id": str(contract.task_id),
+                                "plan_id": str(plan.plan_id),
+                                "approval_id": str(approval.approval_id),
+                                "approval_state": ApprovalState.PENDING.value,
+                                "tool_name": invocation.tool_name,
+                                "arguments_sha256": self._arguments_hash(invocation),
+                                "approval_action": approval.action,
+                                "pending_tool_index": len(outputs),
+                            },
+                        )
+                        return ExecutionResult(
+                            run_id,
+                            RunStatus.WAITING_APPROVAL,
+                            f"Execution is waiting for approval. approval_id={approval.approval_id}",
+                            plan,
+                            str(approval.approval_id),
+                        )
+
                     self._audit_event(
-                        "tool_finished",
-                        contract.task_id,
-                        run_id=run_id,
+                        "tool_authorized", contract.task_id, run_id=run_id,
                         tool_name=invocation.tool_name,
-                        success=result.success,
+                    )
+                    self._audit_event(
+                        "tool_started", contract.task_id, run_id=run_id,
+                        tool_name=invocation.tool_name,
+                    )
+                    try:
+                        result = self._tool_boundary.execute_authorized(
+                            prepared_tool, invocation.arguments
+                        )
+                    except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
+                        self._audit_event(
+                            "tool_denied", contract.task_id, run_id=run_id,
+                            tool_name=invocation.tool_name, success=False,
+                            metadata={"reason": str(exc)[:200]},
+                        )
+                        raise
+                    self._audit_event(
+                        "tool_finished", contract.task_id, run_id=run_id,
+                        tool_name=invocation.tool_name, success=result.success,
                     )
                     if not result.success:
                         raise RuntimeError(result.error or "tool execution failed")
                     outputs.append(str(result.output))
 
                 status = transition(status, RunStatus.SUCCEEDED)
-                output = "\n".join(outputs)
-                self._store.save(
-                    RunState(
-                        run_id,
-                        status.value,
-                        json.dumps(
-                            {
-                                "task_id": str(contract.task_id),
-                                "plan_id": str(plan.plan_id),
-                                "output": output,
-                            }
-                        ),
-                    )
-                )
+                output = "\\n".join(outputs)
+                self._save(run_id, status, {
+                    "task_id": str(contract.task_id), "plan_id": str(plan.plan_id), "output": output,
+                })
                 self._audit_event("task_finished", contract.task_id, run_id=run_id, success=True)
                 return ExecutionResult(run_id, status, output, plan)
 
             if contract.approval_required:
                 status = transition(status, RunStatus.WAITING_APPROVAL)
-                self._store.save(
-                    RunState(
-                        run_id,
-                        status.value,
-                        json.dumps(
-                            {
-                                "task_id": str(contract.task_id),
-                                "plan_id": str(plan.plan_id),
-                                "reason": "execution boundary requires approval",
-                            }
-                        ),
-                    )
-                )
+                self._save(run_id, status, {
+                    "task_id": str(contract.task_id), "plan_id": str(plan.plan_id),
+                    "reason": "execution boundary requires approval",
+                })
                 return ExecutionResult(run_id, status, "Execution is waiting for approval.", plan)
 
             status = transition(status, RunStatus.SUCCEEDED)
@@ -183,42 +188,89 @@ class TaskExecutor:
                 "Task contract validated and execution completed through the safe baseline runtime. "
                 "No external tools or side effects were invoked."
             )
-            self._store.save(
-                RunState(
-                    run_id,
-                    status.value,
-                    json.dumps(
-                        {
-                            "task_id": str(contract.task_id),
-                            "plan_id": str(plan.plan_id),
-                            "output": output,
-                        }
-                    ),
-                )
-            )
+            self._save(run_id, status, {
+                "task_id": str(contract.task_id), "plan_id": str(plan.plan_id), "output": output,
+            })
             self._audit_event("task_finished", contract.task_id, run_id=run_id, success=True)
             return ExecutionResult(run_id, status, output, plan)
         except Exception as exc:
             if status == RunStatus.RUNNING:
                 status = transition(status, RunStatus.FAILED)
-            self._store.save(
-                RunState(
-                    run_id,
-                    status.value,
-                    json.dumps(
-                        {
-                            "task_id": str(contract.task_id),
-                            "plan_id": str(plan.plan_id),
-                            "error": str(exc)[:500],
-                        }
-                    ),
-                )
+            self._save(run_id, status, {
+                "task_id": str(contract.task_id), "plan_id": str(plan.plan_id), "error": str(exc)[:500],
+            })
+            self._audit_event(
+                "task_failed", contract.task_id, run_id=run_id, success=False,
+                metadata={"error": str(exc)[:200]},
+            )
+            raise
+
+    def resume_approved(
+        self,
+        run_id: str,
+        approval_id: str,
+        invocation: ToolInvocation,
+        actor_id: str,
+    ) -> ExecutionResult:
+        """Consume one persisted approval and execute its exact pending invocation once."""
+        if not actor_id.strip():
+            raise ValueError("actor_id is required")
+        state = self._store.get(run_id)
+        if state is None:
+            raise ValueError("run not found")
+        if state.status != RunStatus.WAITING_APPROVAL.value:
+            raise ValueError("run is not waiting for approval")
+
+        payload = json.loads(state.payload)
+        if payload.get("approval_id") != approval_id:
+            raise ValueError("approval does not match pending run")
+        if payload.get("approval_state") != ApprovalState.PENDING.value:
+            raise ValueError("approval has already been consumed or rejected")
+        invocation.validate_bounds()
+        if payload.get("tool_name") != invocation.tool_name:
+            raise ValueError("tool does not match pending approval")
+        if payload.get("arguments_sha256") != self._arguments_hash(invocation):
+            raise ValueError("tool arguments do not match pending approval")
+        if self._tool_boundary is None:
+            raise RuntimeError("tool execution requires a configured runtime tool boundary")
+
+        task_id = UUID(payload["task_id"])
+        plan = ExecutionPlan.model_validate(payload["plan"])
+        running = transition(RunStatus.WAITING_APPROVAL, RunStatus.RUNNING)
+        payload["approval_state"] = ApprovalState.APPROVED.value
+        self._save(run_id, running, payload)
+
+        try:
+            tool = self._tool_boundary.authorize(invocation.tool_name, approved=True)
+            self._audit_event(
+                "tool_authorized", task_id, run_id=run_id, tool_name=invocation.tool_name,
+                actor=actor_id,
             )
             self._audit_event(
-                "task_failed",
-                contract.task_id,
-                run_id=run_id,
-                success=False,
-                metadata={"error": str(exc)[:200]},
+                "tool_started", task_id, run_id=run_id, tool_name=invocation.tool_name,
+                actor=actor_id,
+            )
+            result = self._tool_boundary.execute_authorized(tool, invocation.arguments)
+            self._audit_event(
+                "tool_finished", task_id, run_id=run_id, tool_name=invocation.tool_name,
+                success=result.success, actor=actor_id,
+            )
+            if not result.success:
+                raise RuntimeError(result.error or "tool execution failed")
+            payload.update({
+                "approval_state": ApprovalState.CONSUMED.value,
+                "output": str(result.output),
+            })
+            succeeded = transition(running, RunStatus.SUCCEEDED)
+            self._save(run_id, succeeded, payload)
+            self._audit_event("task_finished", task_id, run_id=run_id, success=True, actor=actor_id)
+            return ExecutionResult(run_id, succeeded, str(result.output), plan)
+        except Exception as exc:
+            failed = transition(running, RunStatus.FAILED)
+            payload.update({"approval_state": ApprovalState.CONSUMED.value, "error": str(exc)[:500]})
+            self._save(run_id, failed, payload)
+            self._audit_event(
+                "task_failed", task_id, run_id=run_id, success=False,
+                metadata={"error": str(exc)[:200]}, actor=actor_id,
             )
             raise
