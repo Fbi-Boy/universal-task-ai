@@ -13,13 +13,38 @@ from backend.api.settings import router as settings_router
 from backend.core.analyzer import TaskAnalysis
 from backend.core.approval_store import ApprovalStore
 from backend.core.audit_sink import SQLiteAuditSink
+from backend.core.runtime_tools import build_runtime_tool_boundary
 from backend.core.state_store import SQLiteRunStateStore
 from backend.core.task_executor import TaskExecutor
 from backend.core.task_intake import TaskIntakeService
 from backend.core.task_planner import TaskPlanner
 from backend.core.task_service import TaskService
 from backend.core.tool_invocation import ToolInvocation
-from backend.core.runtime_tools import build_runtime_tool_boundary
+
+
+class AnalyzeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    task: str = Field(min_length=1, max_length=20_000)
+
+
+class AnalyzeResponse(BaseModel):
+    analysis: TaskAnalysis
+
+
+class TaskRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    task: str = Field(min_length=1, max_length=20_000)
+    tool_invocations: list[ToolInvocation] = Field(default_factory=list, max_length=8)
+    approval_required: bool = False
+
+
+class TaskResponse(BaseModel):
+    run_id: str
+    status: str
+    output: str
+    plan_id: str
+    approval_id: str | None = None
+
 
 def build_task_service(
     run_state_path: Path,
@@ -35,6 +60,44 @@ def build_task_service(
             SQLiteAuditSink(audit_path),
             ApprovalStore(approval_path),
         ),
+    )
+
+
+def web_ui() -> FileResponse:
+    return FileResponse("backend/web/index.html")
+
+
+def web_js() -> FileResponse:
+    return FileResponse("backend/web/ui.js")
+
+
+def web_css() -> FileResponse:
+    return FileResponse("backend/web/ui.css")
+
+
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
+    return AnalyzeResponse(analysis=TaskAnalysis.from_task_text(request.task))
+
+
+def run_task(request: TaskRequest, http_request: Request) -> TaskResponse:
+    try:
+        result = http_request.app.state.task_service.run(
+            request.task,
+            tool_invocations=tuple(request.tool_invocations),
+            approval_required=request.approval_required,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return TaskResponse(
+        run_id=result.execution.run_id,
+        status=result.execution.status.value,
+        output=result.execution.output,
+        plan_id=str(result.execution.plan.plan_id),
+        approval_id=result.execution.approval_id,
     )
 
 
@@ -56,19 +119,18 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
         settings_router,
         dependencies=[Depends(require_configured_api_key)],
     )
-
-    @application.get("/", include_in_schema=False)
-    def web_ui() -> FileResponse:
-        return FileResponse("backend/web/index.html")
-
-    @application.get("/ui.js", include_in_schema=False)
-    def web_js() -> FileResponse:
-        return FileResponse("backend/web/ui.js")
-
-    @application.get("/ui.css", include_in_schema=False)
-    def web_css() -> FileResponse:
-        return FileResponse("backend/web/ui.css")
-
+    application.add_api_route("/", web_ui, include_in_schema=False)
+    application.add_api_route("/ui.js", web_js, include_in_schema=False)
+    application.add_api_route("/ui.css", web_css, include_in_schema=False)
+    application.add_api_route("/health", health)
+    application.add_api_route("/v1/tasks/analyze", analyze_task, methods=["POST"], response_model=AnalyzeResponse)
+    application.add_api_route(
+        "/v1/tasks",
+        run_task,
+        methods=["POST"],
+        response_model=TaskResponse,
+        dependencies=[Depends(require_configured_api_key)],
+    )
     application.state.task_service = task_service or build_task_service(
         Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")),
         Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")),
@@ -77,31 +139,4 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     return application
 
 
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
-
-
-@app.post("/v1/tasks/analyze", response_model=AnalyzeResponse)
-def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
-    return AnalyzeResponse(analysis=TaskAnalysis.from_task_text(request.task))
-
-
-@app.post("/v1/tasks", response_model=TaskResponse, dependencies=[Depends(require_configured_api_key)])
-def run_task(request: TaskRequest, http_request: Request) -> TaskResponse:
-    try:
-        result = http_request.app.state.task_service.run(
-            request.task,
-            tool_invocations=tuple(request.tool_invocations),
-            approval_required=request.approval_required,
-        )
-    except (RuntimeError, ValueError) as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
-    return TaskResponse(
-        run_id=result.execution.run_id,
-        status=result.execution.status.value,
-        output=result.execution.output,
-        plan_id=str(result.execution.plan.plan_id),
-        approval_id=result.execution.approval_id,
-    )
+app = create_app()
