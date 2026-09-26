@@ -53,3 +53,4 @@ def test_model_task_analyzer_does_not_allow_model_to_change_runtime_request() ->
     assert "tools_allowed" not in joined
     assert "approval_required" not in joined
     assert "grant" not in joined
+    assert "x" in joined
