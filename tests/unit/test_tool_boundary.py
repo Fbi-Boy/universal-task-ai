@@ -50,6 +50,13 @@ def test_boundary_denies_unregistered_tool():
         boundary.execute("unknown", {})
 
 
+def test_boundary_reports_approval_requirement_without_executing():
+    registry = ToolRegistry()
+    registry.register(ApprovalTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"message.send"})))
+    assert boundary.requires_approval("message.send") is True
+
+
 def test_boundary_requires_explicit_approval():
     registry = ToolRegistry()
     registry.register(ApprovalTool())
