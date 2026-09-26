@@ -143,6 +143,7 @@ class TaskExecutor:
                     run_id=run_id,
                     status=status,
                     tool_invocations=tool_invocations,
+                    approval_consumed=False,
                 )
 
             if contract.approval_required:
@@ -232,13 +233,6 @@ class TaskExecutor:
                 ),
             )
         )
-        self._audit_event(
-            "tool_authorized",
-            contract.task_id,
-            run_id=run_id,
-            success=True,
-            metadata={"approval_id": approval_id, "actor_id": actor_id[:128]},
-        )
         try:
             return self._run_tools(
                 contract,
@@ -246,6 +240,7 @@ class TaskExecutor:
                 run_id=run_id,
                 status=status,
                 tool_invocations=execution.invocations,
+                approval_consumed=True,
             )
         except Exception as exc:
             self._fail(contract, plan, run_id, status, exc)
@@ -259,12 +254,16 @@ class TaskExecutor:
         run_id: str,
         status: RunStatus,
         tool_invocations: tuple[ToolInvocation, ...],
+        approval_consumed: bool,
     ) -> ExecutionResult:
         outputs: list[str] = []
         for invocation in tool_invocations:
             invocation.validate_bounds()
             try:
-                authorized_tool = self._tool_boundary.authorize(invocation.tool_name, approved=True)  # type: ignore[union-attr]
+                authorized_tool = self._tool_boundary.authorize(
+                    invocation.tool_name,
+                    approved=approval_consumed,
+                )  # type: ignore[union-attr]
             except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
                 self._audit_event(
                     "tool_denied",
