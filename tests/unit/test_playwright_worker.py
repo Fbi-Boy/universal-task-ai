@@ -14,12 +14,18 @@ def test_playwright_worker_rejects_non_allowlisted_navigation_without_launch() -
     assert worker._page is None
 
 
-def test_playwright_worker_denies_side_effect_actions() -> None:
+def test_playwright_worker_keeps_unimplemented_actions_denied_without_launch() -> None:
     worker = PlaywrightBrowserWorker(BrowserPolicy(frozenset({"allowed.example"})))
-    try:
-        worker.execute(BrowserCommand(BrowserAction.CLICK, "https://allowed.example"))
-    except PermissionError:
-        pass
-    else:
-        raise AssertionError("side-effect browser actions must remain denied")
+    for action in (
+        BrowserAction.UPLOAD,
+        BrowserAction.DOWNLOAD,
+        BrowserAction.LOGIN,
+        BrowserAction.PAYMENT,
+    ):
+        try:
+            worker.execute(BrowserCommand(action, "https://allowed.example"))
+        except PermissionError:
+            pass
+        else:
+            raise AssertionError(f"{action.value} must remain denied")
     assert worker._page is None
