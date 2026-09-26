@@ -14,3 +14,14 @@ def test_audit_metadata_redacts_secret_keys():
         metadata={"tool": "web", "api_key": "do-not-log", "safe": "ok"},
     )
     assert event.safe_metadata() == {"tool": "web", "safe": "ok"}
+
+
+def test_audit_metadata_redacts_nested_secret_keys():
+    event = AuditEvent(
+        event_type="tool_started",
+        task_id=uuid4(),
+        metadata={"request": {"authorization": "secret", "value": "ok"}},
+    )
+    assert event.safe_metadata() == {
+        "request": {"authorization": "[REDACTED]", "value": "ok"}
+    }
