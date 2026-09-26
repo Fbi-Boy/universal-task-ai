@@ -63,6 +63,8 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Secret redaction primitive
 - [x] Local persistent audit sink
 - [x] Approval UI
+- [x] Runtime local filesystem read capability (explicit roots, read-only)
+- [x] Bounded browser worker (HTTPS allowlist, ephemeral context, navigate/read only)
 
 ## Phase 6 — Product
 
