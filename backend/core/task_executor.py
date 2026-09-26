@@ -120,14 +120,10 @@ class TaskExecutor:
                         )
                     )
                     self._audit_event(
-                        "tool_denied",
+                        "approval_pending",
                         contract.task_id,
                         run_id=run_id,
-                        success=False,
-                        metadata={
-                            "reason": "approval_pending",
-                            "approval_id": str(request.request.approval_id),
-                        },
+                        metadata={"approval_id": str(request.request.approval_id)},
                     )
                     return ExecutionResult(
                         run_id,
