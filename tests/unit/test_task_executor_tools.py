@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from backend.core.approval_store import ApprovalStore
 from backend.core.audit_sink import InMemoryAuditSink
 from backend.core.permissions import ToolPermission
 from backend.core.planner import ExecutionPlan, PlanStep
@@ -62,9 +63,7 @@ def test_executor_runs_tool_only_through_boundary(tmp_path: Path) -> None:
     result = executor.execute(
         contract,
         _plan(contract.task_id),
-        tool_invocations=(
-            ToolInvocation(tool_name="echo", arguments={"value": "ok"}),
-        ),
+        tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "ok"}),),
     )
     assert result.output == "ok"
     assert [event.event_type for event in audit.events] == [
@@ -100,14 +99,68 @@ def test_executor_waits_for_approval_before_tool_execution(tmp_path: Path) -> No
     registry.register(DeniedTool())
     boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"denied"})))
     audit = InMemoryAuditSink()
-    executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
+    approvals = ApprovalStore(tmp_path / "approvals.db")
+    executor = TaskExecutor(
+        SQLiteRunStateStore(tmp_path / "runs.db"),
+        boundary,
+        audit,
+        approvals,
+    )
     result = executor.execute(
         contract,
         _plan(contract.task_id),
         tool_invocations=(ToolInvocation(tool_name="denied"),),
     )
     assert result.status.value == "waiting_approval"
+    assert result.approval_id is not None
     assert not any(event.event_type == "tool_started" for event in audit.events)
+
+
+def test_approved_tool_executes_once_and_duplicate_resume_is_rejected(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"approval_required": True})
+    registry = ToolRegistry()
+    calls = {"count": 0}
+
+    class CountingTool(EchoTool):
+        def run(self, arguments):
+            calls["count"] += 1
+            return super().run(arguments)
+
+    registry.register(CountingTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"echo"})))
+    approvals = ApprovalStore(tmp_path / "approvals.db")
+    executor = TaskExecutor(
+        SQLiteRunStateStore(tmp_path / "runs.db"),
+        boundary,
+        InMemoryAuditSink(),
+        approvals,
+    )
+    waiting = executor.execute(
+        contract,
+        _plan(contract.task_id),
+        tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "approved"}),),
+    )
+    approvals.approve(uuid4()) if False else None
+    approvals.approve(__import__("uuid").UUID(waiting.approval_id))
+    resumed = executor.resume_approved(
+        contract,
+        _plan(contract.task_id),
+        run_id=waiting.run_id,
+        approval_id=waiting.approval_id,
+        actor_id="test-user",
+    )
+    assert resumed.status.value == "succeeded"
+    assert resumed.output == "approved"
+    assert calls["count"] == 1
+
+    with pytest.raises(ValueError, match="run is not waiting for approval"):
+        executor.resume_approved(
+            contract,
+            _plan(contract.task_id),
+            run_id=waiting.run_id,
+            approval_id=waiting.approval_id,
+            actor_id="test-user",
+        )
 
 
 def test_tool_failure_is_not_a_boundary_denial(tmp_path: Path) -> None:
