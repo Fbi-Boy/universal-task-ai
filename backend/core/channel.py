@@ -1,12 +1,9 @@
-"""Channel-neutral message contract for web, WhatsApp, and future adapters."""
 from dataclasses import dataclass
 from enum import Enum
 
-
 class Channel(str, Enum):
-    WEB = "web"
-    WHATSAPP = "whatsapp"
-
+    WEB='web'
+    WHATSAPP='whatsapp'
 
 @dataclass(frozen=True)
 class InboundMessage:
@@ -15,22 +12,15 @@ class InboundMessage:
     text: str
     authenticated: bool = False
     reply_target: str | None = None
-
-    def __post_init__(self) -> None:
-        if not self.external_user_id.strip():
-            raise ValueError("external user identity is required")
-        if not self.text.strip():
-            raise ValueError("message text is required")
-
+    def __post_init__(self):
+        if not self.external_user_id.strip(): raise ValueError('external user identity is required')
+        if not self.text.strip(): raise ValueError('message text is required')
 
 @dataclass(frozen=True)
 class OutboundMessage:
     channel: Channel
     target: str
     text: str
-
-    def __post_init__(self) -> None:
-        if not self.target.strip():
-            raise ValueError("outbound target is required")
-        if not self.text.strip():
-            raise ValueError("outbound text is required")
+    def __post_init__(self):
+        if not self.target.strip(): raise ValueError('outbound target is required')
+        if not self.text.strip(): raise ValueError('outbound text is required')
