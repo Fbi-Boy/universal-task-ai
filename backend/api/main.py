@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.api.approval import router as approval_router
+from backend.api.approval import create_router as create_approval_router
 from backend.api.auth import require_configured_api_key
 from backend.api.events import router as events_router
 from backend.api.runs import router as runs_router
@@ -58,7 +58,7 @@ def build_task_service(
             SQLiteRunStateStore(run_state_path),
             build_runtime_tool_boundary(),
             SQLiteAuditSink(audit_path),
-            ApprovalStore(approval_path),
+            approval_store,
         ),
     )
 
