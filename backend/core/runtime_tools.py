@@ -4,6 +4,7 @@ from pathlib import Path
 from backend.core.audit_sink import SQLiteAuditSink
 from backend.core.browser_policy import BrowserPolicy
 from backend.core.permissions import ToolPermission
+from backend.core.sandbox import DockerSandbox, SandboxConfig
 from backend.core.tool_boundary import RuntimeToolBoundary
 from backend.core.tools import ToolRegistry
 from backend.local_agent.broker import LocalCapabilityBroker, LocalCapabilityPolicy
@@ -11,6 +12,7 @@ from backend.tools.browser_worker import BrowserWorkerTool
 from backend.tools.calculator import CalculatorTool
 from backend.tools.local_filesystem import LocalFilesystemReadTool
 from backend.tools.playwright_worker import PlaywrightBrowserWorker
+from backend.tools.python_sandbox import PythonSandboxTool
 
 
 def _local_roots() -> tuple[Path, ...]:
@@ -26,6 +28,14 @@ def build_runtime_tool_boundary() -> RuntimeToolBoundary:
     allow_network = False
 
     registry.register(CalculatorTool())
+
+    sandbox_enabled = os.environ.get("UTA_PYTHON_SANDBOX_ENABLED", "").lower() == "true"
+    if sandbox_enabled:
+        image = os.environ.get("UTA_SANDBOX_IMAGE", "").strip()
+        if not image:
+            raise ValueError("UTA_SANDBOX_IMAGE is required when Python sandbox is enabled")
+        registry.register(PythonSandboxTool(DockerSandbox(SandboxConfig(image))))
+        allowed.add("python_sandbox")
 
     roots = _local_roots()
     if roots:
