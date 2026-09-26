@@ -1,6 +1,6 @@
 import json
 import pytest
-from backend.core.planner import TaskPlanner
+from backend.core.task_planner import TaskPlanner
 from backend.core.schemas import TaskContract
 from backend.core.state_store import SQLiteRunStateStore
 from backend.core.task_executor import TaskExecutor
