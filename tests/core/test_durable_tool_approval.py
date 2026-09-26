@@ -179,3 +179,30 @@ def test_missing_approval_store_fails_closed_for_approval_required_tools(tmp_pat
             make_plan(task_id),
             tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "x"}),),
         )
+
+
+def test_waiting_run_contains_recoverable_contract_and_plan_manifest(tmp_path: Path):
+    approvals = ApprovalStore(tmp_path / "approvals.sqlite3")
+    executor, echo, _ = make_executor(tmp_path, approvals=approvals)
+    task_id = uuid4()
+    contract = TaskContract(
+        task_id=task_id,
+        goal="execute echo",
+        tools_allowed=["echo"],
+        tools_required=["echo"],
+        approval_required=True,
+    )
+    plan = make_plan(task_id)
+
+    waiting = executor.execute(
+        contract,
+        plan,
+        tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "recover"}),),
+    )
+
+    state = SQLiteRunStateStore(tmp_path / "runs.sqlite3").get(waiting.run_id)
+    assert state is not None
+    payload = __import__("json").loads(state.payload)
+    assert payload["contract"]["task_id"] == str(task_id)
+    assert payload["plan"]["plan_id"] == str(plan.plan_id)
+    assert echo.calls == 0

@@ -10,6 +10,7 @@ from backend.core.task_executor import TaskExecutor
 from backend.core.task_intake import TaskIntakeService
 from backend.core.task_planner import TaskPlanner
 from backend.core.task_service import TaskService
+from backend.core.approval_store import ApprovalStore
 
 from backend.core.analyzer import TaskAnalysis
 from backend.api.approval import router as approval_router
@@ -62,7 +63,10 @@ class TaskResponse(BaseModel):
 
 
 _task_store = SQLiteRunStateStore(Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")))
-_task_service = TaskService(TaskIntakeService(), TaskPlanner(), TaskExecutor(_task_store))
+_approval_store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))
+_task_executor = TaskExecutor(_task_store, approval_store=_approval_store)
+_task_service = TaskService(TaskIntakeService(), TaskPlanner(), _task_executor)
+app.state.task_service = _task_service
 
 
 @app.get("/health")

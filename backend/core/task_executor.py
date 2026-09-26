@@ -114,6 +114,8 @@ class TaskExecutor:
                                     "task_id": str(contract.task_id),
                                     "plan_id": str(plan.plan_id),
                                     "approval_id": str(request.request.approval_id),
+                                    "contract": contract.model_dump(mode="json"),
+                                    "plan": plan.model_dump(mode="json"),
                                     "reason": "explicit approval required before tool execution",
                                 }
                             ),
@@ -152,6 +154,8 @@ class TaskExecutor:
                             {
                                 "task_id": str(contract.task_id),
                                 "plan_id": str(plan.plan_id),
+                                "contract": contract.model_dump(mode="json"),
+                                "plan": plan.model_dump(mode="json"),
                                 "reason": "execution boundary requires approval",
                             }
                         ),
@@ -172,6 +176,33 @@ class TaskExecutor:
             self._fail(contract, plan, run_id, status, exc)
             raise
 
+    def resume_approved_from_run(
+        self,
+        *,
+        run_id: str,
+        approval_id: str,
+        actor_id: str,
+    ) -> ExecutionResult:
+        """Reconstruct the durable waiting task and resume it after approval."""
+        state = self._store.get(run_id)
+        if state is None:
+            raise KeyError("run not found")
+        if state.status != RunStatus.WAITING_APPROVAL.value:
+            raise ValueError("run is not waiting for approval")
+        try:
+            payload = json.loads(state.payload)
+            contract = TaskContract.model_validate(payload["contract"])
+            plan = ExecutionPlan.model_validate(payload["plan"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("waiting run has invalid durable execution manifest") from exc
+        return self.resume_approved(
+            contract,
+            plan,
+            run_id=run_id,
+            approval_id=approval_id,
+            actor_id=actor_id,
+        )
+
     def resume_approved(
         self,
         contract: TaskContract,
@@ -181,14 +212,12 @@ class TaskExecutor:
         approval_id: str,
         actor_id: str,
     ) -> ExecutionResult:
-        """Consume one approved execution and resume it once.
-
-        Approval consumption is atomic and happens before tool execution. This
-        prevents duplicate resumes. If a process crashes after consumption,
-        recovery must use the durable run state rather than re-consuming approval.
-        """
-        if not actor_id.strip():
+        """Consume one approved execution and resume it once."""
+        actor_id = actor_id.strip()
+        if not actor_id:
             raise ValueError("actor_id must not be empty")
+        if len(actor_id) > 128:
+            raise ValueError("actor_id must be at most 128 characters")
         if self._approvals is None:
             raise RuntimeError("approval resume requires a durable approval store")
         if self._tool_boundary is None:
@@ -224,7 +253,7 @@ class TaskExecutor:
                         "task_id": str(contract.task_id),
                         "plan_id": str(plan.plan_id),
                         "approval_id": approval_id,
-                        "approved_by": actor_id[:128],
+                        "approved_by": actor_id,
                     }
                 ),
             )
@@ -259,7 +288,7 @@ class TaskExecutor:
                 authorized_tool = self._tool_boundary.authorize(
                     invocation.tool_name,
                     approved=approval_consumed,
-                )  # type: ignore[union-attr]
+                )
             except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
                 self._audit_event(
                     "tool_denied",
@@ -284,7 +313,7 @@ class TaskExecutor:
                 tool_name=invocation.tool_name,
             )
             try:
-                result = self._tool_boundary.execute_authorized(authorized_tool, invocation.arguments)  # type: ignore[union-attr]
+                result = self._tool_boundary.execute_authorized(authorized_tool, invocation.arguments)
             except Exception as exc:
                 self._audit_event(
                     "tool_finished",
@@ -323,7 +352,8 @@ class TaskExecutor:
         output: str,
     ) -> ExecutionResult:
         status = RunStatus.RUNNING
-        if self._store.get(run_id) and self._store.get(run_id).status == RunStatus.CREATED.value:
+        current = self._store.get(run_id)
+        if current and current.status == RunStatus.CREATED.value:
             status = transition(RunStatus.CREATED, RunStatus.RUNNING)
         status = transition(status, RunStatus.SUCCEEDED)
         self._store.save(

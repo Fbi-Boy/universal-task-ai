@@ -9,7 +9,7 @@ class TaskRunResult:
     execution: ExecutionResult
 
 class TaskService:
-    """Application service connecting intake, planning, and safe execution."""
+    """Application service connecting intake, planning, execution, and resume."""
     def __init__(self, intake: TaskIntakeService, planner: TaskPlanner, executor: TaskExecutor) -> None:
         self._intake = intake
         self._planner = planner
@@ -20,3 +20,10 @@ class TaskService:
         plan = self._planner.plan(intake.contract)
         execution = self._executor.execute(intake.contract, plan)
         return TaskRunResult(intake=intake, execution=execution)
+
+    def resume_approved(self, *, run_id: str, approval_id: str, actor_id: str) -> ExecutionResult:
+        return self._executor.resume_approved_from_run(
+            run_id=run_id,
+            approval_id=approval_id,
+            actor_id=actor_id,
+        )
