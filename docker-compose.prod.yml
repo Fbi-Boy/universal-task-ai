@@ -21,6 +21,7 @@ services:
     read_only: true
     environment:
       UTA_RUN_STATE_DB: /data/runs.sqlite3
+      UTA_APPROVAL_DB: /data/approvals.sqlite3
     volumes:
       - run_state:/data
     tmpfs:
