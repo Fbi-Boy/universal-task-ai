@@ -36,6 +36,11 @@ class RuntimeToolBoundary:
             raise ToolBoundaryDenied(f"approval is required for tool: {name}")
         return tool
 
+    def requires_approval(self, name: str) -> bool:
+        """Return approval requirement after validating capability access."""
+        tool = self.authorize(name, approved=True)
+        return tool.metadata.requires_approval
+
     def execute_authorized(self, tool: Tool, arguments: Mapping[str, Any]) -> ToolResult:
         """Execute only a tool already authorized by this boundary."""
         return tool.run(arguments)
