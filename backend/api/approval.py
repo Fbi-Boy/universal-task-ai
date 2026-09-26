@@ -2,24 +2,34 @@ from pathlib import Path
 import os
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.core.approval_store import ApprovalStore
 
 router = APIRouter(prefix="/v1/approvals", tags=["approvals"])
-
-# The production compose stack points this at the persistent /data volume.
-# Local development may override it; the default remains a repo-local file.
-store = ApprovalStore(
-    Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3"))
-)
+store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))
 
 
 class ApprovalCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     task_id: UUID
     action: str = Field(min_length=1, max_length=2_000)
+
+
+class ApprovalResumeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    run_id: str = Field(min_length=1, max_length=128)
+    approval_id: UUID
+    actor_id: str = Field(min_length=1, max_length=128)
+
+
+class ApprovalResumeResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    run_id: str
+    status: str
+    output: str
+    plan_id: UUID
 
 
 @router.post("")
@@ -58,3 +68,28 @@ def reject(approval_id: UUID):
         raise HTTPException(status_code=404, detail="approval not found")
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc))
+
+
+@router.post("/{approval_id}/resume", response_model=ApprovalResumeResponse)
+def resume(approval_id: UUID, request: ApprovalResumeRequest, http_request: Request):
+    if request.approval_id != approval_id:
+        raise HTTPException(status_code=400, detail="approval_id does not match path")
+    service = getattr(http_request.app.state, "task_service", None)
+    if service is None:
+        raise HTTPException(status_code=503, detail="task service is not configured")
+    try:
+        result = service.resume_approved(
+            run_id=request.run_id,
+            approval_id=str(approval_id),
+            actor_id=request.actor_id,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return ApprovalResumeResponse(
+        run_id=result.run_id,
+        status=result.status.value,
+        output=result.output,
+        plan_id=result.plan.plan_id,
+    )
