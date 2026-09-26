@@ -7,7 +7,7 @@ from backend.tools.browser_worker import BrowserCommand, BrowserWorker
 
 @dataclass
 class PlaywrightBrowserWorker(BrowserWorker):
-    """Minimal browser worker: allowlisted HTTPS navigation and bounded reads."""
+    """Ephemeral Playwright worker for bounded allowlisted browser interaction."""
 
     policy: BrowserPolicy
     max_output_chars: int = 256_000
@@ -17,6 +17,7 @@ class PlaywrightBrowserWorker(BrowserWorker):
             raise ValueError("max_output_chars must be between 1 and 1000000")
         self._playwright = None
         self._browser = None
+        self._context = None
         self._page = None
 
     def _ensure_page(self) -> Any:
@@ -29,7 +30,7 @@ class PlaywrightBrowserWorker(BrowserWorker):
 
         self._playwright = sync_playwright().start()
         self._browser = self._playwright.chromium.launch(headless=True)
-        context = self._browser.new_context(accept_downloads=False)
+        self._context = self._browser.new_context(accept_downloads=False)
 
         def guard(route: Any) -> None:
             try:
@@ -39,13 +40,19 @@ class PlaywrightBrowserWorker(BrowserWorker):
                 return
             route.continue_()
 
-        context.route("**/*", guard)
-        self._page = context.new_page()
+        self._context.route("**/*", guard)
+        self._page = self._context.new_page()
         return self._page
 
     def execute(self, command: BrowserCommand) -> str:
-        if command.action not in {BrowserAction.NAVIGATE, BrowserAction.READ}:
-            raise PermissionError("browser worker currently permits only navigate and read")
+        if command.action in {
+            BrowserAction.UPLOAD,
+            BrowserAction.DOWNLOAD,
+            BrowserAction.LOGIN,
+            BrowserAction.PAYMENT,
+        }:
+            raise PermissionError(f"browser action is not implemented: {command.action.value}")
+
         if command.url is not None:
             command = BrowserCommand(
                 command.action,
@@ -53,6 +60,7 @@ class PlaywrightBrowserWorker(BrowserWorker):
                 command.selector,
                 command.value,
             )
+
         page = self._ensure_page()
 
         if command.action is BrowserAction.NAVIGATE:
@@ -63,17 +71,39 @@ class PlaywrightBrowserWorker(BrowserWorker):
             return page.url
 
         self.policy.validate_url(page.url)
-        if command.selector:
-            text = page.locator(command.selector).inner_text(timeout=10_000)
-        else:
-            text = page.locator("body").inner_text(timeout=10_000)
-        return text[: self.max_output_chars]
+
+        if command.action is BrowserAction.READ:
+            text = (
+                page.locator(command.selector).inner_text(timeout=10_000)
+                if command.selector
+                else page.locator("body").inner_text(timeout=10_000)
+            )
+            return text[: self.max_output_chars]
+
+        if command.action is BrowserAction.CLICK:
+            page.locator(command.selector).click(timeout=10_000)
+            self.policy.validate_url(page.url)
+            return page.url
+
+        if command.action is BrowserAction.TYPE:
+            page.locator(command.selector).fill(command.value or "", timeout=10_000)
+            return "typed"
+
+        if command.action is BrowserAction.SUBMIT:
+            page.locator(command.selector).click(timeout=10_000)
+            self.policy.validate_url(page.url)
+            return page.url
+
+        raise PermissionError(f"browser action is not implemented: {command.action.value}")
 
     def close(self) -> None:
+        if self._context is not None:
+            self._context.close()
         if self._browser is not None:
             self._browser.close()
         if self._playwright is not None:
             self._playwright.stop()
+        self._context = None
         self._browser = None
         self._page = None
         self._playwright = None
