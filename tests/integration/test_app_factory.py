@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from backend.api.main import build_task_service, create_app
+from backend.api.main import build_task_service, create_app\nfrom backend.core.approval_store import ApprovalStore
 from backend.core.tool_invocation import ToolInvocation
 
 
