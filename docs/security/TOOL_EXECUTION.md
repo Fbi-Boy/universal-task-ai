@@ -9,7 +9,8 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 - Registered-tool metadata is rechecked by the runtime boundary for capability and approval requirements.
 - Security-relevant lifecycle events are emitted to an injected AuditSink.
 - Audit metadata is sanitized before retention.
-- Missing runtime boundaries fail closed.\n- Approval-required tool stages enter WAITING_APPROVAL before any tool execution.
+- Missing runtime boundaries fail closed.
+- Approval-required tool stages enter WAITING_APPROVAL before any tool execution.
 
 ## Failure behavior
 
