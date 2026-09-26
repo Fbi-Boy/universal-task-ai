@@ -1,7 +1,7 @@
 from typing import Any, Mapping
 
-from backend.core.permissions import ToolPermission, authorize_tool\nfrom backend.core.tools import Tool
-from backend.core.tools import ToolRegistry, ToolResult
+from backend.core.permissions import ToolPermission, authorize_tool
+from backend.core.tools import Tool, ToolRegistry, ToolResult
 
 
 class ToolBoundaryDenied(PermissionError):
@@ -15,7 +15,7 @@ class RuntimeToolBoundary:
         self._registry = registry
         self._permissions = permissions
 
-    def authorize(self, name: str, *, approved: bool = False):
+    def authorize(self, name: str, *, approved: bool = False) -> Tool:
         """Resolve and authorize a tool without executing it."""
         try:
             tool = self._registry.get(name)
@@ -36,7 +36,7 @@ class RuntimeToolBoundary:
             raise ToolBoundaryDenied(f"approval is required for tool: {name}")
         return tool
 
-    def execute_authorized(self, tool, arguments: Mapping[str, Any]) -> ToolResult:
+    def execute_authorized(self, tool: Tool, arguments: Mapping[str, Any]) -> ToolResult:
         """Execute only a tool already authorized by this boundary."""
         return tool.run(arguments)
 
