@@ -138,14 +138,14 @@ class TaskExecutor:
                             authorized_tool,
                             invocation.arguments,
                         )
-                    except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
+                    except Exception as exc:
                         self._audit_event(
-                            "tool_denied",
+                            "tool_finished",
                             contract.task_id,
                             run_id=run_id,
                             tool_name=invocation.tool_name,
                             success=False,
-                            metadata={"reason": str(exc)[:200]},
+                            metadata={"error": str(exc)[:200]},
                         )
                         raise
 
