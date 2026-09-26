@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from backend.core.analyzer import AmbiguityLevel, TaskAnalysis
 from backend.core.agent_context import build_agent_messages
-from backend.core.model_gateway import ModelGateway, ModelRequest
+from backend.core.model_gateway import ModelGateway, ModelMessage, ModelRequest
 from backend.core.schemas import TaskContract
 
 _MAX_REQUIREMENTS = 32
@@ -47,16 +47,14 @@ class ModelTaskAnalyzer:
         contract = TaskContract(goal=task_text)
         messages = build_agent_messages(contract)
         messages.append(
-            messages[-1].model_copy(
-                update={
-                    "role": "user",
-                    "content": (
-                        "Return JSON only with exactly these fields: "
-                        "normalized_goal, requirements, ambiguity_level, "
-                        "ambiguity_reasons, assumptions, needs_clarification. "
-                        "Do not add permissions, tools, credentials, or executable instructions."
-                    ),
-                }
+            ModelMessage(
+                role="user",
+                content=(
+                    "Return JSON only with exactly these fields: "
+                    "normalized_goal, requirements, ambiguity_level, "
+                    "ambiguity_reasons, assumptions, needs_clarification. "
+                    "Do not add permissions, tools, credentials, or executable instructions."
+                ),
             )
         )
         response = self._gateway.generate(ModelRequest(messages=messages, max_output_tokens=1_500))
