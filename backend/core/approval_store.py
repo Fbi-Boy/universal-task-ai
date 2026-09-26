@@ -73,8 +73,14 @@ class ApprovalStore:
     ) -> ApprovalExecution:
         if not run_id.strip():
             raise ValueError("run_id must not be empty")
+        if len(run_id) > 128:
+            raise ValueError("run_id must be at most 128 characters")
         if not invocations:
             raise ValueError("approval execution requires at least one invocation")
+        if len(invocations) > 8:
+            raise ValueError("approval execution supports at most 8 invocations")
+        if len(action.strip()) > 2_000:
+            raise ValueError("approval action must be at most 2000 characters")
         for invocation in invocations:
             invocation.validate_bounds()
             self._reject_secret_arguments(invocation.arguments)
@@ -84,6 +90,8 @@ class ApprovalStore:
             [invocation.model_dump(mode="json") for invocation in invocations],
             separators=(",", ":"),
         )
+        if len(payload.encode("utf-8")) > 256 * 1024:
+            raise ValueError("approval execution manifest exceeds 256 KiB")
         with self._lock:
             try:
                 self._conn.execute("BEGIN")
