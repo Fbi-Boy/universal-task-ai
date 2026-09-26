@@ -11,7 +11,7 @@ def test_reject_only_updates_pending_state(tmp_path):
     request = store.create(uuid4(), "publish")
     rejected = store.reject(request.approval_id)
     assert rejected.state.value == "rejected"
-    with pytest.raises(ValueError, match="approval state"):
+    with pytest.raises(ValueError, match="pending approvals"):
         store.reject(request.approval_id)
 
 
