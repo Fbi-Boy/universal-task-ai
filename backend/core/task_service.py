@@ -22,6 +22,11 @@ class TaskService:
         self._executor = executor
 
     @property
+    def tool_catalog(self):
+        """Return metadata for tools allowed by the runtime boundary."""
+        return self._executor.tool_catalog
+
+    @property
     def approval_store(self) -> ApprovalStore | None:
         """Expose the executor's approval store for API composition."""
         return self._executor.approval_store

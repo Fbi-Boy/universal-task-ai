@@ -1,7 +1,7 @@
 from typing import Any, Mapping
 
 from backend.core.permissions import ToolPermission, authorize_tool
-from backend.core.tools import Tool, ToolRegistry, ToolResult
+from backend.core.tools import Tool, ToolMetadata, ToolRegistry, ToolResult
 
 
 class ToolBoundaryDenied(PermissionError):
@@ -52,6 +52,14 @@ class RuntimeToolBoundary:
     def allowed_tools(self) -> tuple[str, ...]:
         return tuple(
             metadata.name
+            for metadata in self._registry.metadata()
+            if self._permissions.can_use(metadata.name)
+        )
+
+    def catalog(self) -> tuple[ToolMetadata, ...]:
+        """Expose only metadata for tools already allowed by this boundary."""
+        return tuple(
+            metadata
             for metadata in self._registry.metadata()
             if self._permissions.can_use(metadata.name)
         )

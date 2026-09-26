@@ -17,6 +17,15 @@ class ApprovalExecution:
     invocations: tuple[ToolInvocation, ...]
 
 
+@dataclass(frozen=True)
+class ApprovalExecutionInfo:
+    approval_id: UUID
+    task_id: UUID
+    run_id: str
+    plan_id: UUID
+    state: ApprovalState
+
+
 class ApprovalStore:
     """SQLite-backed approval store with atomic approval consumption.
 
@@ -116,6 +125,28 @@ class ApprovalStore:
                 (str(approval_id),),
             ).fetchone()
         return self._request_from_row(row) if row else None
+
+    def get_execution_info(self, approval_id: UUID) -> ApprovalExecutionInfo | None:
+        """Return non-secret resume metadata without exposing invocation arguments."""
+        with self._lock:
+            row = self._conn.execute(
+                """
+                SELECT a.approval_id,a.task_id,a.state,e.run_id,e.plan_id
+                FROM approvals a
+                JOIN approval_executions e ON e.approval_id=a.approval_id
+                WHERE a.approval_id=?
+                """,
+                (str(approval_id),),
+            ).fetchone()
+        if row is None:
+            return None
+        return ApprovalExecutionInfo(
+            approval_id=UUID(str(row[0])),
+            task_id=UUID(str(row[1])),
+            run_id=str(row[3]),
+            plan_id=UUID(str(row[4])),
+            state=ApprovalState(str(row[2])),
+        )
 
     def approve(self, approval_id: UUID) -> ApprovalRequest:
         with self._lock:

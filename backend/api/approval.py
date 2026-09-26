@@ -29,6 +29,15 @@ class ApprovalResumeResponse(BaseModel):
     plan_id: UUID
 
 
+class ApprovalExecutionInfoResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    approval_id: UUID
+    task_id: UUID
+    run_id: str
+    plan_id: UUID
+    state: str
+
+
 store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))
 
 
@@ -50,6 +59,19 @@ def create_router(store: ApprovalStore) -> APIRouter:
         if approval is None:
             raise HTTPException(status_code=404, detail="approval not found")
         return approval
+
+    @router.get("/{approval_id}/execution", response_model=ApprovalExecutionInfoResponse)
+    def execution_info(approval_id: UUID):
+        info = store.get_execution_info(approval_id)
+        if info is None:
+            raise HTTPException(status_code=404, detail="approval execution not found")
+        return ApprovalExecutionInfoResponse(
+            approval_id=info.approval_id,
+            task_id=info.task_id,
+            run_id=info.run_id,
+            plan_id=info.plan_id,
+            state=info.state.value,
+        )
 
     @router.post("/{approval_id}/approve")
     def approve(approval_id: UUID):

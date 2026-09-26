@@ -81,6 +81,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Least-privilege runtime tool composition
 - [x] Structured bounded tool invocation API
 - [x] Injectable application runtime for integration testing
+- [x] Authenticated web task execution and runtime tool catalog
 - [ ] Production deployment
 
 ## Phase 7 — Production Hardening
