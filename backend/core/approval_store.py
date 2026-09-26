@@ -80,7 +80,10 @@ class ApprovalStore:
             self._reject_secret_arguments(invocation.arguments)
 
         request = self._machine.request(task_id, action)
-        payload = json.dumps([invocation.model_dump(mode="json") for invocation in invocations], separators=(",", ":"))
+        payload = json.dumps(
+            [invocation.model_dump(mode="json") for invocation in invocations],
+            separators=(",", ":"),
+        )
         with self._lock:
             try:
                 self._conn.execute("BEGIN")
@@ -136,11 +139,12 @@ class ApprovalStore:
                 raise KeyError("approval not found")
             current = self._request_from_row(row)
             updated = self._machine.reject(current)
-            self._conn.execute(
+            cursor = self._conn.execute(
                 "UPDATE approvals SET state=? WHERE approval_id=? AND state=?",
                 (updated.state.value, str(approval_id), ApprovalState.PENDING.value),
             )
-            if self._conn.total_changes != 1:
+            if cursor.rowcount != 1:
+                self._conn.rollback()
                 raise ValueError("approval state changed concurrently")
             self._conn.commit()
             return updated
@@ -179,12 +183,7 @@ class ApprovalStore:
         invocations = tuple(ToolInvocation.model_validate(item) for item in raw_invocations)
         for invocation in invocations:
             invocation.validate_bounds()
-        return ApprovalExecution(
-            updated,
-            str(row[4]),
-            UUID(str(row[5])),
-            invocations,
-        )
+        return ApprovalExecution(updated, str(row[4]), UUID(str(row[5])), invocations)
 
     def list(self) -> list[ApprovalRequest]:
         with self._lock:
@@ -196,9 +195,10 @@ class ApprovalStore:
     @staticmethod
     def _reject_secret_arguments(arguments: object) -> None:
         blocked = {"password", "token", "secret", "api_key", "authorization", "cookie"}
+
         def walk(value: object, depth: int = 0) -> None:
             if depth > 8:
-                return
+                raise ValueError("approval execution arguments exceed maximum nesting depth")
             if isinstance(value, dict):
                 for key, item in value.items():
                     if str(key).lower() in blocked:
@@ -207,6 +207,7 @@ class ApprovalStore:
             elif isinstance(value, (list, tuple)):
                 for item in value:
                     walk(item, depth + 1)
+
         walk(arguments)
 
     @staticmethod
