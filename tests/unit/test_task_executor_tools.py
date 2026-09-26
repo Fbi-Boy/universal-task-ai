@@ -85,3 +85,19 @@ def test_executor_denies_tool_and_audits_failure(tmp_path: Path) -> None:
     assert any(event.event_type == "tool_denied" for event in audit.events)
     assert any(event.event_type == "task_failed" for event in audit.events)
     assert not any(event.event_type == "tool_authorized" for event in audit.events)
+
+
+def test_executor_waits_for_approval_before_tool_execution(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"approval_required": True})
+    registry = ToolRegistry()
+    registry.register(DeniedTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"denied"})))
+    audit = InMemoryAuditSink()
+    executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
+    result = executor.execute(
+        contract,
+        _plan(contract.task_id),
+        tool_invocations=(ToolInvocation(tool_name="denied"),),
+    )
+    assert result.status.value == "waiting_approval"
+    assert not any(event.event_type == "tool_started" for event in audit.events)
