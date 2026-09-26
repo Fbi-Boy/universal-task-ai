@@ -15,4 +15,4 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 
 A denied or malformed invocation fails the run and emits tool_denied plus task_failed. A tool returning success=false also fails the run.
 
-The approval/resume path remains a separate state-machine concern and must not be bypassed by passing an approval flag into tool arguments.
+Approval-gated tool runs persist only the approval id, tool name, execution plan, and SHA-256 hash of the bounded arguments. Raw pending arguments are not stored. Resume requires the persisted run to be WAITING_APPROVAL, the exact approval id, the same tool name, and the same argument hash. The trusted resume path consumes approval internally; approval is never accepted as a tool argument. Replay after the run leaves WAITING_APPROVAL is rejected. Approval-gated runs currently allow exactly one tool invocation.
