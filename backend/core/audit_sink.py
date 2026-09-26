@@ -1,12 +1,20 @@
 import json
 import sqlite3
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
 
 from backend.core.audit import AuditEvent
 
 
-class SQLiteAuditSink:
+class AuditSink(ABC):
+    """Append-only boundary for security-relevant runtime events."""
+
+    @abstractmethod
+    def append(self, event: AuditEvent) -> None:
+        raise NotImplementedError
+
+
+class SQLiteAuditSink(AuditSink):
     """Append-only SQLite sink for sanitized audit events."""
 
     def __init__(self, path: Path) -> None:
@@ -40,7 +48,7 @@ class SQLiteAuditSink:
         self._conn.close()
 
 
-class InMemoryAuditSink:
+class InMemoryAuditSink(AuditSink):
     """Test-friendly audit sink with the same append contract."""
 
     def __init__(self) -> None:
