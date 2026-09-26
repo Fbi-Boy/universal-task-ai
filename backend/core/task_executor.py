@@ -50,6 +50,7 @@ class TaskExecutor:
         tool_name: str | None = None,
         success: bool | None = None,
         metadata: dict | None = None,
+        actor: str = "orchestrator",
     ) -> None:
         if self._audit is None:
             return
@@ -57,6 +58,7 @@ class TaskExecutor:
             AuditEvent(
                 event_type=event_type,
                 task_id=task_id,
+                actor=actor,
                 tool_name=tool_name,
                 success=success,
                 metadata={"run_id": run_id, **(metadata or {})},
@@ -258,9 +260,18 @@ class TaskExecutor:
                         "plan_id": str(plan.plan_id),
                         "approval_id": approval_id,
                         "approved_by": actor_id,
+                        "contract": contract.model_dump(mode="json"),
+                        "plan": plan.model_dump(mode="json"),
                     }
                 ),
             )
+        )
+        self._audit_event(
+            "approval_consumed",
+            contract.task_id,
+            run_id=run_id,
+            metadata={"approval_id": approval_id},
+            actor=actor_id,
         )
         try:
             return self._run_tools(
@@ -270,6 +281,7 @@ class TaskExecutor:
                 status=status,
                 tool_invocations=execution.invocations,
                 approval_consumed=True,
+                actor_id=actor_id,
             )
         except Exception as exc:
             self._fail(contract, plan, run_id, status, exc)
@@ -284,6 +296,7 @@ class TaskExecutor:
         status: RunStatus,
         tool_invocations: tuple[ToolInvocation, ...],
         approval_consumed: bool,
+        actor_id: str | None = None,
     ) -> ExecutionResult:
         outputs: list[str] = []
         for invocation in tool_invocations:
@@ -301,6 +314,7 @@ class TaskExecutor:
                     tool_name=invocation.tool_name,
                     success=False,
                     metadata={"reason": str(exc)[:200]},
+                    actor=actor_id or "orchestrator",
                 )
                 raise
 
@@ -309,12 +323,14 @@ class TaskExecutor:
                 contract.task_id,
                 run_id=run_id,
                 tool_name=invocation.tool_name,
+                actor=actor_id or "orchestrator",
             )
             self._audit_event(
                 "tool_started",
                 contract.task_id,
                 run_id=run_id,
                 tool_name=invocation.tool_name,
+                actor=actor_id or "orchestrator",
             )
             try:
                 result = self._tool_boundary.execute_authorized(authorized_tool, invocation.arguments)
@@ -326,6 +342,7 @@ class TaskExecutor:
                     tool_name=invocation.tool_name,
                     success=False,
                     metadata={"error": str(exc)[:200]},
+                    actor=actor_id or "orchestrator",
                 )
                 raise
 
@@ -335,6 +352,7 @@ class TaskExecutor:
                 run_id=run_id,
                 tool_name=invocation.tool_name,
                 success=result.success,
+                actor=actor_id or "orchestrator",
             )
             if not result.success:
                 raise RuntimeError(result.error or "tool execution failed")
