@@ -15,8 +15,8 @@ class RuntimeToolBoundary:
         self._registry = registry
         self._permissions = permissions
 
-    def authorize(self, name: str, *, approved: bool = False) -> Tool:
-        """Resolve and authorize a tool without executing it."""
+    def prepare(self, name: str) -> Tool:
+        """Resolve and capability-authorize a tool without consuming approval."""
         try:
             tool = self._registry.get(name)
         except KeyError as exc:
@@ -33,8 +33,12 @@ class RuntimeToolBoundary:
             )
         except PermissionError as exc:
             raise ToolBoundaryDenied(str(exc)) from exc
+        return tool
 
-        if metadata.requires_approval and not approved:
+    def authorize(self, name: str, *, approved: bool = False) -> Tool:
+        """Resolve, capability-authorize, and optionally consume approval."""
+        tool = self.prepare(name)
+        if tool.metadata.requires_approval and not approved:
             raise ToolBoundaryDenied(f"approval is required for tool: {name}")
         return tool
 
