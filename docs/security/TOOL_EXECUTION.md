@@ -11,6 +11,7 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 - Audit metadata is sanitized before retention.
 - Missing runtime boundaries fail closed.
 - Approval-required tool stages enter WAITING_APPROVAL before any tool execution.
+- TaskExecutor derives the approval gate from tool metadata as well as the task contract, so a caller cannot disable a tool's approval requirement by omitting `approval_required` from the task request.
 
 ## Failure behavior
 
