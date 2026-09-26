@@ -114,11 +114,11 @@ class ApprovalStore:
                 raise KeyError("approval not found")
             current = self._request_from_row(row)
             updated = self._machine.approve(current)
-            self._conn.execute(
+            cursor = self._conn.execute(
                 "UPDATE approvals SET state=? WHERE approval_id=? AND state=?",
                 (updated.state.value, str(approval_id), ApprovalState.PENDING.value),
             )
-            if self._conn.total_changes != 1:
+            if cursor.rowcount != 1:
                 raise ValueError("approval state changed concurrently")
             self._conn.commit()
             return updated
