@@ -13,6 +13,7 @@ from backend.api.settings import router as settings_router
 from backend.core.analyzer import TaskAnalysis
 from backend.core.model_task_analyzer import ModelTaskAnalyzer
 from backend.core.openai_gateway import OpenAIModelGateway
+from backend.core.ollama_gateway import OllamaModelGateway
 from backend.core.secret_provider import SecretProvider
 from backend.core.approval_store import ApprovalStore
 from backend.core.audit_sink import SQLiteAuditSink
@@ -69,7 +70,16 @@ def build_task_service(
         model_name = os.environ.get("UTA_MODEL", "").strip()
         if not model_name:
             raise ValueError("UTA_MODEL is required when model assistance is enabled")
-        gateway = OpenAIModelGateway(SecretProvider(), model=model_name)
+        provider = os.environ.get("UTA_MODEL_PROVIDER", "openai").strip().lower()
+        if provider == "ollama":
+            gateway = OllamaModelGateway(
+                model=model_name,
+                base_url=os.environ.get("UTA_OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
+            )
+        elif provider == "openai":
+            gateway = OpenAIModelGateway(SecretProvider(), model=model_name)
+        else:
+            raise ValueError("UTA_MODEL_PROVIDER must be openai or ollama")
         intake = TaskIntakeService(ModelTaskAnalyzer(gateway))
     return TaskService(
         intake,
