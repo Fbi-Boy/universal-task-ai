@@ -124,6 +124,7 @@ class TaskExecutor:
                             {
                                 "task_id": str(contract.task_id),
                                 "plan_id": str(plan.plan_id),
+                                "plan": plan.model_dump(mode="json"),
                                 "approval_id": str(approval.approval_id),
                                 "approval_state": ApprovalState.PENDING.value,
                                 "tool_name": invocation.tool_name,
