@@ -10,9 +10,10 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 - Security-relevant lifecycle events are emitted to an injected AuditSink.
 - Audit metadata is sanitized before retention.
 - Missing runtime boundaries fail closed.
+- Approval-required tool stages enter WAITING_APPROVAL before any tool execution.
 
 ## Failure behavior
 
 A denied or malformed invocation fails the run and emits tool_denied plus task_failed. A tool returning success=false also fails the run.
 
-The approval/resume path remains a separate state-machine concern and must not be bypassed by passing an approval flag into tool arguments.
+Approval is a state-machine concern and must never be smuggled through arbitrary tool arguments.

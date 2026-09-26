@@ -1,7 +1,7 @@
 from typing import Any, Mapping
 
 from backend.core.permissions import ToolPermission, authorize_tool
-from backend.core.tools import ToolRegistry, ToolResult
+from backend.core.tools import Tool, ToolRegistry, ToolResult
 
 
 class ToolBoundaryDenied(PermissionError):
@@ -9,30 +9,18 @@ class ToolBoundaryDenied(PermissionError):
 
 
 class RuntimeToolBoundary:
-    """Single policy gate between orchestration and registered tools.
-
-    The boundary never discovers or executes arbitrary functions. Callers must
-    name a registered tool, and its metadata is checked against explicit
-    permissions before invocation. Approval-required tools also need an
-    explicit approved=True marker.
-    """
+    """Single policy gate between orchestration and registered tools."""
 
     def __init__(self, registry: ToolRegistry, permissions: ToolPermission) -> None:
         self._registry = registry
         self._permissions = permissions
 
-    def execute(
-        self,
-        name: str,
-        arguments: Mapping[str, Any],
-        *,
-        approved: bool = False,
-    ) -> ToolResult:
+    def authorize(self, name: str, *, approved: bool = False) -> Tool:
+        """Resolve and authorize a tool without executing it."""
         try:
             tool = self._registry.get(name)
         except KeyError as exc:
             raise ToolBoundaryDenied(f"tool is not registered: {name}") from exc
-
         metadata = tool.metadata
         try:
             authorize_tool(
@@ -44,11 +32,17 @@ class RuntimeToolBoundary:
             )
         except PermissionError as exc:
             raise ToolBoundaryDenied(str(exc)) from exc
-
         if metadata.requires_approval and not approved:
             raise ToolBoundaryDenied(f"approval is required for tool: {name}")
+        return tool
 
+    def execute_authorized(self, tool: Tool, arguments: Mapping[str, Any]) -> ToolResult:
+        """Execute only a tool already authorized by this boundary."""
         return tool.run(arguments)
+
+    def execute(self, name: str, arguments: Mapping[str, Any], *, approved: bool = False) -> ToolResult:
+        tool = self.authorize(name, approved=approved)
+        return self.execute_authorized(tool, arguments)
 
     def allowed_tools(self) -> tuple[str, ...]:
         return tuple(

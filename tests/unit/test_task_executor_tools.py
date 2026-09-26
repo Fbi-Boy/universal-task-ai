@@ -28,6 +28,13 @@ class DeniedTool(Tool):
         raise AssertionError("denied tool must never execute")
 
 
+class FailingTool(Tool):
+    metadata = ToolMetadata(name="failing", description="failing test")
+
+    def run(self, arguments):
+        raise ValueError("tool failure")
+
+
 def _contract():
     return TaskContract(task_id=uuid4(), goal="echo", tools_required=["echo"])
 
@@ -62,8 +69,8 @@ def test_executor_runs_tool_only_through_boundary(tmp_path: Path) -> None:
     assert result.output == "ok"
     assert [event.event_type for event in audit.events] == [
         "task_started",
-        "tool_started",
         "tool_authorized",
+        "tool_started",
         "tool_finished",
         "task_finished",
     ]
@@ -84,3 +91,33 @@ def test_executor_denies_tool_and_audits_failure(tmp_path: Path) -> None:
         )
     assert any(event.event_type == "tool_denied" for event in audit.events)
     assert any(event.event_type == "task_failed" for event in audit.events)
+    assert not any(event.event_type == "tool_authorized" for event in audit.events)
+
+
+def test_executor_waits_for_approval_before_tool_execution(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"approval_required": True})
+    registry = ToolRegistry()
+    registry.register(DeniedTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"denied"})))
+    audit = InMemoryAuditSink()
+    executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
+    result = executor.execute(
+        contract,
+        _plan(contract.task_id),
+        tool_invocations=(ToolInvocation(tool_name="denied"),),
+    )
+    assert result.status.value == "waiting_approval"
+    assert not any(event.event_type == "tool_started" for event in audit.events)
+
+
+def test_tool_failure_is_not_a_boundary_denial(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"tools_required": ["failing"]})
+    registry = ToolRegistry()
+    registry.register(FailingTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"failing"})))
+    audit = InMemoryAuditSink()
+    executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
+    with pytest.raises(ValueError, match="tool failure"):
+        executor.execute(contract, _plan(contract.task_id), tool_invocations=(ToolInvocation(tool_name="failing"),))
+    assert not any(event.event_type == "tool_denied" for event in audit.events)
+    assert any(event.event_type == "tool_finished" and event.success is False for event in audit.events)
