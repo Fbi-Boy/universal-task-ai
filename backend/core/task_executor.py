@@ -38,6 +38,12 @@ class TaskExecutor:
         self._approvals = approval_store
 
     @property
+    def tool_catalog(self):
+        if self._tool_boundary is None:
+            return ()
+        return self._tool_boundary.catalog()
+
+    @property
     def approval_store(self) -> ApprovalStore | None:
         return self._approvals
 
