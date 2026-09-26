@@ -24,10 +24,7 @@ class TaskService:
     @property
     def tool_catalog(self):
         """Return metadata for tools allowed by the runtime boundary."""
-        boundary = getattr(self._executor, "_tool_boundary", None)
-        if boundary is None:
-            return ()
-        return boundary.catalog()
+        return self._executor.tool_catalog
 
     @property
     def approval_store(self) -> ApprovalStore | None:
