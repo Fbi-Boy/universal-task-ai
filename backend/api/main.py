@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+import os
+from pathlib import Path
+
+from backend.core.state_store import SQLiteRunStateStore
+from backend.core.task_executor import TaskExecutor
+from backend.core.task_intake import TaskIntakeService
+from backend.core.task_planner import TaskPlanner
+from backend.core.task_service import TaskService
 
 from backend.core.analyzer import TaskAnalysis
 from backend.api.approval import router as approval_router
@@ -41,6 +49,22 @@ class AnalyzeResponse(BaseModel):
     analysis: TaskAnalysis
 
 
+class TaskRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    task: str = Field(min_length=1, max_length=20_000)
+
+
+class TaskResponse(BaseModel):
+    run_id: str
+    status: str
+    output: str
+    plan_id: str
+
+
+_task_store = SQLiteRunStateStore(Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")))
+_task_service = TaskService(TaskIntakeService(), TaskPlanner(), TaskExecutor(_task_store))
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -49,3 +73,17 @@ def health() -> dict[str, str]:
 @app.post("/v1/tasks/analyze", response_model=AnalyzeResponse)
 def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
     return AnalyzeResponse(analysis=TaskAnalysis.from_task_text(request.task))
+
+
+@app.post("/v1/tasks", response_model=TaskResponse, dependencies=[Depends(require_configured_api_key)])
+def run_task(request: TaskRequest) -> TaskResponse:
+    try:
+        result = _task_service.run(request.task)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return TaskResponse(
+        run_id=result.execution.run_id,
+        status=result.execution.status.value,
+        output=result.execution.output,
+        plan_id=str(result.execution.plan.plan_id),
+    )
