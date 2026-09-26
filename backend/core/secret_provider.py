@@ -29,11 +29,15 @@ class SecretProvider:
         if path.is_file():
             value = path.read_text(encoding="utf-8").strip()
             if value:
+                if len(value) > 4096:
+                    raise ValueError("secret exceeds the configured size limit")
                 return value
 
         if self.allow_environment_fallback and env_name:
             value = os.environ.get(env_name, "").strip()
             if value:
+                if len(value) > 4096:
+                    raise ValueError("secret exceeds the configured size limit")
                 return value
 
         if required:
