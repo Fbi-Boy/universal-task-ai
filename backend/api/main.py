@@ -103,7 +103,21 @@ def _run_task_endpoint(request: TaskRequest, http_request: Request) -> TaskRespo
 
 
 def run_task(request: TaskRequest) -> TaskResponse:
-    return _run_task_endpoint(request, app)
+    try:
+        result = app.state.task_service.run(
+            request.task,
+            tool_invocations=tuple(request.tool_invocations),
+            approval_required=request.approval_required,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return TaskResponse(
+        run_id=result.execution.run_id,
+        status=result.execution.status.value,
+        output=result.execution.output,
+        plan_id=str(result.execution.plan.plan_id),
+        approval_id=result.execution.approval_id,
+    )
 
 
 def create_app(*, task_service: TaskService | None = None) -> FastAPI:
