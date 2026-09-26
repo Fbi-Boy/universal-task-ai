@@ -49,4 +49,7 @@ def test_model_task_analyzer_does_not_allow_model_to_change_runtime_request() ->
     result = ModelTaskAnalyzer(gateway).analyze("x")
     assert result.normalized_goal == "x"
     assert gateway.request is not None
-    assert all("permission" not in message.content.lower() for message in gateway.request.messages)
+    joined = "\n".join(message.content for message in gateway.request.messages).lower()
+    assert "tools_allowed" not in joined
+    assert "approval_required" not in joined
+    assert "credentials" not in joined
