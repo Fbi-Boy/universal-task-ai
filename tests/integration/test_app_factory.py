@@ -1,10 +1,13 @@
 from pathlib import Path
 
-from backend.api.main import build_task_service, create_app\nfrom backend.core.approval_store import ApprovalStore
+from backend.api.main import build_task_service, create_app
+from backend.core.approval_store import ApprovalStore
 from backend.core.tool_invocation import ToolInvocation
 
 
 class StubTaskService:
+    approval_store = ApprovalStore()
+
     def run(self, task_text: str, **kwargs):
         raise AssertionError("stub should not be called by app construction")
 
