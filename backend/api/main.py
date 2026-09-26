@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,59 +21,63 @@ from backend.core.task_service import TaskService
 from backend.core.tool_invocation import ToolInvocation
 from backend.core.runtime_tools import build_runtime_tool_boundary
 
-app = FastAPI(title="Universal Task AI", version="0.1.0")
-app.include_router(approval_router, dependencies=[Depends(require_configured_api_key)])
-app.include_router(runs_router, dependencies=[Depends(require_configured_api_key)])
-app.include_router(events_router, dependencies=[Depends(require_configured_api_key)])
-app.include_router(settings_router, dependencies=[Depends(require_configured_api_key)])
+def build_task_service(
+    run_state_path: Path,
+    approval_path: Path,
+    audit_path: Path,
+) -> TaskService:
+    return TaskService(
+        TaskIntakeService(),
+        TaskPlanner(),
+        TaskExecutor(
+            SQLiteRunStateStore(run_state_path),
+            build_runtime_tool_boundary(),
+            SQLiteAuditSink(audit_path),
+            ApprovalStore(approval_path),
+        ),
+    )
 
 
-@app.get("/", include_in_schema=False)
-def web_ui() -> FileResponse:
-    return FileResponse("backend/web/index.html")
+def create_app(*, task_service: TaskService | None = None) -> FastAPI:
+    application = FastAPI(title="Universal Task AI", version="0.1.0")
+    application.include_router(
+        approval_router,
+        dependencies=[Depends(require_configured_api_key)],
+    )
+    application.include_router(
+        runs_router,
+        dependencies=[Depends(require_configured_api_key)],
+    )
+    application.include_router(
+        events_router,
+        dependencies=[Depends(require_configured_api_key)],
+    )
+    application.include_router(
+        settings_router,
+        dependencies=[Depends(require_configured_api_key)],
+    )
+
+    @application.get("/", include_in_schema=False)
+    def web_ui() -> FileResponse:
+        return FileResponse("backend/web/index.html")
+
+    @application.get("/ui.js", include_in_schema=False)
+    def web_js() -> FileResponse:
+        return FileResponse("backend/web/ui.js")
+
+    @application.get("/ui.css", include_in_schema=False)
+    def web_css() -> FileResponse:
+        return FileResponse("backend/web/ui.css")
+
+    application.state.task_service = task_service or build_task_service(
+        Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")),
+        Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")),
+        Path(os.environ.get("UTA_AUDIT_DB", ".universal_task_ai_audit.sqlite3")),
+    )
+    return application
 
 
-@app.get("/ui.js", include_in_schema=False)
-def web_js() -> FileResponse:
-    return FileResponse("backend/web/ui.js")
-
-
-@app.get("/ui.css", include_in_schema=False)
-def web_css() -> FileResponse:
-    return FileResponse("backend/web/ui.css")
-
-
-class AnalyzeRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    task: str = Field(min_length=1, max_length=20_000)
-
-
-class AnalyzeResponse(BaseModel):
-    analysis: TaskAnalysis
-
-
-class TaskRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    task: str = Field(min_length=1, max_length=20_000)
-    tool_invocations: list[ToolInvocation] = Field(default_factory=list, max_length=8)
-    approval_required: bool = False
-
-
-class TaskResponse(BaseModel):
-    run_id: str
-    status: str
-    output: str
-    plan_id: str
-    approval_id: str | None = None
-
-
-_task_store = SQLiteRunStateStore(Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")))
-_approval_store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))
-_audit_sink = SQLiteAuditSink(Path(os.environ.get("UTA_AUDIT_DB", ".universal_task_ai_audit.sqlite3")))
-_tool_boundary = build_runtime_tool_boundary()
-_task_executor = TaskExecutor(_task_store, _tool_boundary, _audit_sink, _approval_store)
-_task_service = TaskService(TaskIntakeService(), TaskPlanner(), _task_executor)
-app.state.task_service = _task_service
+app = create_app()
 
 
 @app.get("/health")
@@ -87,9 +91,9 @@ def analyze_task(request: AnalyzeRequest) -> AnalyzeResponse:
 
 
 @app.post("/v1/tasks", response_model=TaskResponse, dependencies=[Depends(require_configured_api_key)])
-def run_task(request: TaskRequest) -> TaskResponse:
+def run_task(request: TaskRequest, http_request: Request) -> TaskResponse:
     try:
-        result = _task_service.run(
+        result = http_request.app.state.task_service.run(
             request.task,
             tool_invocations=tuple(request.tool_invocations),
             approval_required=request.approval_required,
