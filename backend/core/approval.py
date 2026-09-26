@@ -8,6 +8,7 @@ class ApprovalState(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+    CONSUMED = "consumed"
 
 
 @dataclass(frozen=True)
@@ -17,11 +18,13 @@ class ApprovalRequest:
     action: str
     state: ApprovalState = ApprovalState.PENDING
 
+    def __post_init__(self) -> None:
+        if not str(self.action).strip():
+            raise ValueError("action must not be empty")
+
 
 class ApprovalMachine:
     def request(self, task_id: UUID, action: str) -> ApprovalRequest:
-        if not action.strip():
-            raise ValueError("action must not be empty")
         return ApprovalRequest(uuid4(), task_id, action.strip())
 
     def approve(self, request: ApprovalRequest) -> ApprovalRequest:
@@ -33,3 +36,8 @@ class ApprovalMachine:
         if request.state is not ApprovalState.PENDING:
             raise ValueError("only pending approvals can be rejected")
         return ApprovalRequest(request.approval_id, request.task_id, request.action, ApprovalState.REJECTED)
+
+    def consume(self, request: ApprovalRequest) -> ApprovalRequest:
+        if request.state is not ApprovalState.APPROVED:
+            raise ValueError("only approved approvals can be consumed")
+        return ApprovalRequest(request.approval_id, request.task_id, request.action, ApprovalState.CONSUMED)

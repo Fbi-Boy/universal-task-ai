@@ -1,13 +1,19 @@
+from pathlib import Path
+import os
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from backend.core.approval import ApprovalState
 from backend.core.approval_store import ApprovalStore
 
 router = APIRouter(prefix="/v1/approvals", tags=["approvals"])
-store = ApprovalStore()
+
+# The production compose stack points this at the persistent /data volume.
+# Local development may override it; the default remains a repo-local file.
+store = ApprovalStore(
+    Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3"))
+)
 
 
 class ApprovalCreate(BaseModel):
