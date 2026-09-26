@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -27,37 +28,59 @@ class DeniedTool(Tool):
         raise AssertionError("denied tool must never execute")
 
 
-def _plan() -> ExecutionPlan:
-    return ExecutionPlan(steps=[PlanStep(kind="tool", description="invoke tool")])
-
-
 def _contract():
-    return TaskContract(goal="echo", tools_required=["echo"])
+    return TaskContract(task_id=uuid4(), goal="echo", tools_required=["echo"])
+
+
+def _plan(task_id):
+    return ExecutionPlan(
+        task_id=task_id,
+        steps=[
+            PlanStep(
+                step_id="tool-1",
+                kind="tool",
+                objective="invoke tool",
+            )
+        ],
+    )
 
 
 def test_executor_runs_tool_only_through_boundary(tmp_path: Path) -> None:
+    contract = _contract()
     registry = ToolRegistry()
     registry.register(EchoTool())
     boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"echo"})))
     audit = InMemoryAuditSink()
     executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
     result = executor.execute(
-        _contract(), _plan(),
-        tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "ok"}),),
+        contract,
+        _plan(contract.task_id),
+        tool_invocations=(
+            ToolInvocation(tool_name="echo", arguments={"value": "ok"}),
+        ),
     )
     assert result.output == "ok"
     assert [event.event_type for event in audit.events] == [
-        "task_started", "tool_authorized", "tool_started", "tool_finished", "task_finished"
+        "task_started",
+        "tool_started",
+        "tool_authorized",
+        "tool_finished",
+        "task_finished",
     ]
 
 
 def test_executor_denies_tool_and_audits_failure(tmp_path: Path) -> None:
+    contract = _contract()
     registry = ToolRegistry()
     registry.register(DeniedTool())
     boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset()))
     audit = InMemoryAuditSink()
     executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
     with pytest.raises(PermissionError):
-        executor.execute(_contract(), _plan(), tool_invocations=(ToolInvocation(tool_name="denied"),))
+        executor.execute(
+            contract,
+            _plan(contract.task_id),
+            tool_invocations=(ToolInvocation(tool_name="denied"),),
+        )
     assert any(event.event_type == "tool_denied" for event in audit.events)
     assert any(event.event_type == "task_failed" for event in audit.events)

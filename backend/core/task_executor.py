@@ -87,6 +87,25 @@ class TaskExecutor:
                     "agent execution requires a registered side-effect boundary"
                 )
 
+            if has_tool_stage and contract.approval_required:
+                status = transition(status, RunStatus.WAITING_APPROVAL)
+                self._store.save(
+                    RunState(
+                        run_id,
+                        status.value,
+                        json.dumps(
+                            {
+                                "task_id": str(contract.task_id),
+                                "plan_id": str(plan.plan_id),
+                                "reason": "execution boundary requires approval",
+                            }
+                        ),
+                    )
+                )
+                return ExecutionResult(
+                    run_id, status, "Execution is waiting for approval.", plan
+                )
+
             if has_tool_stage:
                 if self._tool_boundary is None:
                     raise RuntimeError(
@@ -100,12 +119,6 @@ class TaskExecutor:
                 outputs: list[str] = []
                 for invocation in tool_invocations:
                     invocation.validate_bounds()
-                    self._audit_event(
-                        "tool_authorized",
-                        contract.task_id,
-                        run_id=run_id,
-                        tool_name=invocation.tool_name,
-                    )
                     self._audit_event(
                         "tool_started",
                         contract.task_id,
@@ -126,6 +139,12 @@ class TaskExecutor:
                             metadata={"reason": str(exc)[:200]},
                         )
                         raise
+                    self._audit_event(
+                        "tool_authorized",
+                        contract.task_id,
+                        run_id=run_id,
+                        tool_name=invocation.tool_name,
+                    )
                     self._audit_event(
                         "tool_finished",
                         contract.task_id,
