@@ -51,6 +51,7 @@ def build_task_service(
     approval_path: Path,
     audit_path: Path,
 ) -> TaskService:
+    approval_store = ApprovalStore(approval_path)
     return TaskService(
         TaskIntakeService(),
         TaskPlanner(),
@@ -122,8 +123,18 @@ def run_task(request: TaskRequest) -> TaskResponse:
 
 def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application = FastAPI(title="Universal Task AI", version="0.1.0")
+
+    service = task_service or build_task_service(
+        Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")),
+        Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")),
+        Path(os.environ.get("UTA_AUDIT_DB", ".universal_task_ai_audit.sqlite3")),
+    )
+    approval_store = service.approval_store
+    if approval_store is None:
+        raise ValueError("task service must expose its approval store")
+
     application.include_router(
-        approval_router,
+        create_approval_router(approval_store),
         dependencies=[Depends(require_configured_api_key)],
     )
     application.include_router(
@@ -142,7 +153,12 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application.add_api_route("/ui.js", web_js, include_in_schema=False)
     application.add_api_route("/ui.css", web_css, include_in_schema=False)
     application.add_api_route("/health", health)
-    application.add_api_route("/v1/tasks/analyze", analyze_task, methods=["POST"], response_model=AnalyzeResponse)
+    application.add_api_route(
+        "/v1/tasks/analyze",
+        analyze_task,
+        methods=["POST"],
+        response_model=AnalyzeResponse,
+    )
     application.add_api_route(
         "/v1/tasks",
         _run_task_endpoint,
@@ -150,11 +166,7 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
         response_model=TaskResponse,
         dependencies=[Depends(require_configured_api_key)],
     )
-    application.state.task_service = task_service or build_task_service(
-        Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")),
-        Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")),
-        Path(os.environ.get("UTA_AUDIT_DB", ".universal_task_ai_audit.sqlite3")),
-    )
+    application.state.task_service = service
     return application
 
 
