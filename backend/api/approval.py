@@ -29,7 +29,10 @@ class ApprovalResumeResponse(BaseModel):
     plan_id: UUID
 
 
-store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))\n\n\ndef create_router(store: ApprovalStore) -> APIRouter:
+store = ApprovalStore(Path(os.environ.get("UTA_APPROVAL_DB", ".universal_task_ai_approvals.sqlite3")))
+
+
+def create_router(store: ApprovalStore) -> APIRouter:
     """Build approval routes against the exact store used by task execution."""
     router = APIRouter(prefix="/v1/approvals", tags=["approvals"])
 
