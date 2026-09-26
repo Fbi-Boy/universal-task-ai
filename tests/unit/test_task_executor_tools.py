@@ -144,7 +144,7 @@ def test_approved_tool_executes_once_and_duplicate_resume_is_rejected(tmp_path: 
     approvals.approve(UUID(waiting.approval_id))
     resumed = executor.resume_approved(
         contract,
-        _plan(contract.task_id),
+        plan,
         run_id=waiting.run_id,
         approval_id=waiting.approval_id,
         actor_id="test-user",
