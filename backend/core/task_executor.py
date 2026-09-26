@@ -114,6 +114,8 @@ class TaskExecutor:
                         raise
 
                     if prepared_tool.metadata.requires_approval:
+                        if len(tool_invocations) != 1:
+                            raise RuntimeError("approval-gated runs currently require exactly one tool invocation")
                         approval = self._approvals.request(
                             contract.task_id,
                             f"execute tool {invocation.tool_name}",
