@@ -100,7 +100,25 @@ class TaskExecutor:
                 if not tool_invocations:
                     raise RuntimeError("tool plan requires at least one explicit tool invocation")
 
-                if contract.approval_required:
+                requires_approval = contract.approval_required
+                if not requires_approval:
+                    for invocation in tool_invocations:
+                        try:
+                            if self._tool_boundary.requires_approval(invocation.tool_name):
+                                requires_approval = True
+                                break
+                        except (ToolBoundaryDenied, PermissionError, ValueError) as exc:
+                            self._audit_event(
+                                "tool_denied",
+                                contract.task_id,
+                                run_id=run_id,
+                                tool_name=invocation.tool_name,
+                                success=False,
+                                metadata={"reason": str(exc)[:200]},
+                            )
+                            raise
+
+                if requires_approval:
                     if self._approvals is None:
                         raise RuntimeError("approval-required tool execution requires a durable approval store")
                     request = self._approvals.create_execution(
