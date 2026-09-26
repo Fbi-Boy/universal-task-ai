@@ -1,5 +1,5 @@
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -125,8 +125,7 @@ def test_executor_waits_then_resumes_approved_tool_once(tmp_path: Path):
     assert waiting.approval_id
     assert echo.calls == 0
 
-    approvals.approve(uuid4()) if False else None
-    approvals.approve(__import__("uuid").UUID(waiting.approval_id))
+    approvals.approve(UUID(waiting.approval_id))
 
     resumed = executor.resume_approved(
         contract,
@@ -139,7 +138,7 @@ def test_executor_waits_then_resumes_approved_tool_once(tmp_path: Path):
     assert resumed.status.value == "succeeded"
     assert resumed.output == "ok"
     assert echo.calls == 1
-    assert approvals.get(__import__("uuid").UUID(waiting.approval_id)).state is ApprovalState.CONSUMED
+    assert approvals.get(UUID(waiting.approval_id)).state is ApprovalState.CONSUMED
 
     with pytest.raises(ValueError, match="not waiting for approval"):
         executor.resume_approved(
