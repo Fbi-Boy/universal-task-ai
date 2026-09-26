@@ -50,4 +50,9 @@ class ProjectContextReader:
         return found
 
     def _display_path(self, path: Path) -> str:
-        return path.relative_to(self._policy.roots[0]).as_posix()
+        for root in self._policy.roots:
+            try:
+                return path.relative_to(root).as_posix()
+            except ValueError:
+                continue
+        raise WorkspaceDenied("project file is outside configured workspace roots")
