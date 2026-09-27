@@ -23,17 +23,24 @@ class AuditEvent(BaseModel):
         """Recursively remove common secret-bearing keys before persistence/export."""
         blocked = {"password", "token", "secret", "api_key", "authorization", "cookie"}
 
-        def sanitize(value: Any) -> Any:
+        def sanitize(value: Any, depth: int = 0) -> Any:
+            if depth > 8:
+                return "[redacted: max audit depth]"
             if isinstance(value, dict):
+                if len(value) > 128:
+                    return "[redacted: audit mapping too large]"
                 return {
-                    str(key): sanitize(item)
+                    str(key)[:128]: sanitize(item, depth + 1)
                     for key, item in value.items()
                     if str(key).lower() not in blocked
                 }
-            if isinstance(value, list):
-                return [sanitize(item) for item in value]
-            if isinstance(value, tuple):
-                return [sanitize(item) for item in value]
+            if isinstance(value, (list, tuple)):
+                if len(value) > 128:
+                    return "[redacted: audit collection too large]"
+                return [sanitize(item, depth + 1) for item in value]
+            if isinstance(value, (str, bytes)):
+                if len(value) > 8 * 1024:
+                    return "[redacted: audit scalar too large]"
             return value
 
         return sanitize(self.metadata)
