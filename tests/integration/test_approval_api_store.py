@@ -4,7 +4,7 @@ from uuid import UUID
 from backend.api.approval import create_router
 from backend.api.main import build_task_service, create_app
 from backend.core.approval_store import ApprovalStore
-from backend.core.tool_invocation import ToolInvocation
+from backend.core.tool_invocation import ToolInvocation\nfrom backend.api.approval import ApprovalDecisionRequest
 
 
 def _endpoint(router, path: str):
@@ -33,7 +33,7 @@ def test_approval_router_uses_the_same_store_as_task_executor(tmp_path: Path):
     approval_id = UUID(waiting.execution.approval_id)
     router = create_router(service.approval_store)
     approve_endpoint = _endpoint(router, "/v1/approvals/{approval_id}/approve")
-    approved = approve_endpoint(approval_id)
+    approved = approve_endpoint(approval_id, ApprovalDecisionRequest(actor_id="test-operator"))
 
     assert approved.approval_id == approval_id
     assert approved.state.value == "approved"
