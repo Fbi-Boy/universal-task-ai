@@ -24,6 +24,8 @@ class FakeResponse:
 def test_ollama_gateway_is_loopback_only() -> None:
     with pytest.raises(ValueError):
         OllamaModelGateway(model="local", base_url="http://example.com")
+    with pytest.raises(ValueError):
+        OllamaModelGateway(model="local", base_url="http://localhost:11434")
 
 
 def test_ollama_gateway_uses_local_endpoint() -> None:
@@ -64,6 +66,18 @@ def test_ollama_gateway_rejects_non_default_port_and_path() -> None:
         OllamaModelGateway(model="local", base_url="http://127.0.0.1:12345")
     with pytest.raises(ValueError):
         OllamaModelGateway(model="local", base_url="http://127.0.0.1:11434/other")
+
+
+def test_ollama_gateway_supports_ipv6_loopback() -> None:
+    captured = {}
+
+    def opener(request, *, timeout):
+        captured["url"] = request.full_url
+        return FakeResponse({"message": {"content": "hello"}, "done": True})
+
+    gateway = OllamaModelGateway(model="local", base_url="http://[::1]:11434", opener=opener)
+    gateway.generate(ModelRequest(messages=[ModelMessage(role="user", content="hello")]))
+    assert captured["url"] == "http://[::1]:11434/api/chat"
 
 
 def test_ollama_gateway_rejects_credentials_and_query_data() -> None:
