@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from backend.api.approval import create_router as create_approval_router
 from backend.api.auth import require_configured_api_key
 from backend.api.events import router as events_router
-from backend.api.hardening import RequestBodyLimitMiddleware, RequestContextMiddleware, request_id_from_request
+from backend.api.hardening import SecurityHeadersMiddleware, RequestBodyLimitMiddleware, RequestContextMiddleware, request_id_from_request
 from backend.api.runs import router as runs_router
 from backend.api.settings import router as settings_router
 from backend.core.analyzer import TaskAnalysis
@@ -169,6 +169,7 @@ def run_task(request: TaskRequest) -> TaskResponse:
 def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application = FastAPI(title="Universal Task AI", version=build_version())
     application.add_middleware(RequestBodyLimitMiddleware)
+    application.add_middleware(SecurityHeadersMiddleware)
     application.add_middleware(RequestContextMiddleware)
 
     @application.exception_handler(Exception)
