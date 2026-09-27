@@ -212,3 +212,27 @@ def test_executor_derives_approval_from_tool_metadata(tmp_path: Path) -> None:
     assert waiting.status.value == "waiting_approval"
     assert waiting.approval_id is not None
     assert not any(event.event_type == "tool_started" for event in audit.events)
+
+
+class HugeOutputTool(Tool):
+    metadata = ToolMetadata(name="huge", description="oversized output")
+
+    def run(self, arguments):
+        return ToolResult(success=True, output="x" * (64 * 1024 + 1))
+
+
+def test_executor_rejects_oversized_tool_output(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"tools_required": ["huge"]})
+    registry = ToolRegistry()
+    registry.register(HugeOutputTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"huge"})))
+    audit = InMemoryAuditSink()
+    executor = TaskExecutor(SQLiteRunStateStore(tmp_path / "runs.db"), boundary, audit)
+    with pytest.raises(ValueError, match="64 KiB"):
+        executor.execute(
+            contract,
+            _plan(contract.task_id),
+            tool_invocations=(ToolInvocation(tool_name="huge"),),
+        )
+    assert any(event.event_type == "tool_finished" and event.success is False for event in audit.events)
+    assert any(event.event_type == "task_failed" for event in audit.events)
