@@ -43,7 +43,9 @@ class RuntimeToolBoundary:
 
     def execute_authorized(self, tool: Tool, arguments: Mapping[str, Any]) -> ToolResult:
         """Execute only a tool already authorized by this boundary."""
-        return tool.run(arguments)
+        result = tool.run(arguments)
+        result.validate_bounds()
+        return result
 
     def execute(self, name: str, arguments: Mapping[str, Any], *, approved: bool = False) -> ToolResult:
         tool = self.authorize(name, approved=approved)
