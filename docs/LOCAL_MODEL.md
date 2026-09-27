@@ -4,7 +4,7 @@ The local model path uses Ollama through a deliberately narrow loopback-only HTT
 
 ## Security boundary
 
-- Only `localhost`, `127.0.0.1`, and `::1` are accepted.
+- Only `127.0.0.1` and `::1` are accepted; hostname `localhost` is deliberately rejected to avoid hostname-resolution ambiguity.
 - The endpoint path is fixed to `/api/chat` and the default Ollama port `11434`.
 - HTTPS is not used because this boundary is explicitly local-only; remote hosts are rejected.
 - Credentials, query strings, fragments, non-default ports, and redirects are rejected.
