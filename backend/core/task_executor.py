@@ -272,7 +272,11 @@ class TaskExecutor:
         expected_contract_hash = contract_hash(contract)
         expected_plan_hash = plan_hash(plan)
 
-        execution = self._approvals.consume_execution(UUID(approval_id))
+        execution = self._approvals.consume_execution(
+            UUID(approval_id),
+            expected_contract_hash=expected_contract_hash,
+            expected_plan_hash=expected_plan_hash,
+        )
         if execution.run_id != run_id or execution.request.task_id != contract.task_id:
             raise ValueError("approval execution does not match waiting run")
         if execution.plan_id != plan.plan_id:
