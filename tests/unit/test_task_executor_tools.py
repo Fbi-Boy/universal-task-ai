@@ -236,3 +236,43 @@ def test_executor_rejects_oversized_tool_output(tmp_path: Path) -> None:
         )
     assert any(event.event_type == "tool_finished" and event.success is False for event in audit.events)
     assert any(event.event_type == "task_failed" for event in audit.events)
+
+
+def test_approval_resume_rejects_changed_execution_manifest(tmp_path: Path) -> None:
+    contract = _contract().model_copy(update={"approval_required": True})
+    registry = ToolRegistry()
+    registry.register(EchoTool())
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"echo"})))
+    approvals = ApprovalStore(tmp_path / "approvals.db")
+    executor = TaskExecutor(
+        SQLiteRunStateStore(tmp_path / "runs.db"),
+        boundary,
+        InMemoryAuditSink(),
+        approvals,
+    )
+    plan = _plan(contract.task_id)
+    invocation = ToolInvocation(tool_name="echo", arguments={"value": "approved"})
+    waiting = executor.execute(contract, plan, tool_invocations=(invocation,))
+    approvals.approve(UUID(waiting.approval_id), "test-user")
+
+    tampered_plan = plan.model_copy(
+        update={"steps": [PlanStep(step_id="tool-1", kind="tool", objective="tampered")]}
+    )
+    with pytest.raises(ValueError, match="manifest has changed"):
+        executor.resume_approved(
+            contract,
+            tampered_plan,
+            run_id=waiting.run_id,
+            approval_id=waiting.approval_id,
+            actor_id="test-user",
+        )
+
+    resumed = executor.resume_approved(
+        contract,
+        plan,
+        run_id=waiting.run_id,
+        approval_id=waiting.approval_id,
+        actor_id="test-user",
+    )
+    assert resumed.status.value == "succeeded"
+    assert resumed.output == "approved"
