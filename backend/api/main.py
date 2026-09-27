@@ -201,6 +201,7 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
         analyze_task,
         methods=["POST"],
         response_model=AnalyzeResponse,
+        dependencies=[Depends(require_configured_api_key)],
     )
     application.add_api_route(
         "/v1/tasks",
