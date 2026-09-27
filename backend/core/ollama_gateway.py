@@ -9,7 +9,7 @@ from backend.core.model_gateway import ModelGateway, ModelRequest, ModelResponse
 _MAX_RESPONSE_BYTES = 1_048_576
 _MAX_REQUEST_BYTES = 256_000
 _MAX_MODEL_OUTPUT = 20_000
-_ALLOWED_HOSTS = {"localhost", "127.0.0.1", "::1"}
+_ALLOWED_HOSTS = {"127.0.0.1", "::1"}
 _OLLAMA_PORT = 11434
 
 
@@ -45,7 +45,8 @@ class OllamaModelGateway(ModelGateway):
         if timeout_seconds <= 0 or timeout_seconds > 120:
             raise ValueError("timeout must be between 0 and 120 seconds")
 
-        self._url = f"http://{parsed.hostname}:{_OLLAMA_PORT}/api/chat"
+        host = f"[{parsed.hostname}]" if parsed.hostname == "::1" else parsed.hostname
+        self._url = f"http://{host}:{_OLLAMA_PORT}/api/chat"
         self._model = model
         self._timeout = timeout_seconds
         self._opener = opener or build_opener(_NoRedirectHandler())
