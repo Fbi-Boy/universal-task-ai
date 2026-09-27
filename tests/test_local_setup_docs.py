@@ -1,6 +1,15 @@
+import importlib.util
 from pathlib import Path
 
-from scripts import check_local
+
+def _load_check_local():
+    spec = importlib.util.spec_from_file_location(
+        "check_local", Path("scripts/check-local.py")
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_local_launchers_bind_loopback_only():
@@ -27,6 +36,7 @@ def test_local_preflight_does_not_print_secret_values():
 
 
 def test_local_preflight_reads_dotenv_without_printing_values(tmp_path, monkeypatch):
+    check_local = _load_check_local()
     env_path = tmp_path / ".env"
     env_path.write_text(
         "UTA_BROWSER_ENABLED=true\n"
@@ -39,6 +49,7 @@ def test_local_preflight_reads_dotenv_without_printing_values(tmp_path, monkeypa
 
 
 def test_local_preflight_process_environment_overrides_dotenv(tmp_path, monkeypatch):
+    check_local = _load_check_local()
     env_path = tmp_path / ".env"
     env_path.write_text(
         "UTA_BROWSER_ENABLED=true\n"
