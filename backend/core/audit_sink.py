@@ -47,6 +47,9 @@ class SQLiteAuditSink(AuditSink):
     def close(self) -> None:
         self._conn.close()
 
+    def ping(self) -> None:
+        """Verify that the audit database is responsive."""
+        self._conn.execute("SELECT 1").fetchone()
 
 
 class InMemoryAuditSink(AuditSink):
@@ -59,7 +62,3 @@ class InMemoryAuditSink(AuditSink):
         self.events.append(
             event.model_copy(update={"metadata": event.safe_metadata()})
         )
-
-    def ping(self) -> None:
-        """Verify that the audit database is responsive."""
-        self._conn.execute("SELECT 1").fetchone()
