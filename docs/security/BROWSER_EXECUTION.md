@@ -1,20 +1,12 @@
 # Browser Execution Boundary
 
-A browser session holds only browser state and the current policy. Every initial navigation and redirect is revalidated against the host policy.
+Browser execution is high-risk and network-capable. It is available only through the runtime capability boundary and requires approval.
 
 ## Supported worker actions
 
-The Playwright worker supports only:
+The Playwright worker supports navigate, read, click, type, and submit. Upload, download, login, and payment remain deliberately unimplemented.
 
-- navigate — HTTPS navigation to an explicitly allowlisted host.
-- read — bounded text extraction from the current page or a bounded selector.
-- click — click an explicit selector.
-- type — fill an explicit selector with a value capped at 64 KiB.
-- submit — click an explicit submit selector and revalidate the resulting URL.
-
-The browser tool remains high-risk, network-capable, and approval-required through RuntimeToolBoundary, so these actions cannot run merely because a caller can name the tool.
-
-upload, download, login, and payment remain deliberately unimplemented. They require additional capability-specific controls rather than being silently enabled by the generic browser worker.
+A single invocation may contain a bounded batch of up to 8 commands. This is the supported way to keep browser state across multiple actions such as navigate -> read/click/type while preserving task-level isolation.
 
 ## Security controls
 
@@ -25,7 +17,9 @@ upload, download, login, and payment remain deliberately unimplemented. They req
 - Downloads are disabled in the Playwright context.
 - Selectors are bounded to 2 KiB and typed values to 64 KiB.
 - Browser output is bounded to 256,000 characters by default.
-- The worker uses an ephemeral headless browser context.
+- Each tool invocation gets a fresh browser context and is closed in a finally block; cookies, storage, and page state are not reused across invocations.
+- Multi-action browser work stays within one bounded batch rather than sharing a context between tasks.
+- Browser actions are revalidated against the current URL after navigation, click, submit, and type.
 - The production executor must run in an isolated browser/container with bounded CPU, memory, time, and filesystem access.
 - Credentials must not be persisted in ordinary task state.
-- Sensitive actions must pause for explicit user approval and emit audit events before resuming.
+- Sensitive actions pause for explicit user approval and emit audit events before resuming.

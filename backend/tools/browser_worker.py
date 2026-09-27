@@ -4,6 +4,8 @@ from typing import Protocol
 from backend.core.browser_policy import BrowserAction, BrowserPolicy
 from backend.core.tools import Tool, ToolMetadata, ToolResult
 
+_MAX_COMMANDS = 8
+
 
 @dataclass(frozen=True)
 class BrowserCommand:
@@ -40,38 +42,58 @@ class BrowserWorkerTool(Tool):
         self.policy = policy
         self.worker = worker
 
-    def run(self, arguments):
+    def _command(self, arguments: dict) -> BrowserCommand:
+        allowed = {"action", "url", "selector", "value"}
+        unknown = set(arguments) - allowed
+        if unknown:
+            raise ValueError(f"unknown browser command fields: {sorted(unknown)}")
         try:
             action = BrowserAction(arguments["action"])
-            url = arguments.get("url")
-            if url:
-                url = self.policy.validate_url(url)
+        except KeyError as exc:
+            raise ValueError("browser command requires action") from exc
+        url = arguments.get("url")
+        if url:
+            url = self.policy.validate_url(url)
+        selector = arguments.get("selector")
+        value = arguments.get("value")
 
-            selector = arguments.get("selector")
-            value = arguments.get("value")
+        if action is BrowserAction.NAVIGATE:
+            if not url:
+                raise ValueError("navigate requires url")
+            if selector is not None or value is not None:
+                raise ValueError("navigate does not accept selector or value")
+        elif action is BrowserAction.READ:
+            if value is not None:
+                raise ValueError("read does not accept value")
+        elif action in {BrowserAction.CLICK, BrowserAction.SUBMIT}:
+            if not selector:
+                raise ValueError(f"{action.value} requires selector")
+            if value is not None:
+                raise ValueError(f"{action.value} does not accept value")
+        elif action is BrowserAction.TYPE:
+            if not selector:
+                raise ValueError("type requires selector")
+            if value is None:
+                raise ValueError("type requires value")
+        else:
+            raise PermissionError(f"browser action is not implemented: {action.value}")
+        return BrowserCommand(action, url, selector, value)
 
-            if action is BrowserAction.NAVIGATE:
-                if not url:
-                    raise ValueError("navigate requires url")
-                if selector is not None or value is not None:
-                    raise ValueError("navigate does not accept selector or value")
-            elif action is BrowserAction.READ:
-                if value is not None:
-                    raise ValueError("read does not accept value")
-            elif action in {BrowserAction.CLICK, BrowserAction.SUBMIT}:
-                if not selector:
-                    raise ValueError(f"{action.value} requires selector")
-                if value is not None:
-                    raise ValueError(f"{action.value} does not accept value")
-            elif action is BrowserAction.TYPE:
-                if not selector:
-                    raise ValueError("type requires selector")
-                if value is None:
-                    raise ValueError("type requires value")
-            else:
-                raise PermissionError(f"browser action is not implemented: {action.value}")
-
-            command = BrowserCommand(action, url, selector, value)
-            return ToolResult(success=True, output=self.worker.execute(command))
-        except (KeyError, TypeError, ValueError, PermissionError) as exc:
+    def run(self, arguments):
+        try:
+            if "commands" in arguments:
+                commands = arguments["commands"]
+                if not isinstance(commands, list) or not commands:
+                    raise ValueError("commands must be a non-empty list")
+                if len(commands) > _MAX_COMMANDS:
+                    raise ValueError("browser command batch is limited to 8 commands")
+                if any(not isinstance(item, dict) for item in commands):
+                    raise ValueError("each browser command must be an object")
+                parsed = tuple(self._command(item) for item in commands)
+                execute_batch = getattr(self.worker, "execute_batch", None)
+                if execute_batch is None:
+                    raise RuntimeError("browser worker does not support isolated command batches")
+                return ToolResult(success=True, output=execute_batch(parsed))
+            return ToolResult(success=True, output=self.worker.execute(self._command(arguments)))
+        except (KeyError, TypeError, ValueError, PermissionError, RuntimeError) as exc:
             return ToolResult(success=False, error=str(exc))

@@ -45,6 +45,20 @@ class PlaywrightBrowserWorker(BrowserWorker):
         return self._page
 
     def execute(self, command: BrowserCommand) -> str:
+        try:
+            return self._execute_one(command)
+        finally:
+            self.close()
+
+    def execute_batch(self, commands: tuple[BrowserCommand, ...]) -> list[str]:
+        if not commands or len(commands) > 8:
+            raise ValueError("browser command batch must contain 1-8 commands")
+        try:
+            return [self._execute_one(command) for command in commands]
+        finally:
+            self.close()
+
+    def _execute_one(self, command: BrowserCommand) -> str:
         if command.action in {
             BrowserAction.UPLOAD,
             BrowserAction.DOWNLOAD,
@@ -87,6 +101,7 @@ class PlaywrightBrowserWorker(BrowserWorker):
 
         if command.action is BrowserAction.TYPE:
             page.locator(command.selector).fill(command.value or "", timeout=10_000)
+            self.policy.validate_url(page.url)
             return "typed"
 
         if command.action is BrowserAction.SUBMIT:
