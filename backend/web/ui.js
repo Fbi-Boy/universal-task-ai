@@ -94,7 +94,7 @@ async function refreshApprovals() {
               body: JSON.stringify({
                 run_id: info.run_id,
                 approval_id: approval.approval_id,
-                actor_id: "web-session"
+                actor_id: approvalActor.value.trim()
               })
             });
             resultBox.textContent = resumed.output || "";
