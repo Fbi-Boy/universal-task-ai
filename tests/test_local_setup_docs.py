@@ -15,3 +15,10 @@ def test_local_setup_keeps_high_risk_capabilities_opt_in():
     assert "disabled by default" in docs
     assert "approval-gated" in docs
     assert "immutable image digest" in docs
+
+
+def test_local_preflight_does_not_print_secret_values():
+    script = Path("scripts/check-local.py").read_text()
+    assert "API_KEY" not in script
+    assert "SECRET" not in script
+    assert "PASSWORD" not in script
