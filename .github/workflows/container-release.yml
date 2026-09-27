@@ -29,6 +29,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
+          tags: ghcr.io/fbi-boy/universal-task-ai:${{ github.sha }}
           provenance: true
           sbom: true
