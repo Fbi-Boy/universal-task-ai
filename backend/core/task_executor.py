@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 from backend.core.approval_store import ApprovalStore
+from backend.core.execution_integrity import contract_hash, plan_hash
 from backend.core.audit import AuditEvent
 from backend.core.audit_sink import AuditSink
 from backend.core.planner import ExecutionPlan
@@ -133,6 +134,8 @@ class TaskExecutor:
                         plan.plan_id,
                         tool_invocations,
                         action=f"execute {len(tool_invocations)} bounded tool invocation(s)",
+                        contract_hash=contract_hash(contract),
+                        plan_hash=plan_hash(plan),
                     )
                     status = transition(status, RunStatus.WAITING_APPROVAL)
                     self._store.save(
@@ -266,12 +269,22 @@ class TaskExecutor:
             raise ValueError("approval plan does not match run")
         if payload.get("approval_id") != approval_id:
             raise ValueError("approval does not match waiting run")
+        expected_contract_hash = contract_hash(contract)
+        expected_plan_hash = plan_hash(plan)
 
-        execution = self._approvals.consume_execution(UUID(approval_id))
+        execution = self._approvals.consume_execution(
+            UUID(approval_id),
+            expected_contract_hash=expected_contract_hash,
+            expected_plan_hash=expected_plan_hash,
+        )
         if execution.run_id != run_id or execution.request.task_id != contract.task_id:
             raise ValueError("approval execution does not match waiting run")
         if execution.plan_id != plan.plan_id:
             raise ValueError("approval execution does not match plan")
+        if execution.contract_hash != expected_contract_hash:
+            raise ValueError("approval execution contract manifest has changed")
+        if execution.plan_hash != expected_plan_hash:
+            raise ValueError("approval execution plan manifest has changed")
 
         status = transition(RunStatus.WAITING_APPROVAL, RunStatus.RUNNING)
         self._store.save(

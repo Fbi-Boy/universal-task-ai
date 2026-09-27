@@ -90,6 +90,8 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] API request correlation and bounded request-body protection
 - [x] Conservative browser security response headers
 - [x] Public runtime readiness endpoint
+- [x] Approval execution manifest integrity checks
+- [x] Non-destructive approval-store migration for integrity metadata
 - [ ] Production deployment
 
 ## Phase 7 — Production Hardening

@@ -16,6 +16,8 @@ class ApprovalExecution:
     run_id: str
     plan_id: UUID
     invocations: tuple[ToolInvocation, ...]
+    contract_hash: str = ""
+    plan_hash: str = ""
 
 
 @dataclass(frozen=True)
@@ -58,11 +60,14 @@ class ApprovalStore:
                 run_id TEXT NOT NULL UNIQUE,
                 plan_id TEXT NOT NULL,
                 invocations TEXT NOT NULL,
+                contract_hash TEXT,
+                plan_hash TEXT,
                 FOREIGN KEY(approval_id) REFERENCES approvals(approval_id)
             )
             """
         )
         self._ensure_decision_columns()
+        self._ensure_execution_integrity_columns()
         self._conn.commit()
 
     def _ensure_decision_columns(self) -> None:
@@ -71,6 +76,13 @@ class ApprovalStore:
             self._conn.execute("ALTER TABLE approvals ADD COLUMN decided_by TEXT")
         if "decided_at" not in columns:
             self._conn.execute("ALTER TABLE approvals ADD COLUMN decided_at TEXT")
+
+    def _ensure_execution_integrity_columns(self) -> None:
+        columns = {str(row[1]) for row in self._conn.execute("PRAGMA table_info(approval_executions)").fetchall()}
+        if "contract_hash" not in columns:
+            self._conn.execute("ALTER TABLE approval_executions ADD COLUMN contract_hash TEXT")
+        if "plan_hash" not in columns:
+            self._conn.execute("ALTER TABLE approval_executions ADD COLUMN plan_hash TEXT")
 
     @staticmethod
     def _validate_actor(actor_id: str) -> str:
@@ -99,6 +111,8 @@ class ApprovalStore:
         invocations: tuple[ToolInvocation, ...],
         *,
         action: str,
+        contract_hash: str = "",
+        plan_hash: str = "",
     ) -> ApprovalExecution:
         if not run_id.strip():
             raise ValueError("run_id must not be empty")
@@ -106,6 +120,11 @@ class ApprovalStore:
             raise ValueError("run_id must be at most 128 characters")
         if not invocations:
             raise ValueError("approval execution requires at least one invocation")
+        if contract_hash or plan_hash:
+            if len(contract_hash) != 64 or len(plan_hash) != 64:
+                raise ValueError("execution manifest hashes must be SHA-256 hex digests")
+            if any(char not in "0123456789abcdef" for char in contract_hash + plan_hash):
+                raise ValueError("execution manifest hashes must be lowercase hexadecimal")
         if len(invocations) > 8:
             raise ValueError("approval execution supports at most 8 invocations")
         if len(action.strip()) > 2_000:
@@ -129,14 +148,14 @@ class ApprovalStore:
                     (str(request.approval_id), str(request.task_id), request.action, request.state.value),
                 )
                 self._conn.execute(
-                    "INSERT INTO approval_executions(approval_id,run_id,plan_id,invocations) VALUES(?,?,?,?)",
-                    (str(request.approval_id), run_id, str(plan_id), payload),
+                    "INSERT INTO approval_executions(approval_id,run_id,plan_id,invocations,contract_hash,plan_hash) VALUES(?,?,?,?,?,?)",
+                    (str(request.approval_id), run_id, str(plan_id), payload, contract_hash, plan_hash),
                 )
                 self._conn.commit()
             except Exception:
                 self._conn.rollback()
                 raise
-        return ApprovalExecution(request, run_id, plan_id, invocations)
+        return ApprovalExecution(request, run_id, plan_id, invocations, contract_hash, plan_hash)
 
     def get(self, approval_id: UUID) -> ApprovalRequest | None:
         with self._lock:
@@ -197,13 +216,13 @@ class ApprovalStore:
                 raise ValueError("approval state changed concurrently")
             self._conn.commit()
             return updated
-    def consume_execution(self, approval_id: UUID) -> ApprovalExecution:
-        """Atomically consume an approved execution; repeated resume is rejected."""
+    def consume_execution(self, approval_id: UUID, *, expected_contract_hash: str | None = None, expected_plan_hash: str | None = None) -> ApprovalExecution:
+        """Atomically consume an approved execution after manifest integrity checks."""
         with self._lock:
             row = self._conn.execute(
                 """
                 SELECT a.approval_id,a.task_id,a.action,a.state,
-                       e.run_id,e.plan_id,e.invocations
+                       e.run_id,e.plan_id,e.invocations,e.contract_hash,e.plan_hash
                 FROM approvals a
                 JOIN approval_executions e ON e.approval_id=a.approval_id
                 WHERE a.approval_id=?
@@ -216,6 +235,10 @@ class ApprovalStore:
             request = self._request_from_row(row[:4])
             if request.state is not ApprovalState.APPROVED:
                 raise ValueError("approval is not approved or was already consumed")
+            if expected_contract_hash is not None and str(row[7] or "") != expected_contract_hash:
+                raise ValueError("approval execution contract manifest has changed")
+            if expected_plan_hash is not None and str(row[8] or "") != expected_plan_hash:
+                raise ValueError("approval execution plan manifest has changed")
 
             updated = self._machine.consume(request)
             cursor = self._conn.execute(
@@ -231,7 +254,7 @@ class ApprovalStore:
         invocations = tuple(ToolInvocation.model_validate(item) for item in raw_invocations)
         for invocation in invocations:
             invocation.validate_bounds()
-        return ApprovalExecution(updated, str(row[4]), UUID(str(row[5])), invocations)
+        return ApprovalExecution(updated, str(row[4]), UUID(str(row[5])), invocations, str(row[7] or ""), str(row[8] or ""))
 
     def list(self) -> list[ApprovalRequest]:
         with self._lock:
