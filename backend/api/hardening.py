@@ -93,3 +93,35 @@ def internal_error_response(request_id: str) -> Response:
         status_code=500,
         headers={"cache-control": "no-store"},
     )
+
+
+class SecurityHeadersMiddleware:
+    """Apply conservative browser-facing security headers to every HTTP response."""
+
+    HEADERS = (
+        (b"x-content-type-options", b"nosniff"),
+        (b"x-frame-options", b"DENY"),
+        (b"referrer-policy", b"no-referrer"),
+        (b"permissions-policy", b"geolocation=(), camera=(), microphone=()"),
+    )
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_security_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                raw_headers = list(message.get("headers", []))
+                existing = {key.lower() for key, _ in raw_headers}
+                raw_headers.extend(
+                    (key, value) for key, value in self.HEADERS if key not in existing
+                )
+                message = dict(message)
+                message["headers"] = raw_headers
+            await send(message)
+
+        await self.app(scope, receive, send_with_security_headers)
