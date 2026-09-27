@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from backend.api.hardening import RequestBodyLimitMiddleware, RequestContextMiddleware, _safe_request_id
+from backend.api.hardening import RequestBodyLimitMiddleware, RequestContextMiddleware, SecurityHeadersMiddleware, _safe_request_id
 
 def test_request_id_rejects_control_characters_and_bounds() -> None:
     generated = _safe_request_id("\n")
@@ -46,3 +46,34 @@ def test_request_context_adds_bounded_correlation_id() -> None:
     ))
     assert received == ["client-123"]
     assert (b"x-request-id", b"client-123") in sent[0]["headers"]
+
+
+def test_security_headers_are_added_without_overwriting_existing_values() -> None:
+    async def app(scope, receive, send):
+        await send({
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [(b"x-frame-options", b"SAMEORIGIN")],
+        })
+        await send({"type": "http.response.body", "body": b"ok"})
+
+    middleware = SecurityHeadersMiddleware(app)
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    sent = []
+
+    async def send(message):
+        sent.append(message)
+
+    asyncio.run(middleware(
+        {"type": "http", "headers": [], "method": "GET", "path": "/"},
+        receive,
+        send,
+    ))
+
+    headers = dict(sent[0]["headers"])
+    assert headers[b"x-content-type-options"] == b"nosniff"
+    assert headers[b"x-frame-options"] == b"SAMEORIGIN"
+    assert headers[b"referrer-policy"] == b"no-referrer"
