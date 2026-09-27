@@ -35,3 +35,7 @@ class SQLiteRunStateStore:
             "SELECT run_id,status,payload FROM runs ORDER BY rowid DESC LIMIT ?", (limit,)
         ).fetchall()
         return [RunState(*row) for row in rows]
+
+    def ping(self) -> None:
+        """Verify that the run-state database is writable and responsive."""
+        self._conn.execute("SELECT 1").fetchone()
