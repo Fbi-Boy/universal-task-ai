@@ -6,6 +6,7 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 
 - Explicit ToolInvocation objects; arbitrary callable references are not accepted.
 - Argument count, nesting depth, key length, and scalar size are bounded before execution.
+- Tool results are bounded at the runtime boundary (nested values, collection sizes, scalar size, and error length) before they enter task output or downstream stages.
 - Registered-tool metadata is rechecked by the runtime boundary for capability and approval requirements.
 - Security-relevant lifecycle events are emitted to an injected AuditSink.
 - Audit metadata is sanitized before retention.
