@@ -14,6 +14,7 @@ from backend.core.analyzer import TaskAnalysis
 from backend.core.model_task_analyzer import ModelTaskAnalyzer
 from backend.core.ollama_gateway import OllamaModelGateway
 from backend.core.openai_gateway import OpenAIModelGateway
+from backend.core.release import build_sha, build_version
 from backend.core.secret_provider import SecretProvider
 from backend.core.approval_store import ApprovalStore
 from backend.core.audit_sink import SQLiteAuditSink
@@ -108,7 +109,7 @@ def web_css() -> FileResponse:
 
 
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "version": build_version(), "build_sha": build_sha()}
 
 
 def list_tools(http_request: Request) -> list[ToolCatalogItem]:
@@ -158,7 +159,7 @@ def run_task(request: TaskRequest) -> TaskResponse:
 
 
 def create_app(*, task_service: TaskService | None = None) -> FastAPI:
-    application = FastAPI(title="Universal Task AI", version="0.1.0")
+    application = FastAPI(title="Universal Task AI", version=build_version())
 
     service = task_service or build_task_service(
         Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")),
