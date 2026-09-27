@@ -1,6 +1,7 @@
 const task = document.querySelector("#task");
 const counter = document.querySelector("#counter");
 const apiKey = document.querySelector("#api-key");
+const approvalActor = document.querySelector("#approval-actor");
 const tool = document.querySelector("#tool");
 const args = document.querySelector("#arguments");
 const approvalRequired = document.querySelector("#approval-required");
@@ -8,6 +9,7 @@ const resultBox = document.querySelector("#result");
 const statusBox = document.querySelector("#run-status");
 
 apiKey.value = sessionStorage.getItem("uta_api_key") || "";
+approvalActor.value = sessionStorage.getItem("uta_approval_actor") || "web-session";
 
 function authHeaders(extra = {}) {
   const key = sessionStorage.getItem("uta_api_key") || "";
@@ -48,6 +50,19 @@ document.querySelector("#clear-key").onclick = () => {
   refresh();
 };
 
+approvalActor.onchange = () => {
+  const value = approvalActor.value.trim();
+  if (value) sessionStorage.setItem("uta_approval_actor", value);
+  else sessionStorage.removeItem("uta_approval_actor");
+};
+
+function approvalDecisionBody() {
+  const actor = approvalActor.value.trim();
+  if (!actor || actor.length > 128) throw new Error("Approval actor ID must be 1-128 characters.");
+  sessionStorage.setItem("uta_approval_actor", actor);
+  return JSON.stringify({actor_id: actor});
+}
+
 async function loadTools() {
   const items = await json("/v1/tools");
   tool.replaceChildren(new Option("No tool — safe baseline", ""));
@@ -71,7 +86,7 @@ async function refreshApprovals() {
         approve.textContent = "Approve + resume";
         approve.onclick = async () => {
           try {
-            await json("/v1/approvals/" + approval.approval_id + "/approve", {method: "POST"});
+            await json("/v1/approvals/" + approval.approval_id + "/approve", {method: "POST", headers: {"content-type": "application/json"}, body: approvalDecisionBody()});
             const info = await json("/v1/approvals/" + approval.approval_id + "/execution");
             const resumed = await json("/v1/approvals/" + approval.approval_id + "/resume", {
               method: "POST",
@@ -96,7 +111,7 @@ async function refreshApprovals() {
         reject.textContent = "Reject";
         reject.onclick = async () => {
           try {
-            await json("/v1/approvals/" + approval.approval_id + "/reject", {method: "POST"});
+            await json("/v1/approvals/" + approval.approval_id + "/reject", {method: "POST", headers: {"content-type": "application/json"}, body: approvalDecisionBody()});
             await refresh();
           } catch (error) {
             resultBox.textContent = String(error);
