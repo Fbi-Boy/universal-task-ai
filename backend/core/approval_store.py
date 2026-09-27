@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from uuid import UUID
@@ -24,6 +25,8 @@ class ApprovalExecutionInfo:
     run_id: str
     plan_id: UUID
     state: ApprovalState
+    decided_by: str | None = None
+    decided_at: str | None = None
 
 
 class ApprovalStore:
@@ -59,7 +62,24 @@ class ApprovalStore:
             )
             """
         )
+        self._ensure_decision_columns()
         self._conn.commit()
+
+    def _ensure_decision_columns(self) -> None:
+        columns = {str(row[1]) for row in self._conn.execute("PRAGMA table_info(approvals)").fetchall()}
+        if "decided_by" not in columns:
+            self._conn.execute("ALTER TABLE approvals ADD COLUMN decided_by TEXT")
+        if "decided_at" not in columns:
+            self._conn.execute("ALTER TABLE approvals ADD COLUMN decided_at TEXT")
+
+    @staticmethod
+    def _validate_actor(actor_id: str) -> str:
+        actor = actor_id.strip()
+        if not actor:
+            raise ValueError("actor_id must not be empty")
+        if len(actor) > 128:
+            raise ValueError("actor_id must be at most 128 characters")
+        return actor
 
     def create(self, task_id: UUID, action: str) -> ApprovalRequest:
         request = self._machine.request(task_id, action)
@@ -131,7 +151,7 @@ class ApprovalStore:
         with self._lock:
             row = self._conn.execute(
                 """
-                SELECT a.approval_id,a.task_id,a.state,e.run_id,e.plan_id
+                SELECT a.approval_id,a.task_id,a.state,e.run_id,e.plan_id,a.decided_by,a.decided_at
                 FROM approvals a
                 JOIN approval_executions e ON e.approval_id=a.approval_id
                 WHERE a.approval_id=?
@@ -146,9 +166,18 @@ class ApprovalStore:
             run_id=str(row[3]),
             plan_id=UUID(str(row[4])),
             state=ApprovalState(str(row[2])),
+            decided_by=str(row[5]) if row[5] is not None else None,
+            decided_at=str(row[6]) if row[6] is not None else None,
         )
 
-    def approve(self, approval_id: UUID) -> ApprovalRequest:
+    def approve(self, approval_id: UUID, actor_id: str) -> ApprovalRequest:
+        return self._decide(approval_id, actor_id, approved=True)
+
+    def reject(self, approval_id: UUID, actor_id: str) -> ApprovalRequest:
+        return self._decide(approval_id, actor_id, approved=False)
+
+    def _decide(self, approval_id: UUID, actor_id: str, *, approved: bool) -> ApprovalRequest:
+        actor = self._validate_actor(actor_id)
         with self._lock:
             row = self._conn.execute(
                 "SELECT approval_id,task_id,action,state FROM approvals WHERE approval_id=?",
@@ -157,37 +186,17 @@ class ApprovalStore:
             if row is None:
                 raise KeyError("approval not found")
             current = self._request_from_row(row)
-            updated = self._machine.approve(current)
+            updated = self._machine.approve(current) if approved else self._machine.reject(current)
+            decided_at = datetime.now(timezone.utc).isoformat()
             cursor = self._conn.execute(
-                "UPDATE approvals SET state=? WHERE approval_id=? AND state=?",
-                (updated.state.value, str(approval_id), ApprovalState.PENDING.value),
+                "UPDATE approvals SET state=?, decided_by=?, decided_at=? WHERE approval_id=? AND state=?",
+                (updated.state.value, actor, decided_at, str(approval_id), ApprovalState.PENDING.value),
             )
             if cursor.rowcount != 1:
                 self._conn.rollback()
                 raise ValueError("approval state changed concurrently")
             self._conn.commit()
             return updated
-
-    def reject(self, approval_id: UUID) -> ApprovalRequest:
-        with self._lock:
-            row = self._conn.execute(
-                "SELECT approval_id,task_id,action,state FROM approvals WHERE approval_id=?",
-                (str(approval_id),),
-            ).fetchone()
-            if row is None:
-                raise KeyError("approval not found")
-            current = self._request_from_row(row)
-            updated = self._machine.reject(current)
-            cursor = self._conn.execute(
-                "UPDATE approvals SET state=? WHERE approval_id=? AND state=?",
-                (updated.state.value, str(approval_id), ApprovalState.PENDING.value),
-            )
-            if cursor.rowcount != 1:
-                self._conn.rollback()
-                raise ValueError("approval state changed concurrently")
-            self._conn.commit()
-            return updated
-
     def consume_execution(self, approval_id: UUID) -> ApprovalExecution:
         """Atomically consume an approved execution; repeated resume is rejected."""
         with self._lock:
