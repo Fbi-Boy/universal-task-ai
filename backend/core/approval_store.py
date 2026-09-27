@@ -215,8 +215,8 @@ class ApprovalStore:
                 raise ValueError("approval state changed concurrently")
             self._conn.commit()
             return updated
-    def consume_execution(self, approval_id: UUID) -> ApprovalExecution:
-        """Atomically consume an approved execution; repeated resume is rejected."""
+    def consume_execution(self, approval_id: UUID, *, expected_contract_hash: str, expected_plan_hash: str) -> ApprovalExecution:
+        """Atomically consume an approved execution after manifest integrity checks."""
         with self._lock:
             row = self._conn.execute(
                 """
@@ -234,6 +234,10 @@ class ApprovalStore:
             request = self._request_from_row(row[:4])
             if request.state is not ApprovalState.APPROVED:
                 raise ValueError("approval is not approved or was already consumed")
+            if str(row[7] or "") != expected_contract_hash:
+                raise ValueError("approval execution contract manifest has changed")
+            if str(row[8] or "") != expected_plan_hash:
+                raise ValueError("approval execution plan manifest has changed")
 
             updated = self._machine.consume(request)
             cursor = self._conn.execute(
