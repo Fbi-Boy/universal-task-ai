@@ -34,3 +34,7 @@ A passing preflight is necessary but not sufficient for deployment. The protecte
 ## Security rule
 
 Never replace a digest with a mutable tag in production. Never treat a successful rehearsal as proof that a real production target was deployed.
+
+
+## Browser approval flow
+The web UI requires an explicit approval actor ID and sends it as the bounded `actor_id` request field for both approve and reject decisions. The actor identifier is stored only in browser session storage and is not a capability grant.
