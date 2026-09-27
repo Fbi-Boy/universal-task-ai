@@ -48,6 +48,7 @@ class SQLiteAuditSink(AuditSink):
         self._conn.close()
 
 
+
 class InMemoryAuditSink(AuditSink):
     """Test-friendly audit sink with the same append contract."""
 
