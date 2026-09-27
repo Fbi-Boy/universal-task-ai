@@ -14,6 +14,11 @@ class ApprovalCreate(BaseModel):
     action: str = Field(min_length=1, max_length=2_000)
 
 
+class ApprovalDecisionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    actor_id: str = Field(min_length=1, max_length=128)
+
+
 class ApprovalResumeRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     run_id: str = Field(min_length=1, max_length=128)
@@ -74,18 +79,18 @@ def create_router(store: ApprovalStore) -> APIRouter:
         )
 
     @router.post("/{approval_id}/approve")
-    def approve(approval_id: UUID):
+    def approve(approval_id: UUID, request: ApprovalDecisionRequest):
         try:
-            return store.approve(approval_id)
+            return store.approve(approval_id, request.actor_id)
         except KeyError:
             raise HTTPException(status_code=404, detail="approval not found")
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     @router.post("/{approval_id}/reject")
-    def reject(approval_id: UUID):
+    def reject(approval_id: UUID, request: ApprovalDecisionRequest):
         try:
-            return store.reject(approval_id)
+            return store.reject(approval_id, request.actor_id)
         except KeyError:
             raise HTTPException(status_code=404, detail="approval not found")
         except ValueError as exc:
@@ -142,18 +147,18 @@ def get_approval(approval_id: UUID):
     return approval
 
 
-def approve(approval_id: UUID):
+def approve(approval_id: UUID, actor_id: str):
     try:
-        return _default_router_store.approve(approval_id)
+        return _default_router_store.approve(approval_id, actor_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="approval not found")
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
-def reject(approval_id: UUID):
+def reject(approval_id: UUID, actor_id: str):
     try:
-        return _default_router_store.reject(approval_id)
+        return _default_router_store.reject(approval_id, actor_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="approval not found")
     except ValueError as exc:

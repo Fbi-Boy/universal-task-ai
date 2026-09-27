@@ -141,7 +141,7 @@ def test_approved_tool_executes_once_and_duplicate_resume_is_rejected(tmp_path: 
         plan,
         tool_invocations=(ToolInvocation(tool_name="echo", arguments={"value": "approved"}),),
     )
-    approvals.approve(UUID(waiting.approval_id))
+    approvals.approve(UUID(waiting.approval_id), "test-user")
     resumed = executor.resume_approved(
         contract,
         plan,
