@@ -85,6 +85,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Bounded model-assisted task understanding with strict output validation
 - [x] Loopback-only local Ollama model provider
 - [x] Secure local setup launcher and .env preflight
+- [x] Durable approval decisions with bounded actor metadata
 - [ ] Production deployment
 
 ## Phase 7 — Production Hardening

@@ -9,10 +9,10 @@ from backend.core.tool_invocation import ToolInvocation
 def test_reject_only_updates_pending_state(tmp_path):
     store = ApprovalStore(tmp_path / "approvals.sqlite3")
     request = store.create(uuid4(), "publish")
-    rejected = store.reject(request.approval_id)
+    rejected = store.reject(request.approval_id, "test-operator")
     assert rejected.state.value == "rejected"
     with pytest.raises(ValueError, match="pending approvals"):
-        store.reject(request.approval_id)
+        store.reject(request.approval_id, "test-operator")
 
 
 def test_approval_execution_rejects_secret_arguments(tmp_path):
@@ -38,7 +38,7 @@ def test_approval_execution_consumption_is_atomic(tmp_path):
         (ToolInvocation(tool_name="echo", arguments={"value": "ok"}),),
         action="execute tool",
     )
-    store.approve(created.request.approval_id)
+    store.approve(created.request.approval_id, "test-operator")
     consumed = store.consume_execution(created.request.approval_id)
     assert consumed.run_id == "run-1"
     with pytest.raises(ValueError, match="not approved or was already consumed"):
