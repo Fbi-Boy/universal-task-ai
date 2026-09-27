@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from scripts import check_local
+
 
 def test_local_launchers_bind_loopback_only():
     sh = Path("scripts/run-local.sh").read_text()
@@ -22,3 +24,27 @@ def test_local_preflight_does_not_print_secret_values():
     assert "API_KEY" not in script
     assert "SECRET" not in script
     assert "PASSWORD" not in script
+
+
+def test_local_preflight_reads_dotenv_without_printing_values(tmp_path, monkeypatch):
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "UTA_BROWSER_ENABLED=true\n"
+        "UTA_BROWSER_ALLOWED_HOSTS=example.com\n"
+        "UTA_SANDBOX_IMAGE=registry.example/uta@sha256:" + "a" * 64 + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    assert check_local.main() == 0
+
+
+def test_local_preflight_process_environment_overrides_dotenv(tmp_path, monkeypatch):
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "UTA_BROWSER_ENABLED=true\n"
+        "UTA_BROWSER_ALLOWED_HOSTS=example.com\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("UTA_BROWSER_ENABLED", "false")
+    assert check_local.main() == 0
