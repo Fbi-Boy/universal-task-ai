@@ -23,9 +23,9 @@ The launcher validates `.env` before starting the API and binds Uvicorn to `127.
 
 ## Capability policy
 
-- Browser execution is disabled unless `UTA_BROWSER_ENABLED=true` and a narrow `UTA_BROWSER_ALLOWED_HOSTS` allowlist is configured.
-- Local filesystem access requires explicit `UTA_LOCAL_ROOTS` roots and remains read-only.
-- Python sandbox execution is disabled unless explicitly enabled and requires an immutable `@sha256:<64-hex-digest>` image reference.
+- Browser execution is disabled by default unless `UTA_BROWSER_ENABLED=true` and a narrow `UTA_BROWSER_ALLOWED_HOSTS` allowlist is configured.
+- Local filesystem access is disabled by default; when enabled it requires explicit `UTA_LOCAL_ROOTS` roots and remains read-only.
+- Python sandbox execution is disabled by default unless explicitly enabled and requires an immutable image digest such as `@sha256:<64-hex-digest>`.
 - High-risk browser and tool actions remain approval-gated by the runtime policy.
 
 ## Verification
