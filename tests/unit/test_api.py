@@ -2,7 +2,11 @@ from backend.api.main import AnalyzeRequest, analyze_task, health
 
 
 def test_health() -> None:
-    assert health() == {"status": "ok"}
+    assert health() == {
+        "status": "ok",
+        "version": "0.1.0",
+        "build_sha": "unknown",
+    }
 
 
 def test_analyze_task() -> None:
