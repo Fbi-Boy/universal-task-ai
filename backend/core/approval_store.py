@@ -289,3 +289,8 @@ class ApprovalStore:
             str(row[2]),
             ApprovalState(str(row[3])),
         )
+
+    def ping(self) -> None:
+        """Verify that the durable approval database is responsive."""
+        with self._lock:
+            self._conn.execute("SELECT 1").fetchone()
