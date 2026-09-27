@@ -83,6 +83,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Injectable application runtime for integration testing
 - [x] Authenticated web task execution and runtime tool catalog
 - [x] Bounded model-assisted task understanding with strict output validation
+- [x] Loopback-only local Ollama model provider
 - [ ] Production deployment
 
 ## Phase 7 — Production Hardening
