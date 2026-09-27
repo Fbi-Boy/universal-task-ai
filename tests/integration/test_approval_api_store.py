@@ -1,10 +1,10 @@
 from pathlib import Path
 from uuid import UUID
 
-from backend.api.approval import create_router
+from backend.api.approval import ApprovalDecisionRequest, create_router
 from backend.api.main import build_task_service, create_app
 from backend.core.approval_store import ApprovalStore
-from backend.core.tool_invocation import ToolInvocation\nfrom backend.api.approval import ApprovalDecisionRequest
+from backend.core.tool_invocation import ToolInvocation
 
 
 def _endpoint(router, path: str):
