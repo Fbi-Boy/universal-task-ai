@@ -73,7 +73,7 @@ def test_resume_preserves_durable_manifest_and_records_actor(tmp_path: Path) -> 
     assert "plan" in state.payload
     assert waiting.approval_id is not None
 
-    approvals.approve(UUID(waiting.approval_id))
+    approvals.approve(UUID(waiting.approval_id), "human-operator")
     result = executor.resume_approved_from_run(
         run_id=waiting.run_id,
         approval_id=waiting.approval_id,
