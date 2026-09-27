@@ -2,12 +2,13 @@ from pathlib import Path
 import os
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.api.approval import create_router as create_approval_router
 from backend.api.auth import require_configured_api_key
 from backend.api.events import router as events_router
+from backend.api.hardening import RequestBodyLimitMiddleware, RequestContextMiddleware, request_id_from_request
 from backend.api.runs import router as runs_router
 from backend.api.settings import router as settings_router
 from backend.core.analyzer import TaskAnalysis
@@ -112,6 +113,13 @@ def health() -> dict[str, str]:
     return {"status": "ok", "version": build_version(), "build_sha": build_sha()}
 
 
+def readiness(http_request: Request) -> dict[str, str]:
+    service = getattr(http_request.app.state, "task_service", None)
+    if service is None or service.approval_store is None:
+        raise HTTPException(status_code=503, detail="runtime is not ready")
+    return {"status": "ready", "version": build_version(), "build_sha": build_sha()}
+
+
 def list_tools(http_request: Request) -> list[ToolCatalogItem]:
     service = http_request.app.state.task_service
     return [ToolCatalogItem(**metadata.__dict__) for metadata in service.tool_catalog]
@@ -160,6 +168,16 @@ def run_task(request: TaskRequest) -> TaskResponse:
 
 def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application = FastAPI(title="Universal Task AI", version=build_version())
+    application.add_middleware(RequestBodyLimitMiddleware)
+    application.add_middleware(RequestContextMiddleware)
+
+    @application.exception_handler(Exception)
+    async def unhandled_exception(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            {"detail": "internal server error", "request_id": request_id_from_request(request)},
+            status_code=500,
+            headers={"cache-control": "no-store"},
+        )
 
     service = task_service or build_task_service(
         Path(os.environ.get("UTA_RUN_STATE_DB", ".universal_task_ai_runs.sqlite3")),
@@ -190,6 +208,7 @@ def create_app(*, task_service: TaskService | None = None) -> FastAPI:
     application.add_api_route("/ui.js", web_js, include_in_schema=False)
     application.add_api_route("/ui.css", web_css, include_in_schema=False)
     application.add_api_route("/health", health)
+    application.add_api_route("/ready", readiness)
     application.add_api_route(
         "/v1/tools",
         list_tools,
