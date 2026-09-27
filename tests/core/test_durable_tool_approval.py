@@ -71,7 +71,7 @@ def test_approval_execution_persists_and_can_be_approved_once(tmp_path: Path):
         (invocation,),
         action="execute echo",
     )
-    first.approve(created.request.approval_id)
+    first.approve(created.request.approval_id, "test-operator")
 
     second = ApprovalStore(tmp_path / "approvals.sqlite3")
     consumed = second.consume_execution(created.request.approval_id)
@@ -125,7 +125,7 @@ def test_executor_waits_then_resumes_approved_tool_once(tmp_path: Path):
     assert waiting.approval_id
     assert echo.calls == 0
 
-    approvals.approve(UUID(waiting.approval_id))
+    approvals.approve(UUID(waiting.approval_id), "test-operator")
 
     resumed = executor.resume_approved(
         contract,
