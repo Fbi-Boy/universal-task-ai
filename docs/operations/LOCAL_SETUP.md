@@ -16,7 +16,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env
-./scripts/run-local.sh
+bash scripts/run-local.sh
 ```
 
 ## Browser capability
