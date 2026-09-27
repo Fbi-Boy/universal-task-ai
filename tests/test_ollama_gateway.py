@@ -54,3 +54,27 @@ def test_ollama_gateway_rejects_nonzero_temperature() -> None:
                 temperature=0.5,
             )
         )
+
+
+def test_ollama_gateway_rejects_non_default_port_and_path() -> None:
+    with pytest.raises(ValueError):
+        OllamaModelGateway(model="local", base_url="http://127.0.0.1:12345")
+    with pytest.raises(ValueError):
+        OllamaModelGateway(model="local", base_url="http://127.0.0.1:11434/other")
+
+
+def test_ollama_redirect_handler_rejects_redirects() -> None:
+    from urllib.error import HTTPError
+    from urllib.request import Request
+
+    handler = __import__("backend.core.ollama_gateway", fromlist=["_NoRedirectHandler"])._NoRedirectHandler()
+    request = Request("http://127.0.0.1:11434/api/chat")
+    with pytest.raises(HTTPError):
+        handler.redirect_request(
+            request,
+            None,
+            302,
+            "Found",
+            {},
+            "http://127.0.0.1:11434/api/chat",
+        )
