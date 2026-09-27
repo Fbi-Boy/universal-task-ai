@@ -11,6 +11,9 @@ from backend.api.events import router as events_router
 from backend.api.runs import router as runs_router
 from backend.api.settings import router as settings_router
 from backend.core.analyzer import TaskAnalysis
+from backend.core.model_task_analyzer import ModelTaskAnalyzer
+from backend.core.openai_gateway import OpenAIModelGateway
+from backend.core.secret_provider import SecretProvider
 from backend.core.approval_store import ApprovalStore
 from backend.core.audit_sink import SQLiteAuditSink
 from backend.core.runtime_tools import build_runtime_tool_boundary
@@ -61,8 +64,15 @@ def build_task_service(
     audit_path: Path,
 ) -> TaskService:
     approval_store = ApprovalStore(approval_path)
+    intake = TaskIntakeService()
+    if os.environ.get("UTA_MODEL_ENABLED", "").lower() == "true":
+        model_name = os.environ.get("UTA_MODEL", "").strip()
+        if not model_name:
+            raise ValueError("UTA_MODEL is required when model assistance is enabled")
+        gateway = OpenAIModelGateway(SecretProvider(), model=model_name)
+        intake = TaskIntakeService(ModelTaskAnalyzer(gateway))
     return TaskService(
-        TaskIntakeService(),
+        intake,
         TaskPlanner(),
         TaskExecutor(
             SQLiteRunStateStore(run_state_path),
