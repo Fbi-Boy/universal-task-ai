@@ -115,9 +115,13 @@ def health() -> dict[str, str]:
 
 def readiness(http_request: Request) -> dict[str, str]:
     service = getattr(http_request.app.state, "task_service", None)
-    if service is None or service.approval_store is None:
+    if service is None:
         raise HTTPException(status_code=503, detail="runtime is not ready")
-    return {"status": "ready", "version": build_version(), "build_sha": build_sha()}
+    try:
+        checks = service.readiness()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="runtime dependencies are not ready") from exc
+    return {"status": "ready", "version": build_version(), "build_sha": build_sha(), **checks}
 
 
 def list_tools(http_request: Request) -> list[ToolCatalogItem]:

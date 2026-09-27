@@ -48,6 +48,17 @@ class TaskExecutor:
     def approval_store(self) -> ApprovalStore | None:
         return self._approvals
 
+    def readiness(self) -> dict[str, str]:
+        """Probe durable dependencies without executing a task or tool."""
+        self._store.ping()
+        if self._approvals is None:
+            raise RuntimeError("approval store is not configured")
+        self._approvals.ping()
+        if self._audit is None or not hasattr(self._audit, "ping"):
+            raise RuntimeError("audit sink is not configured")
+        self._audit.ping()
+        return {"run_state": "ok", "approval_store": "ok", "audit_sink": "ok"}
+
     def _audit_event(
         self,
         event_type: str,

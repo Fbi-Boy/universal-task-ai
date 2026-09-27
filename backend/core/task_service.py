@@ -31,6 +31,10 @@ class TaskService:
         """Expose the executor's approval store for API composition."""
         return self._executor.approval_store
 
+    def readiness(self) -> dict[str, str]:
+        """Probe durable runtime dependencies without executing user work."""
+        return self._executor.readiness()
+
     def run(
         self,
         task_text: str,
