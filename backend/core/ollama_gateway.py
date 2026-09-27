@@ -1,12 +1,19 @@
 import json
 from collections.abc import Callable
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from backend.core.model_gateway import ModelGateway, ModelRequest, ModelResponse
 
 _MAX_RESPONSE_BYTES = 1_048_576
 _ALLOWED_HOSTS = {"localhost", "127.0.0.1", "::1"}
+_OLLAMA_PORT = 11434
+
+
+class _NoRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise HTTPError(req.full_url, code, "redirects are disabled", headers, fp)
 
 
 class OllamaModelGateway(ModelGateway):
@@ -18,21 +25,25 @@ class OllamaModelGateway(ModelGateway):
         model: str,
         base_url: str = "http://127.0.0.1:11434",
         timeout_seconds: float = 30.0,
-        opener: Callable[..., object] = urlopen,
+        opener: Callable[..., object] | None = None,
     ) -> None:
         if not model.strip() or len(model) > 128:
             raise ValueError("model must be 1-128 characters")
         parsed = urlparse(base_url)
         if parsed.scheme != "http" or parsed.hostname not in _ALLOWED_HOSTS:
             raise ValueError("Ollama gateway accepts only HTTP loopback endpoints")
+        if parsed.port not in (None, _OLLAMA_PORT):
+            raise ValueError("Ollama gateway accepts only the default Ollama port")
+        if parsed.path not in ("", "/"):
+            raise ValueError("Ollama gateway accepts only the base loopback path")
         if parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError("Ollama endpoint must not contain credentials or query data")
         if timeout_seconds <= 0 or timeout_seconds > 120:
             raise ValueError("timeout must be between 0 and 120 seconds")
-        self._url = base_url.rstrip("/") + "/api/chat"
+        self._url = f"http://{parsed.hostname}:{_OLLAMA_PORT}/api/chat"
         self._model = model.strip()
         self._timeout = timeout_seconds
-        self._opener = opener
+        self._opener = opener or build_opener(_NoRedirectHandler())
 
     def generate(self, request: ModelRequest) -> ModelResponse:
         request.validate_bounds()
@@ -54,7 +65,7 @@ class OllamaModelGateway(ModelGateway):
             headers={"Content-Type": "application/json", "Accept": "application/json"},
         )
         try:
-            with self._opener(http_request, timeout=self._timeout) as response:
+            with self._opener.open(http_request, timeout=self._timeout) if hasattr(self._opener, "open") else self._opener(http_request, timeout=self._timeout) as response:
                 raw = response.read(_MAX_RESPONSE_BYTES + 1)
         except Exception as exc:
             raise RuntimeError("local Ollama request failed") from exc
