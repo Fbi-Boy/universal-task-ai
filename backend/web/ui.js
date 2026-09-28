@@ -204,8 +204,10 @@ document.querySelector("#run").onclick = async () => {
         auto_route_tools: !tool.value
       })
     });
-    statusBox.textContent = response.status;
-    resultBox.textContent = response.output || "";
+    statusBox.textContent = response.status + " · route: " + response.routing_mode;
+    const routedTools = Array.isArray(response.routed_tools) ? response.routed_tools : [];
+    const routingSummary = routedTools.length ? "Tools: " + routedTools.join(", ") + "\\n\\n" : "No tools invoked.\\n\\n";
+    resultBox.textContent = routingSummary + (response.output || "");
     document.querySelector("#run-id").value = response.run_id;
     await refresh();
   } catch (error) {
