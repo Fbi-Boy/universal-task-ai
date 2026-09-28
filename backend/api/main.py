@@ -141,6 +141,12 @@ def _run_task_endpoint(request: TaskRequest, http_request: Request) -> TaskRespo
             tool_invocations=tuple(request.tool_invocations),
             approval_required=request.approval_required,
         )
+    except PermissionError as exc:
+        # Policy details may contain internal capability names; do not expose them.
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="tool execution denied by runtime policy",
+        ) from exc
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return TaskResponse(
@@ -159,6 +165,11 @@ def run_task(request: TaskRequest) -> TaskResponse:
             tool_invocations=tuple(request.tool_invocations),
             approval_required=request.approval_required,
         )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="tool execution denied by runtime policy",
+        ) from exc
     except (RuntimeError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return TaskResponse(
