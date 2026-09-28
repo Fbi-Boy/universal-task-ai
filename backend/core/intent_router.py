@@ -87,6 +87,8 @@ def _is_safe_relative_path(path: str) -> bool:
         return False
     if any(ord(character) < 32 for character in path):
         return False
+    if re.search(r"[/\\]{2,}", path):
+        return False
     segments = re.split(r"[/\\]+", path)
     return all(segment not in {"", ".", ".."} for segment in segments)
 
