@@ -25,6 +25,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push immutable commit image
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -32,3 +33,13 @@ jobs:
           tags: ghcr.io/fbi-boy/universal-task-ai:${{ github.sha }}
           provenance: true
           sbom: true
+      - name: Publish immutable image digest
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Build action did not return a valid image digest." >&2
+            exit 1
+          fi
+          echo "Immutable release image: ghcr.io/fbi-boy/universal-task-ai@${IMAGE_DIGEST}" >> "$GITHUB_STEP_SUMMARY"

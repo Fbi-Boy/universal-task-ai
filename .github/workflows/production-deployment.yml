@@ -3,8 +3,8 @@ name: Production Deployment
 on:
   workflow_dispatch:
     inputs:
-      image_tag:
-        description: "Container tag to deploy"
+      image_digest:
+        description: "Immutable image digest (sha256:<64 lowercase hex characters>)"
         required: true
         type: string
 
@@ -22,7 +22,8 @@ jobs:
     environment: production
     timeout-minutes: 20
     env:
-      IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.image_tag }}
+      IMAGE_DIGEST: ${{ inputs.image_digest }}
+      IMAGE: ghcr.io/fbi-boy/universal-task-ai@${{ inputs.image_digest }}
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
@@ -36,6 +37,10 @@ jobs:
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
+          if [[ ! "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "image_digest must be sha256 followed by 64 lowercase hexadecimal characters." >&2
+            exit 2
+          fi
           test -n "${DEPLOY_HOST}"
           test -n "${DEPLOY_USER}"
           test -n "${DEPLOY_PATH}"
@@ -53,4 +58,5 @@ jobs:
       - name: Verify deployment
         run: |
           set -euo pipefail
-          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}"             "cd '${DEPLOY_PATH}' && docker compose -f docker-compose.prod.yml ps --status running"
+          printf -v remote_status 'cd -- %q && docker compose -f docker-compose.prod.yml ps --status running' "$DEPLOY_PATH"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_status"
