@@ -54,7 +54,7 @@ In another terminal, run:
 .\.venv\Scripts\python.exe scripts\smoke_local.py
 ```
 
-Set `UNIVERSAL_TASK_AI_API_KEY` in that terminal's environment first, or run the smoke test after setting it in the environment used by your shell. A successful local check does not mean the application has been deployed to production.
+Set `UNIVERSAL_TASK_AI_API_KEY` in that terminal's environment first, or run the smoke test after setting it in the environment used by your shell. The smoke test refuses any `UTA_SMOKE_BASE_URL` that is not an HTTP(S) loopback URL, so it cannot send the API key to a remote host by configuration mistake. A successful local check does not mean the application has been deployed to production.
 
 ## Troubleshooting
 
