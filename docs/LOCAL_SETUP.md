@@ -46,6 +46,10 @@ The launcher binds only to loopback and stops if preflight fails.
 - Browser automation remains disabled unless `UTA_BROWSER_ENABLED=true` and `UTA_BROWSER_ALLOWED_HOSTS` is configured with only the hosts you need.
 - Python execution remains disabled unless explicitly enabled with a sandbox image pinned by immutable `@sha256:` digest.
 
+## Safe automatic intent routing
+
+The default **Auto — safe intents only** mode recognizes a narrow set of explicit arithmetic prompts such as `Hitung: 12 * (3 + 1)` and `Calculate 2 ** 3`. The expression must fit a strict character and length allowlist and is evaluated by the existing AST-based calculator. Other tasks stay on the safe baseline unless you explicitly choose a registered tool. This feature does not enable browser, filesystem, shell, or process access.
+
 ## Verify
 
 In another terminal, run:

@@ -93,6 +93,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Windows launcher stops when preflight fails
 - [x] Local setup quickstart documents safe API-key generation and capability opt-ins
 - [x] Non-destructive local .env generator with random key, template validation, and POSIX 0600 permissions
+- [x] Narrow deterministic intent routing for explicit arithmetic only; no inferred browser/filesystem/process authority
 - [x] Durable approval decisions with bounded actor metadata
 - [x] Release readiness checks and bounded local smoke test
 - [x] Local smoke test refuses non-loopback destinations before transmitting API credentials

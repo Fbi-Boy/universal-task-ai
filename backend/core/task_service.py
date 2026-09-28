@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from backend.core.approval_store import ApprovalStore
 from backend.core.task_executor import ExecutionResult, TaskExecutor
+from backend.core.intent_router import SafeCalculatorIntentRouter
 from backend.core.task_intake import TaskIntakeService
 from backend.core.task_planner import TaskPlanner
 from backend.core.tool_invocation import ToolInvocation
@@ -16,10 +17,17 @@ class TaskRunResult:
 class TaskService:
     """Application service connecting intake, planning, execution, and resume."""
 
-    def __init__(self, intake: TaskIntakeService, planner: TaskPlanner, executor: TaskExecutor) -> None:
+    def __init__(
+        self,
+        intake: TaskIntakeService,
+        planner: TaskPlanner,
+        executor: TaskExecutor,
+        intent_router: SafeCalculatorIntentRouter | None = None,
+    ) -> None:
         self._intake = intake
         self._planner = planner
         self._executor = executor
+        self._intent_router = intent_router or SafeCalculatorIntentRouter()
 
     @property
     def tool_catalog(self):
@@ -41,8 +49,13 @@ class TaskService:
         *,
         tool_invocations: tuple[ToolInvocation, ...] = (),
         approval_required: bool = False,
+        auto_route_tools: bool = True,
     ) -> TaskRunResult:
         intake = self._intake.intake(task_text)
+        if auto_route_tools and not tool_invocations:
+            suggested = self._intent_router.route(task_text)
+            if suggested is not None:
+                tool_invocations = (suggested,)
         if len(tool_invocations) > 8:
             raise ValueError("at most 8 tool invocations are allowed per task")
         for invocation in tool_invocations:
