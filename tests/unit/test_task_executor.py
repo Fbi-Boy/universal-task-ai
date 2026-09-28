@@ -9,13 +9,13 @@ from backend.core.state_store import SQLiteRunStateStore
 from backend.core.task_executor import TaskExecutor
 
 
-def test_executor_persists_success(tmp_path):
+def test_executor_persists_needs_tool_for_unsupported_task(tmp_path):
     store = SQLiteRunStateStore(tmp_path / "runs.sqlite3")
     contract = TaskContract(goal="Create a report")
     result = TaskExecutor(store).execute(contract, TaskPlanner().plan(contract))
-    assert result.status.value == "succeeded"
+    assert result.status.value == "needs_tool"
     state = store.get(result.run_id)
-    assert state is not None and state.status == "succeeded"
+    assert state is not None and state.status == "needs_tool"
     assert json.loads(state.payload)["task_id"] == str(contract.task_id)
 
 
