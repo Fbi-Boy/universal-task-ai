@@ -16,7 +16,8 @@ This checklist is an operator gate for the first real deployment. A successful l
 
 - [ ] A release image exists in GHCR for a reviewed commit.
 - [ ] The exact image digest (`sha256:...`) is recorded; do not deploy mutable tags such as `latest`.
-- [ ] The deployment input is confirmed to resolve to the intended immutable image. If the workflow accepts only a tag, verify that the tag is the full commit SHA and record the resulting digest before rollout.
+- [ ] The Production Deployment workflow receives only the image digest and deploys by `ghcr.io/fbi-boy/universal-task-ai@sha256:...`.
+- [ ] The digest in the workflow input matches the digest printed by the Container Release workflow for the reviewed commit.
 - [ ] Required runtime secrets are provisioned through the approved secret mechanism and are not stored in the repository, image, command line, or logs.
 - [ ] Public API authentication is enabled and the initial API key is distributed through a secure channel.
 - [ ] External search/network access is configured only if required; egress restrictions remain enabled.
@@ -34,20 +35,20 @@ This checklist is an operator gate for the first real deployment. A successful l
 
 ## 4. Deploy and verify
 
-- [ ] Trigger the protected **Production Deployment** workflow with the reviewed release identifier.
+- [ ] Trigger the protected **Production Deployment** workflow with the reviewed image digest.
 - [ ] Confirm the deployment job succeeds; do not paste secrets or raw logs containing sensitive values into tickets or chat.
 - [ ] Confirm Compose services are running and restart counts are stable.
 - [ ] Verify `/health` returns healthy and `/ready` reports durable dependencies ready.
 - [ ] Verify unauthenticated requests to protected API endpoints are rejected.
 - [ ] Verify an authenticated, low-risk smoke task succeeds without enabling filesystem, browser, process, or network capabilities unnecessarily.
-- [ ] Verify the expected release identity matches the deployed commit/image.
+- [ ] Verify the expected release identity matches the deployed commit/image digest.
 - [ ] Verify container hardening (non-root user, read-only root filesystem, not privileged, dropped capabilities, resource limits, and immutable sandbox image digest where applicable).
 - [ ] Verify logs and audit events are produced without API keys, tokens, passwords, raw secret values, or raw approval invocation arguments.
 - [ ] Verify monitoring, alerts, disk capacity, and backup jobs are active.
 
 ## 5. Rollback and incident readiness
 
-- [ ] Rollback steps are documented and tested against the known-good immutable image.
+- [ ] Rollback steps are documented and tested against the known-good immutable image digest.
 - [ ] The operator knows how to stop new task intake while preserving audit evidence.
 - [ ] Rollback does not delete persistent volumes or approval/audit databases.
 - [ ] A failed readiness check, authentication regression, unexpected capability grant, secret exposure, or audit persistence failure triggers a stop-and-investigate decision.
