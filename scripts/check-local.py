@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 _ALLOWED_KEYS = {
+    "UNIVERSAL_TASK_AI_API_KEY",
     "UTA_BROWSER_ENABLED",
     "UTA_BROWSER_ALLOWED_HOSTS",
     "UTA_LOCAL_ROOTS",
@@ -9,6 +10,8 @@ _ALLOWED_KEYS = {
     "UTA_SANDBOX_IMAGE",
 }
 _MAX_ENV_FILE_BYTES = 64 * 1024
+_MIN_API_KEY_LENGTH = 32
+_PLACEHOLDER_KEYS = {"changeme", "change-me", "your-api-key", "replace-me"}
 
 
 def _load_env_file(path: Path) -> dict[str, str]:
@@ -41,10 +44,22 @@ def main() -> int:
         print(f"Invalid .env: {exc}")
         return 1
 
+    api_key = _setting(env_file, "UNIVERSAL_TASK_AI_API_KEY").strip()
+    if (
+        len(api_key) < _MIN_API_KEY_LENGTH
+        or api_key.lower() in _PLACEHOLDER_KEYS
+    ):
+        print(
+            "UNIVERSAL_TASK_AI_API_KEY must be configured with a random value "
+            "of at least 32 characters; generate one with Python secrets."
+        )
+        return 4
+
     browser = _setting(env_file, "UTA_BROWSER_ENABLED", "false").lower() == "true"
     sandbox = _setting(env_file, "UTA_PYTHON_SANDBOX_ENABLED", "false").lower() == "true"
     roots = bool(_setting(env_file, "UTA_LOCAL_ROOTS").strip())
 
+    print("api_key_configured=true")
     print(f"browser_enabled={browser}")
     print(f"local_roots_configured={roots}")
     print(f"python_sandbox_enabled={sandbox}")
