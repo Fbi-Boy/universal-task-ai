@@ -96,9 +96,9 @@ def test_preflight_bounds_env_file(tmp_path, monkeypatch):
     assert check_local.main() == 1
 
 
-def test_setup_generator_creates_key_without_printing_it(tmp_path, capsys):
+def test_setup_generator_creates_key_without_printing_it(tmp_path, monkeypatch, capsys):
     import os
-    from scripts.setup_local import API_KEY_NAME, create_local_env
+    from scripts.setup_local import API_KEY_NAME, main
 
     root = tmp_path / "project"
     root.mkdir()
@@ -106,7 +106,8 @@ def test_setup_generator_creates_key_without_printing_it(tmp_path, capsys):
         f"# template\n{API_KEY_NAME}=\nUTA_BROWSER_ENABLED=false\n",
         encoding="utf-8",
     )
-    create_local_env(root)
+    monkeypatch.chdir(root)
+    assert main() == 0
     env_text = (root / ".env").read_text(encoding="utf-8")
     key = next(line.partition("=")[2] for line in env_text.splitlines()
                if line.startswith(f"{API_KEY_NAME}="))
