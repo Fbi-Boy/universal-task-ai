@@ -1,8 +1,5 @@
-from backend.core.analyzer import TaskAnalysis
 from backend.core.intent_router import SafeCalculatorIntentRouter
-from backend.core.planner import ExecutionPlan
 from backend.core.run_lifecycle import RunStatus
-from backend.core.schemas import TaskContract
 from backend.core.task_executor import ExecutionResult
 from backend.core.task_intake import TaskIntakeService
 from backend.core.task_planner import TaskPlanner
@@ -16,6 +13,7 @@ def test_routes_explicit_indonesian_and_english_arithmetic():
     cases = [
         ("Hitung: 12 * (3 + 1)", "12 * (3 + 1)"),
         ("Calculate 2 ** 3", "2 ** 3"),
+        ("Calculate -5 + 2", "-5 + 2"),
         ("Berapa hasil dari 14 / 2?", "14 / 2"),
         ("What is 9 - 4?", "9 - 4"),
     ]
