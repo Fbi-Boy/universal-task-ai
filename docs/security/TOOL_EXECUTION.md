@@ -5,7 +5,8 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 ## Required controls
 
 - Explicit ToolInvocation objects; arbitrary callable references are not accepted.
-- Tool arguments must be JSON-compatible even when constructed by internal Python callers.
+- Tool names and argument objects use strict types; argument trees must contain only plain built-in JSON values, even for internal Python callers.
+- Custom dict/list/scalar subclasses are rejected to prevent user-defined methods from running during validation.
 - Argument count, nesting depth, object-key length, scalar size, numeric range, and aggregate UTF-8 string bytes are bounded before execution.
 - Non-finite floating-point values, non-string object keys, arbitrary Python objects, and oversized integers are rejected.
 - Tool results are bounded at the runtime boundary (nested values, collection sizes, scalar size, and error length) before they enter task output or downstream stages.

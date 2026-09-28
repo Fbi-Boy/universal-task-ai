@@ -11,6 +11,11 @@ def test_tool_invocation_rejects_extra_fields() -> None:
         ToolInvocation(tool_name="x", arguments={}, approved=True)
 
 
+def test_tool_invocation_rejects_non_string_tool_name() -> None:
+    with pytest.raises(ValidationError):
+        ToolInvocation(tool_name=123, arguments={})
+
+
 def test_tool_invocation_bounds_top_level_keys() -> None:
     invocation = ToolInvocation(tool_name="x", arguments={str(i): i for i in range(33)})
     with pytest.raises(ValueError):
@@ -37,21 +42,25 @@ def test_tool_invocation_rejects_non_finite_numbers(value: float) -> None:
 
 def test_tool_invocation_rejects_non_json_python_objects() -> None:
     invocation = ToolInvocation(tool_name="x", arguments={"value": object()})
-    with pytest.raises(ValueError, match="JSON-compatible"):
+    with pytest.raises(ValueError, match="plain JSON-compatible"):
         invocation.validate_bounds()
 
 
 def test_tool_invocation_rejects_non_string_object_keys() -> None:
     invocation = ToolInvocation(tool_name="x", arguments={"nested": {1: "value"}})
-    with pytest.raises(ValueError, match="keys must be strings"):
+    with pytest.raises(ValueError, match="keys must be plain strings"):
         invocation.validate_bounds()
 
 
 def test_tool_invocation_bounds_aggregate_string_bytes() -> None:
     invocation = ToolInvocation(
         tool_name="x",
-        arguments={"a": "x" * (64 * 1024), "b": "y" * (64 * 1024),
-                   "c": "z" * (64 * 1024), "d": "q" * (64 * 1024)},
+        arguments={
+            "a": "x" * (64 * 1024),
+            "b": "y" * (64 * 1024),
+            "c": "z" * (64 * 1024),
+            "d": "q" * (64 * 1024),
+        },
     )
     with pytest.raises(ValueError, match="aggregate string size"):
         invocation.validate_bounds()
@@ -60,4 +69,22 @@ def test_tool_invocation_bounds_aggregate_string_bytes() -> None:
 def test_tool_invocation_rejects_huge_integer() -> None:
     invocation = ToolInvocation(tool_name="x", arguments={"value": 1 << 300})
     with pytest.raises(ValueError, match="integer"):
+        invocation.validate_bounds()
+
+
+def test_tool_invocation_rejects_custom_collection_subclasses() -> None:
+    class CustomDict(dict):
+        pass
+
+    invocation = ToolInvocation(tool_name="x", arguments={"nested": CustomDict(value="x")})
+    with pytest.raises(ValueError, match="plain JSON-compatible"):
+        invocation.validate_bounds()
+
+
+def test_tool_invocation_rejects_custom_scalar_subclasses() -> None:
+    class CustomString(str):
+        pass
+
+    invocation = ToolInvocation(tool_name="x", arguments={"value": CustomString("x")})
+    with pytest.raises(ValueError, match="plain JSON-compatible"):
         invocation.validate_bounds()
