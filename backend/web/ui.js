@@ -206,7 +206,7 @@ document.querySelector("#run").onclick = async () => {
     });
     statusBox.textContent = response.status + " · route: " + response.routing_mode;
     const routedTools = Array.isArray(response.routed_tools) ? response.routed_tools : [];
-    const routingSummary = routedTools.length ? "Tools: " + routedTools.join(", ") + "\\n\\n" : "No tools invoked.\\n\\n";
+    const routingSummary = routedTools.length ? "Tools: " + routedTools.join(", ") + "\n\n" : "No tools invoked.\\n\\n";
     resultBox.textContent = routingSummary + (response.output || "");
     document.querySelector("#run-id").value = response.run_id;
     await refresh();
