@@ -381,7 +381,7 @@ class TaskExecutor:
                 actor=actor_id or "orchestrator",
             )
             try:
-                result = self._tool_boundary.execute_authorized(authorized_tool, invocation.arguments)
+                result = self._tool_boundary.execute_authorized(authorized_tool, invocation.arguments, approved=approval_consumed)
             except Exception as exc:
                 self._audit_event(
                     "tool_finished",
