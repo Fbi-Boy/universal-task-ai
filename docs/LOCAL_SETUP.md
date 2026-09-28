@@ -9,11 +9,10 @@ From the repository root:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-Copy-Item .env.example .env
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+.\.venv\Scripts\python.exe scripts\setup_local.py
 ```
 
-Copy the generated random value into `UNIVERSAL_TASK_AI_API_KEY` in `.env`. Do not share it, commit it, paste it into task text, or place it in screenshots/logs. The key must contain at least 32 characters.
+The setup helper creates `.env` from the reviewed `.env.example` template and generates a fresh random `UNIVERSAL_TASK_AI_API_KEY`. It does not print the key and refuses to overwrite an existing `.env`. Keep the repository in a private user-owned directory because Windows file permissions inherit from the parent directory.
 
 Then run:
 
@@ -30,11 +29,16 @@ Open `http://127.0.0.1:8000` in your browser. In the UI's Connection panel, ente
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]"
-cp .env.example .env
-python -c "import secrets; print(secrets.token_urlsafe(32))"
+.venv/bin/python scripts/setup_local.py
 ```
 
-Put the generated value into `.env`, then run `./scripts/run-local.sh`. The launcher binds only to loopback and stops if preflight fails.
+The helper creates `.env` with owner-only file permissions (0600) and never prints the generated key. If `.env` already exists, it exits without modifying it. Then run:
+
+```bash
+./scripts/run-local.sh
+```
+
+The launcher binds only to loopback and stops if preflight fails.
 
 ## Optional capabilities
 
@@ -54,7 +58,8 @@ Set `UNIVERSAL_TASK_AI_API_KEY` in that terminal's environment first, or run the
 
 ## Troubleshooting
 
-- **Preflight says the API key is missing/weak:** generate a new random key and put it in `.env`. Never use a public/example value.
+- **Setup says `.env` already exists:** it is intentionally preserved; edit it carefully or back it up before making changes.
+- **Preflight says the API key is missing/weak:** rerun the setup helper only after safely backing up/removing an invalid `.env`, or generate a new random key and update the existing file. Never use a public/example value.
 - **Browser preflight fails:** keep browser disabled or set a narrow host allowlist before enabling it.
 - **Sandbox preflight fails:** keep Python sandbox disabled or configure an approved immutable image digest.
 - **Port 8000 is in use:** stop the other local service or intentionally choose a documented port and update the smoke-test URL; do not expose the API on all interfaces as a workaround.

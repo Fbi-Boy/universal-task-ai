@@ -31,6 +31,7 @@ def test_local_preflight_does_not_print_secret_values():
 
 def test_quickstart_documents_secure_key_generation_and_launch():
     docs = Path("docs/LOCAL_SETUP.md").read_text()
-    assert "secrets.token_urlsafe(32)" in docs
+    assert "scripts/setup_local.py" in docs
+    assert "does not print the key" in docs
     assert "127.0.0.1" in docs
     assert "server does not start" in docs
