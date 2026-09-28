@@ -7,6 +7,7 @@ mistyped or hostile UTA_SMOKE_BASE_URL from receiving the local credential.
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import os
 import sys
@@ -14,7 +15,6 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
-_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 
 def validate_base_url(raw: str) -> str:
@@ -29,7 +29,14 @@ def validate_base_url(raw: str) -> str:
 
     if parsed.scheme.lower() not in {"http", "https"}:
         raise ValueError("smoke test base URL must use HTTP or HTTPS")
-    if parsed.hostname is None or parsed.hostname.lower() not in _LOOPBACK_HOSTS:
+    host = parsed.hostname
+    if host is None or "%" in host:
+        raise ValueError("smoke test refuses non-loopback destinations")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError as exc:
+        raise ValueError("smoke test requires a literal loopback IP address") from exc
+    if not address.is_loopback or str(address) != host.lower():
         raise ValueError("smoke test refuses non-loopback destinations")
     if parsed.username is not None or parsed.password is not None:
         raise ValueError("smoke test base URL must not contain credentials")
