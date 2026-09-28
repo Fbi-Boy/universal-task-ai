@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import secrets
-import sys
 from pathlib import Path
 
 MAX_TEMPLATE_BYTES = 64 * 1024
