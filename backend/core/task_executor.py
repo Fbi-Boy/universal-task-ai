@@ -207,13 +207,13 @@ class TaskExecutor:
                 )
                 return ExecutionResult(run_id, status, "Execution is waiting for approval.", plan)
 
-            return self._finish_success(
+            return self._finish_needs_tool(
                 contract,
                 plan,
                 run_id=run_id,
                 output=(
-                    "Task contract validated and execution completed through the safe baseline runtime. "
-                    "No external tools or side effects were invoked."
+                    "Task was not executed: no supported tool was selected or safely inferred. "
+                    "Choose a supported tool or narrow the task. No external action was taken."
                 ),
             )
         except Exception as exc:
@@ -412,6 +412,39 @@ class TaskExecutor:
             run_id=run_id,
             output="\n".join(outputs),
         )
+
+    def _finish_needs_tool(
+        self,
+        contract: TaskContract,
+        plan: ExecutionPlan,
+        *,
+        run_id: str,
+        output: str,
+    ) -> ExecutionResult:
+        """Finish honestly when the plan has no executable tool or agent stage."""
+        status = transition(RunStatus.RUNNING, RunStatus.NEEDS_TOOL)
+        self._store.save(
+            RunState(
+                run_id,
+                status.value,
+                json.dumps(
+                    {
+                        "task_id": str(contract.task_id),
+                        "plan_id": str(plan.plan_id),
+                        "output": output,
+                        "reason": "no_supported_tool_selected",
+                    }
+                ),
+            )
+        )
+        self._audit_event(
+            "task_needs_tool",
+            contract.task_id,
+            run_id=run_id,
+            success=False,
+            metadata={"reason": "no_supported_tool_selected"},
+        )
+        return ExecutionResult(run_id, status, output, plan)
 
     def _finish_success(
         self,
