@@ -44,8 +44,11 @@ def main() -> None:
         raise SystemExit("FAIL: health endpoint did not report healthy")
 
     status, readiness = request("/ready")
-    if status != 200 or readiness.get("status") != "ready":
-        raise SystemExit("FAIL: durable runtime dependencies are not ready")
+    if status != 200:
+        detail = readiness.get("detail", "no safe diagnostic returned")
+        raise SystemExit(f"FAIL: readiness endpoint returned HTTP {status}: {detail}")
+    if readiness.get("status") != "ready":
+        raise SystemExit("FAIL: readiness endpoint returned an unexpected status")
     for dependency in ("run_state", "approval_store", "audit_sink"):
         if readiness.get(dependency) != "ok":
             raise SystemExit(f"FAIL: readiness dependency check failed: {dependency}")
