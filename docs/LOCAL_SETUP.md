@@ -50,6 +50,10 @@ The launcher binds only to loopback and stops if preflight fails.
 
 The default **Auto — safe intents only** mode recognizes a narrow set of explicit arithmetic prompts such as `Hitung: 12 * (3 + 1)` and `Calculate 2 ** 3`. The expression must fit a strict character and length allowlist and is evaluated by the existing AST-based calculator. Other tasks stay on the safe baseline unless you explicitly choose a registered tool. This feature does not enable browser, filesystem, shell, or process access.
 
+## Unsupported tasks are not marked successful
+
+When no supported tool is selected or safely inferred, the run ends with status `needs_tool` and explains that the task was **not executed**. This is intentional: a safe fallback must not claim that an unimplemented task succeeded. Select an available tool explicitly or narrow the request; no local/browser capability is enabled by this status.
+
 ## Understand routing results
 
 After a task runs, the web UI reports its routing mode: `auto_calculator` means an explicit arithmetic prompt was sent to the bounded calculator; `explicit_tool` means you selected a tool yourself; `safe_baseline` means no tool was invoked. The response also lists the actual tool names, if any. This is transparency only and does not grant new permissions.

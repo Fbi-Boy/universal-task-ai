@@ -6,15 +6,17 @@ class RunStatus(StrEnum):
     RUNNING = "running"
     WAITING_APPROVAL = "waiting_approval"
     SUCCEEDED = "succeeded"
+    NEEDS_TOOL = "needs_tool"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
 
 _ALLOWED: dict[RunStatus, frozenset[RunStatus]] = {
     RunStatus.CREATED: frozenset({RunStatus.RUNNING, RunStatus.CANCELLED}),
-    RunStatus.RUNNING: frozenset({RunStatus.WAITING_APPROVAL, RunStatus.SUCCEEDED, RunStatus.FAILED, RunStatus.CANCELLED}),
+    RunStatus.RUNNING: frozenset({RunStatus.WAITING_APPROVAL, RunStatus.SUCCEEDED, RunStatus.NEEDS_TOOL, RunStatus.FAILED, RunStatus.CANCELLED}),
     RunStatus.WAITING_APPROVAL: frozenset({RunStatus.RUNNING, RunStatus.CANCELLED}),
     RunStatus.SUCCEEDED: frozenset(),
+    RunStatus.NEEDS_TOOL: frozenset(),
     RunStatus.FAILED: frozenset(),
     RunStatus.CANCELLED: frozenset(),
 }

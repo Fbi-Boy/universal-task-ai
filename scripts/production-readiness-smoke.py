@@ -67,11 +67,17 @@ def main() -> None:
     status, task = request(
         "/v1/tasks",
         method="POST",
-        payload={"task": "Verify the task runtime is responsive without using external tools."},
+        payload={"task": "Calculate: 2 + 2"},
         api_key=api_key,
     )
-    if status != 200 or task.get("status") != "succeeded":
-        raise SystemExit("FAIL: authenticated low-risk task smoke test did not succeed")
+    if (
+        status != 200
+        or task.get("status") != "succeeded"
+        or task.get("routing_mode") != "auto_calculator"
+        or task.get("routed_tools") != ["calculator"]
+        or task.get("output") != "4"
+    ):
+        raise SystemExit("FAIL: authenticated supported-task smoke test did not succeed")
 
     print("PASS: health, durable readiness, auth rejection, and authenticated low-risk task")
 
