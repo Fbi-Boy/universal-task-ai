@@ -51,6 +51,8 @@ class TaskResponse(BaseModel):
     output: str
     plan_id: str
     approval_id: str | None = None
+    routing_mode: str
+    routed_tools: list[str] = Field(default_factory=list)
 
 
 class ToolCatalogItem(BaseModel):
@@ -157,6 +159,8 @@ def _run_task_endpoint(request: TaskRequest, http_request: Request) -> TaskRespo
         output=result.execution.output,
         plan_id=str(result.execution.plan.plan_id),
         approval_id=result.execution.approval_id,
+        routing_mode=result.routing_mode,
+        routed_tools=list(result.routed_tools),
     )
 
 
@@ -181,6 +185,8 @@ def run_task(request: TaskRequest) -> TaskResponse:
         output=result.execution.output,
         plan_id=str(result.execution.plan.plan_id),
         approval_id=result.execution.approval_id,
+        routing_mode=result.routing_mode,
+        routed_tools=list(result.routed_tools),
     )
 
 
