@@ -8,9 +8,10 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 - Tool names and argument objects use strict types; argument trees must contain only plain built-in JSON values, even for internal Python callers.
 - Custom dict/list/scalar subclasses are rejected to prevent user-defined methods from running during validation.
 - Argument count, nesting depth, object-key length, scalar size, numeric range, and aggregate UTF-8 string bytes are bounded before execution.
-- Non-finite floating-point values, non-string object keys, arbitrary Python objects, and oversized integers are rejected.
+- The runtime boundary repeats argument validation for every execution entry point; callers cannot bypass it by invoking the lower-level authorized-execution method.
+- The boundary verifies that the exact tool instance belongs to its registry and rechecks capability permissions and approval requirements immediately before execution.
+- Non-finite floating-point values, non-string object keys, arbitrary Python objects, and oversized integers are rejected before the tool runs.
 - Tool results are bounded at the runtime boundary (nested values, collection sizes, scalar size, and error length) before they enter task output or downstream stages.
-- Registered-tool metadata is rechecked by the runtime boundary for capability and approval requirements.
 - Security-relevant lifecycle events are emitted to an injected AuditSink.
 - Audit metadata is recursively sanitized and bounded before retention.
 - Missing runtime boundaries fail closed.
