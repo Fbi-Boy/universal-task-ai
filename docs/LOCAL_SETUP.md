@@ -56,7 +56,7 @@ When no supported tool is selected or safely inferred, the run ends with status 
 
 ## Understand routing results
 
-After a task runs, the web UI reports its routing mode: `auto_calculator` means an explicit arithmetic prompt was sent to the bounded calculator; `explicit_tool` means you selected a tool yourself; `safe_baseline` means no tool was invoked. The response also lists the actual tool names, if any. This is transparency only and does not grant new permissions.
+After a task runs, the web UI reports its routing mode: `auto_calculator` means an explicit arithmetic prompt was sent to the bounded calculator; `auto_local_read` means an explicit relative-path file-read request was routed to `filesystem.read_text` because that capability is already configured; `explicit_tool` means you selected a tool yourself; `safe_baseline` means no tool was invoked. The response also lists the actual tool names, if any. Local reads remain restricted to `UTA_LOCAL_ROOTS` and the broker's path-containment checks. Routing never enables a capability.
 
 ## Verify
 

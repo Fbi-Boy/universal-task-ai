@@ -95,6 +95,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Non-destructive local .env generator with random key, template validation, and POSIX 0600 permissions
 - [x] Narrow deterministic intent routing for explicit arithmetic only; no inferred browser/filesystem/process authority
 - [x] Expose routing mode and invoked tool names in task API responses and web UI
+- [x] Route explicit relative-path local text reads only when `filesystem.read_text` is already enabled; reject absolute/traversal paths before the runtime broker
 - [x] Unsupported safe-baseline tasks report `needs_tool` instead of false success, with an audit event and regression tests
 - [x] Durable approval decisions with bounded actor metadata
 - [x] Release readiness checks and bounded local smoke test
