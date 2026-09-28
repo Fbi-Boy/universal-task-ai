@@ -95,6 +95,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Non-destructive local .env generator with random key, template validation, and POSIX 0600 permissions
 - [x] Durable approval decisions with bounded actor metadata
 - [x] Release readiness checks and bounded local smoke test
+- [x] Local smoke test refuses non-loopback destinations before transmitting API credentials
 - [x] API request correlation and bounded request-body protection
 - [x] Conservative browser security response headers
 - [x] Public runtime readiness endpoint
