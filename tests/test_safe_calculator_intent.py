@@ -1,4 +1,6 @@
-from backend.core.intent_router import SafeCalculatorIntentRouter
+from types import SimpleNamespace
+
+from backend.core.intent_router import SafeCalculatorIntentRouter, SafeTaskIntentRouter
 from backend.core.run_lifecycle import RunStatus
 from backend.core.task_executor import ExecutionResult
 from backend.core.task_intake import TaskIntakeService
@@ -60,7 +62,7 @@ class CapturingExecutor:
 
     @property
     def tool_catalog(self):
-        return ()
+        return (SimpleNamespace(name="filesystem.read_text"),)
 
     @property
     def approval_store(self):
@@ -100,3 +102,40 @@ def test_task_service_can_disable_auto_routing_and_respects_explicit_tools():
     assert selected.routing_mode == "explicit_tool"
     assert selected.routed_tools == ("calculator",)
     assert executor.invocations == (explicit,)
+
+
+def test_routes_local_file_read_only_when_capability_is_enabled():
+    router = SafeTaskIntentRouter()
+    invocation = router.route(
+        "Read a local file: notes/todo.txt",
+        available_tools={"filesystem.read_text"},
+    )
+    assert invocation is not None
+    assert invocation.tool_name == "filesystem.read_text"
+    assert invocation.arguments == {"path": "notes/todo.txt"}
+    assert router.route("Read a local file: notes/todo.txt") is None
+
+
+def test_local_file_router_rejects_absolute_and_traversal_paths():
+    router = SafeTaskIntentRouter()
+    unsafe = [
+        "Read a local file: ../secret.txt",
+        "Read a local file: notes/../../secret.txt",
+        "Read a local file: /etc/passwd",
+        r"Read a local file: C:\\Windows\\win.ini",
+        "Read a local file: folder//notes.txt",
+        "Read a local file: .",
+    ]
+    for task in unsafe:
+        assert router.route(task, available_tools={"filesystem.read_text"}) is None
+
+
+def test_task_service_reports_explicit_local_read_routing():
+    executor = CapturingExecutor()
+    service = TaskService(TaskIntakeService(), TaskPlanner(), executor)
+
+    result = service.run("Read a local file: notes.txt")
+
+    assert result.routing_mode == "auto_local_read"
+    assert result.routed_tools == ("filesystem.read_text",)
+    assert executor.invocations[0].arguments == {"path": "notes.txt"}
