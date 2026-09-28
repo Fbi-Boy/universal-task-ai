@@ -13,7 +13,7 @@ from backend.core.tool_invocation import ToolInvocation
 class TaskRunResult:
     intake: object
     execution: ExecutionResult
-    routing_mode: Literal["safe_baseline", "explicit_tool", "auto_calculator"]
+    routing_mode: Literal["safe_baseline", "explicit_tool", "auto_calculator", "auto_local_read"]
     routed_tools: tuple[str, ...]
 
 
