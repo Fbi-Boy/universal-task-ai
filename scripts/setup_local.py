@@ -33,7 +33,7 @@ def create_local_env(project_root: Path) -> None:
     lines = template.splitlines(keepends=True)
     matches: list[int] = []
     for index, line in enumerate(lines):
-        content = line.rstrip("\r\n")
+        content = line.rstrip("\r\n").lstrip()
         if content.startswith(f"{API_KEY_NAME}="):
             matches.append(index)
             if content.partition("=")[2].strip():
