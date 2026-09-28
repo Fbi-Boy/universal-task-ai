@@ -76,8 +76,10 @@ def test_task_service_auto_routes_only_when_enabled():
     executor = CapturingExecutor()
     service = TaskService(TaskIntakeService(), TaskPlanner(), executor)
 
-    service.run("Calculate: 8 * 7")
+    result = service.run("Calculate: 8 * 7")
 
+    assert result.routing_mode == "auto_calculator"
+    assert result.routed_tools == ("calculator",)
     assert len(executor.invocations) == 1
     assert executor.invocations[0].tool_name == "calculator"
     assert executor.invocations[0].arguments == {"expression": "8 * 7"}
@@ -88,9 +90,13 @@ def test_task_service_can_disable_auto_routing_and_respects_explicit_tools():
     executor = CapturingExecutor()
     service = TaskService(TaskIntakeService(), TaskPlanner(), executor)
 
-    service.run("Calculate: 8 * 7", auto_route_tools=False)
+    baseline = service.run("Calculate: 8 * 7", auto_route_tools=False)
+    assert baseline.routing_mode == "safe_baseline"
+    assert baseline.routed_tools == ()
     assert executor.invocations == ()
 
     explicit = ToolInvocation(tool_name="calculator", arguments={"expression": "3 + 4"})
-    service.run("Calculate: 8 * 7", tool_invocations=(explicit,))
+    selected = service.run("Calculate: 8 * 7", tool_invocations=(explicit,))
+    assert selected.routing_mode == "explicit_tool"
+    assert selected.routed_tools == ("calculator",)
     assert executor.invocations == (explicit,)
