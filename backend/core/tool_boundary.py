@@ -1,6 +1,7 @@
 from typing import Any, Mapping
 
 from backend.core.permissions import ToolPermission, authorize_tool
+from backend.core.tool_invocation import ToolInvocation
 from backend.core.tools import Tool, ToolMetadata, ToolRegistry, ToolResult
 
 
@@ -41,15 +42,40 @@ class RuntimeToolBoundary:
         tool = self.authorize(name, approved=True)
         return tool.metadata.requires_approval
 
-    def execute_authorized(self, tool: Tool, arguments: Mapping[str, Any]) -> ToolResult:
-        """Execute only a tool already authorized by this boundary."""
-        result = tool.run(arguments)
+    def execute_authorized(
+        self,
+        tool: Tool,
+        arguments: Mapping[str, Any],
+        *,
+        approved: bool = False,
+    ) -> ToolResult:
+        """Revalidate registration, permissions, approval, and input before execution."""
+        try:
+            registered = self._registry.get(tool.metadata.name)
+        except KeyError as exc:
+            raise ToolBoundaryDenied("tool is not registered") from exc
+        if registered is not tool:
+            raise ToolBoundaryDenied("tool instance is not the registered implementation")
+
+        authorized = self.authorize(tool.metadata.name, approved=approved)
+        if authorized is not tool:
+            raise ToolBoundaryDenied("tool authorization did not resolve the registered implementation")
+
+        invocation = ToolInvocation(tool_name=tool.metadata.name, arguments=arguments)
+        invocation.validate_bounds()
+        result = tool.run(invocation.arguments)
         result.validate_bounds()
         return result
 
-    def execute(self, name: str, arguments: Mapping[str, Any], *, approved: bool = False) -> ToolResult:
+    def execute(
+        self,
+        name: str,
+        arguments: Mapping[str, Any],
+        *,
+        approved: bool = False,
+    ) -> ToolResult:
         tool = self.authorize(name, approved=approved)
-        return self.execute_authorized(tool, arguments)
+        return self.execute_authorized(tool, arguments, approved=approved)
 
     def allowed_tools(self) -> tuple[str, ...]:
         return tuple(
