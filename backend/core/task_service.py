@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 from backend.core.approval_store import ApprovalStore
 from backend.core.task_executor import ExecutionResult, TaskExecutor
@@ -12,6 +13,8 @@ from backend.core.tool_invocation import ToolInvocation
 class TaskRunResult:
     intake: object
     execution: ExecutionResult
+    routing_mode: Literal["safe_baseline", "explicit_tool", "auto_calculator"]
+    routed_tools: tuple[str, ...]
 
 
 class TaskService:
@@ -52,10 +55,14 @@ class TaskService:
         auto_route_tools: bool = True,
     ) -> TaskRunResult:
         intake = self._intake.intake(task_text)
-        if auto_route_tools and not tool_invocations:
+        routing_mode: Literal["safe_baseline", "explicit_tool", "auto_calculator"] = "safe_baseline"
+        if tool_invocations:
+            routing_mode = "explicit_tool"
+        elif auto_route_tools:
             suggested = self._intent_router.route(task_text)
             if suggested is not None:
                 tool_invocations = (suggested,)
+                routing_mode = "auto_calculator"
         if len(tool_invocations) > 8:
             raise ValueError("at most 8 tool invocations are allowed per task")
         for invocation in tool_invocations:
@@ -74,7 +81,12 @@ class TaskService:
             plan,
             tool_invocations=tool_invocations,
         )
-        return TaskRunResult(intake=intake, execution=execution)
+        return TaskRunResult(
+            intake=intake,
+            execution=execution,
+            routing_mode=routing_mode,
+            routed_tools=tuple(dict.fromkeys(item.tool_name for item in tool_invocations)),
+        )
 
     def resume_approved(
         self,
