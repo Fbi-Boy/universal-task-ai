@@ -81,13 +81,13 @@ class SafeTaskIntentRouter:
 
 
 def _is_safe_relative_path(path: str) -> bool:
-    if not path or len(path) > _MAX_LOCAL_PATH_LENGTH or "\\x00" in path:
+    if not path or len(path) > _MAX_LOCAL_PATH_LENGTH or "\x00" in path:
         return False
     if path.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", path):
         return False
     if any(ord(character) < 32 for character in path):
         return False
-    segments = re.split(r"[/\\\\]+", path)
+    segments = re.split(r"[/\\]+", path)
     return all(segment not in {"", ".", ".."} for segment in segments)
 
 
@@ -95,13 +95,13 @@ _MAX_TASK_LENGTH = 600
 _MAX_EXPRESSION_LENGTH = 500
 _MAX_LOCAL_PATH_LENGTH = 1024
 _CALCULATOR_PREFIX = re.compile(
-    r"^\\s*(?:hitung(?:kan)?|calculate|calc|berapa\\s+hasil(?:\\s+dari)?|what\\s+is)"
-    r"\\s*[:,]?\\s*(.+?)\\s*$",
+    r"^\s*(?:hitung(?:kan)?|calculate|calc|berapa\s+hasil(?:\s+dari)?|what\s+is)"
+    r"\s*[:,]?\s*(.+?)\s*$",
     re.IGNORECASE,
 )
-_ALLOWED_EXPRESSION = re.compile(r"[0-9\\s()+\\-*/.]+\\Z")
+_ALLOWED_EXPRESSION = re.compile(r"[0-9\s()+\-*/.]+\Z")
 _LOCAL_READ_PREFIX = re.compile(
-    r"^\\s*(?:read\\s+(?:a\\s+)?local\\s+file|read\\s+file|baca\\s+file(?:\\s+lokal)?)"
-    r"\\s*[:,]\\s*(.+?)\\s*$",
+    r"^\s*(?:read\s+(?:a\s+)?local\s+file|read\s+file|baca\s+file(?:\s+lokal)?)"
+    r"\s*[:,]\s*(.+?)\s*$",
     re.IGNORECASE,
 )
