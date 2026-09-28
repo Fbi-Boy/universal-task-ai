@@ -2,6 +2,7 @@ import json
 import sqlite3
 from abc import ABC, abstractmethod
 from pathlib import Path
+from threading import RLock
 
 from backend.core.audit import AuditEvent
 
@@ -15,10 +16,11 @@ class AuditSink(ABC):
 
 
 class SQLiteAuditSink(AuditSink):
-    """Append-only SQLite sink for sanitized audit events."""
+    """Thread-safe append-only SQLite sink for security-relevant runtime events."""
 
     def __init__(self, path: Path) -> None:
-        self._conn = sqlite3.connect(path)
+        self._lock = RLock()
+        self._conn = sqlite3.connect(path, check_same_thread=False)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute(
             "CREATE TABLE IF NOT EXISTS audit_events ("
@@ -29,27 +31,31 @@ class SQLiteAuditSink(AuditSink):
 
     def append(self, event: AuditEvent) -> None:
         metadata = event.safe_metadata()
-        self._conn.execute(
-            "INSERT INTO audit_events(event_id,event_type,task_id,timestamp,actor,tool_name,success,metadata) "
-            "VALUES(?,?,?,?,?,?,?,?)",
-            (
-                str(event.event_id), event.event_type, str(event.task_id), event.timestamp.isoformat(),
-                event.actor, event.tool_name, None if event.success is None else int(event.success),
-                json.dumps(metadata, sort_keys=True, separators=(",", ":")),
-            ),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO audit_events(event_id,event_type,task_id,timestamp,actor,tool_name,success,metadata) "
+                "VALUES(?,?,?,?,?,?,?,?)",
+                (
+                    str(event.event_id), event.event_type, str(event.task_id), event.timestamp.isoformat(),
+                    event.actor, event.tool_name, None if event.success is None else int(event.success),
+                    json.dumps(metadata, sort_keys=True, separators=(",", ":")),
+                ),
+            )
+            self._conn.commit()
 
     def count(self) -> int:
-        row = self._conn.execute("SELECT COUNT(*) FROM audit_events").fetchone()
+        with self._lock:
+            row = self._conn.execute("SELECT COUNT(*) FROM audit_events").fetchone()
         return int(row[0])
 
     def close(self) -> None:
-        self._conn.close()
+        with self._lock:
+            self._conn.close()
 
     def ping(self) -> None:
-        """Verify that the audit database is responsive."""
-        self._conn.execute("SELECT 1").fetchone()
+        """Verify that the audit database is responsive from any API worker."""
+        with self._lock:
+            self._conn.execute("SELECT 1").fetchone()
 
 
 class InMemoryAuditSink(AuditSink):
