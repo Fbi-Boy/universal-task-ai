@@ -55,7 +55,7 @@ jobs:
           cid=$(docker compose -f docker-compose.prod.yml ps -q app)
           test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}}' "$cid")" = "true"
           test "$(docker inspect -f '{{.HostConfig.Privileged}}' "$cid")" = "false"
-          test "$(docker inspect -f '{{.Config.User}}' "$cid")" = "10001:10001"
+          test "$(docker exec "$cid" id -u)" = "10001"
       - name: Cleanup
         if: always()
         run: docker compose -f docker-compose.prod.yml down -v
