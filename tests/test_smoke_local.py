@@ -7,7 +7,6 @@ from scripts.smoke_local import main, validate_base_url
     ("raw", "expected"),
     [
         ("http://127.0.0.1:8000", "http://127.0.0.1:8000"),
-        ("http://localhost:8000/", "http://localhost:8000"),
         ("http://[::1]:8000", "http://[::1]:8000"),
         ("https://127.0.0.1:8443/local/", "https://127.0.0.1:8443/local"),
     ],
@@ -29,6 +28,8 @@ def test_smoke_base_url_accepts_loopback_only(raw, expected):
         "http://127.0.0.1:99999",
         " http://127.0.0.1:8000",
         "http://0.0.0.0:8000",
+        "http://localhost:8000",
+        "http://[::1%25lo0]:8000",
     ],
 )
 def test_smoke_base_url_rejects_untrusted_or_ambiguous_values(raw):
