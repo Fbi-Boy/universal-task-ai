@@ -31,6 +31,8 @@ pytest
 
 The setup helper creates `.env` with a fresh random API key and refuses to overwrite an existing configuration. It never displays the key. Then launch with `scripts/run-local.ps1` on Windows or `bash scripts/run-local.sh` on Linux/macOS. See [Secure local setup](docs/LOCAL_SETUP.md) for the full workflow and optional local/browser capability configuration.
 
+For the first safe automation path, enter `Hitung: 12 * (3 + 1)` or `Calculate: 12 * (3 + 1)` and leave the tool selector on **Auto — safe intents only**. Only explicit arithmetic expressions are routed automatically; browser, filesystem, and other tools are never inferred or enabled by this shortcut.
+
 Never commit `.env`, API keys, provider tokens, cookies, or sandbox credentials.
 
 ## Production
