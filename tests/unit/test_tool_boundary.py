@@ -1,5 +1,6 @@
 from typing import Any, Mapping
 
+import math
 import pytest
 
 from backend.core.permissions import ToolPermission
@@ -12,6 +13,28 @@ class EchoTool(Tool):
 
     def run(self, arguments: Mapping[str, Any]) -> ToolResult:
         return ToolResult(success=True, output=dict(arguments))
+
+
+class TrackingTool(Tool):
+    metadata = ToolMetadata(name="safe.tracking", description="test tracking")
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def run(self, arguments: Mapping[str, Any]) -> ToolResult:
+        self.calls += 1
+        return ToolResult(success=True, output="ran")
+
+
+class UnregisteredTool(Tool):
+    metadata = ToolMetadata(name="safe.echo", description="unregistered lookalike")
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def run(self, arguments: Mapping[str, Any]) -> ToolResult:
+        self.calls += 1
+        return ToolResult(success=True, output="unregistered")
 
 
 class ApprovalTool(Tool):
@@ -72,3 +95,25 @@ def test_boundary_denies_network_without_capability():
     boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"web.search"})))
     with pytest.raises(ToolBoundaryDenied, match="network"):
         boundary.execute("web.search", {})
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_boundary_rejects_invalid_arguments_before_tool_runs(value: float):
+    tool = TrackingTool()
+    registry = ToolRegistry()
+    registry.register(tool)
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"safe.tracking"})))
+    with pytest.raises(ValueError, match="non-finite"):
+        boundary.execute("safe.tracking", {"value": value})
+    assert tool.calls == 0
+
+
+def test_boundary_rejects_unregistered_tool_instance_even_if_name_matches():
+    registered = EchoTool()
+    impostor = UnregisteredTool()
+    registry = ToolRegistry()
+    registry.register(registered)
+    boundary = RuntimeToolBoundary(registry, ToolPermission(frozenset({"safe.echo"})))
+    with pytest.raises(ToolBoundaryDenied, match="not the registered implementation"):
+        boundary.execute_authorized(impostor, {})
+    assert impostor.calls == 0
