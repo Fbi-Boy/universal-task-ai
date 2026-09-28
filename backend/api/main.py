@@ -166,6 +166,7 @@ def run_task(request: TaskRequest) -> TaskResponse:
             request.task,
             tool_invocations=tuple(request.tool_invocations),
             approval_required=request.approval_required,
+            auto_route_tools=request.auto_route_tools,
         )
     except PermissionError as exc:
         raise HTTPException(
