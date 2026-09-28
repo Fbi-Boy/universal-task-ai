@@ -94,3 +94,69 @@ def test_preflight_bounds_env_file(tmp_path, monkeypatch):
     (tmp_path / ".env").write_bytes(b"#" * (64 * 1024 + 1))
     monkeypatch.chdir(tmp_path)
     assert check_local.main() == 1
+
+
+def test_setup_generator_creates_key_without_printing_it(tmp_path, capsys):
+    import os
+    from scripts.setup_local import API_KEY_NAME, create_local_env
+
+    root = tmp_path / "project"
+    root.mkdir()
+    (root / ".env.example").write_text(
+        f"# template\n{API_KEY_NAME}=\nUTA_BROWSER_ENABLED=false\n",
+        encoding="utf-8",
+    )
+    create_local_env(root)
+    env_text = (root / ".env").read_text(encoding="utf-8")
+    key = next(line.partition("=")[2] for line in env_text.splitlines()
+               if line.startswith(f"{API_KEY_NAME}="))
+    assert len(key) >= 32
+    assert "UTA_BROWSER_ENABLED=false" in env_text
+    assert key not in capsys.readouterr().out
+    if os.name == "posix":
+        assert (root / ".env").stat().st_mode & 0o777 == 0o600
+
+
+def test_setup_generator_never_overwrites_existing_env(tmp_path):
+    import pytest
+    from scripts.setup_local import create_local_env
+
+    root = tmp_path / "project"
+    root.mkdir()
+    (root / ".env.example").write_text("UNIVERSAL_TASK_AI_API_KEY=\n", encoding="utf-8")
+    sentinel = "UNIVERSAL_TASK_AI_API_KEY=existing-secret-value\n"
+    (root / ".env").write_text(sentinel, encoding="utf-8")
+    with pytest.raises(FileExistsError):
+        create_local_env(root)
+    assert (root / ".env").read_text(encoding="utf-8") == sentinel
+
+
+def test_setup_generator_rejects_unsafe_templates(tmp_path):
+    import pytest
+    from scripts.setup_local import create_local_env
+
+    root = tmp_path / "project"
+    root.mkdir()
+    for template in (
+        "UTA_BROWSER_ENABLED=false\n",
+        "UNIVERSAL_TASK_AI_API_KEY=\nUNIVERSAL_TASK_AI_API_KEY=\n",
+        "UNIVERSAL_TASK_AI_API_KEY=accidental-secret\n",
+    ):
+        (root / ".env.example").write_text(template, encoding="utf-8")
+        with pytest.raises(ValueError):
+            create_local_env(root)
+        assert not (root / ".env").exists()
+
+
+def test_setup_generator_rejects_symlink_template(tmp_path):
+    import pytest
+    from scripts.setup_local import create_local_env
+
+    root = tmp_path / "project"
+    root.mkdir()
+    external = tmp_path / "external-template"
+    external.write_text("UNIVERSAL_TASK_AI_API_KEY=\n", encoding="utf-8")
+    (root / ".env.example").symlink_to(external)
+    with pytest.raises(ValueError):
+        create_local_env(root)
+    assert not (root / ".env").exists()
