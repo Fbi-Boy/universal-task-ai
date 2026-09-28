@@ -97,6 +97,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Readiness probes durable run, approval, and audit storage
 - [x] Approval execution manifest integrity checks
 - [x] Non-destructive approval-store migration for integrity metadata
+- [x] Production rehearsal checks health, durable readiness, authentication rejection, and an authenticated low-risk task
 - [ ] Production deployment — requires real infrastructure configuration and verified rollout; see [Production Go-Live Checklist](operations/PRODUCTION_GO_LIVE_CHECKLIST.md)
 
 ## Phase 7 — Production Hardening
