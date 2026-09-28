@@ -41,7 +41,7 @@
 
 <section class="welcome">
   <h2>Welcome to Universal Task AI</h2>
-  <p>Describe a task, optionally select a bounded runtime tool, then review the result or approve risky actions.</p>
+  <p>Describe a task. Explicit arithmetic requests can use the safe calculator automatically; select a tool only when you want to invoke it directly.</p>
   <div class="quick">
     <button data-template="Calculate: ">▣ <b>Calculate</b> ＋</button>
     <button data-template="Read a local file: ">▱ <b>Read local file</b> ＋</button>
@@ -54,7 +54,7 @@
   <textarea id="task" maxlength="20000" placeholder="Describe the task…"></textarea>
   <div class="execution-controls">
     <label>Tool
-      <select id="tool"><option value="">No tool — safe baseline</option></select>
+      <select id="tool"><option value="">Auto — safe intents only</option></select>
     </label>
     <label>Arguments JSON
       <input id="arguments" value="{}" spellcheck="false">
