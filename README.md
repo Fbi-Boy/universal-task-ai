@@ -29,7 +29,7 @@ pytest
 uvicorn backend.api.main:app --reload
 ```
 
-Copy `.env.example` to `.env`. Never commit secrets.
+Copy `.env.example` to `.env`, generate a random `UNIVERSAL_TASK_AI_API_KEY`, and never commit secrets. See [Secure local setup](docs/LOCAL_SETUP.md) for the Windows and Linux/macOS launchers, fail-closed preflight, and optional local/browser capability configuration.
 
 ## Production
 
