@@ -7,7 +7,9 @@ on:
       - "Dockerfile"
       - "docker-compose.prod.yml"
       - ".github/workflows/production-deployment.yml"
+      - ".github/workflows/production-rehearsal.yml"
       - "backend/**"
+      - "scripts/production-readiness-smoke.py"
       - "pyproject.toml"
 
 permissions:
@@ -30,23 +32,30 @@ jobs:
           printf 'rehearsal-search-key' > secrets/brave_search_api_key
       - name: Start production stack
         run: docker compose -f docker-compose.prod.yml up -d --build
-      - name: Health check
+      - name: Health and readiness smoke tests
         run: |
           set -euo pipefail
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8000/health; then
-              exit 0
+            if curl --fail --silent http://127.0.0.1:8000/health >/dev/null; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              docker compose -f docker-compose.prod.yml logs
+              exit 1
             fi
             sleep 2
           done
-          docker compose -f docker-compose.prod.yml logs
-          exit 1
+          if ! python scripts/production-readiness-smoke.py; then
+            docker compose -f docker-compose.prod.yml logs --tail=80 app
+            exit 1
+          fi
       - name: Verify container hardening
         run: |
           set -euo pipefail
           cid=$(docker compose -f docker-compose.prod.yml ps -q app)
           test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}}' "$cid")" = "true"
           test "$(docker inspect -f '{{.HostConfig.Privileged}}' "$cid")" = "false"
+          test "$(docker exec "$cid" id -u)" = "10001"
       - name: Cleanup
         if: always()
         run: docker compose -f docker-compose.prod.yml down -v

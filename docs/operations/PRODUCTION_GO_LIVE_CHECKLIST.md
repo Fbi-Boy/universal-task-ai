@@ -46,6 +46,8 @@ This checklist is an operator gate for the first real deployment. A successful l
 - [ ] Verify logs and audit events are produced without API keys, tokens, passwords, raw secret values, or raw approval invocation arguments.
 - [ ] Verify monitoring, alerts, disk capacity, and backup jobs are active.
 
+The automated production rehearsal runs `scripts/production-readiness-smoke.py` against the ephemeral stack. It verifies health, durable dependency readiness, rejection of unauthenticated task requests, and one authenticated low-risk task. This is a rehearsal gate, not a substitute for checks against the actual production host after rollout.
+
 ## 5. Rollback and incident readiness
 
 - [ ] Rollback steps are documented and tested against the known-good immutable image digest.
