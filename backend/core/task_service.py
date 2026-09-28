@@ -55,7 +55,7 @@ class TaskService:
         auto_route_tools: bool = True,
     ) -> TaskRunResult:
         intake = self._intake.intake(task_text)
-        routing_mode: Literal["safe_baseline", "explicit_tool", "auto_calculator"] = "safe_baseline"
+        routing_mode: Literal["safe_baseline", "explicit_tool", "auto_calculator", "auto_local_read"] = "safe_baseline"
         if tool_invocations:
             routing_mode = "explicit_tool"
         elif auto_route_tools:
@@ -66,7 +66,9 @@ class TaskService:
             )
             if suggested is not None:
                 tool_invocations = (suggested,)
-                routing_mode = "auto_calculator" if suggested.tool_name == "calculator" else "auto_local_read"
+                routing_mode = (
+                    "auto_calculator" if suggested.tool_name == "calculator" else "auto_local_read"
+                )
         if len(tool_invocations) > 8:
             raise ValueError("at most 8 tool invocations are allowed per task")
         for invocation in tool_invocations:
