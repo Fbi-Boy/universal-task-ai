@@ -45,7 +45,10 @@ jobs:
             fi
             sleep 2
           done
-          python scripts/production-readiness-smoke.py
+          if ! python scripts/production-readiness-smoke.py; then
+            docker compose -f docker-compose.prod.yml logs --tail=80 app
+            exit 1
+          fi
       - name: Verify container hardening
         run: |
           set -euo pipefail
