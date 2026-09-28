@@ -1,8 +1,8 @@
 from backend.api.main import TaskRequest, run_task
 
-def test_run_task_endpoint_executes_safe_baseline():
+def test_run_task_endpoint_reports_unsupported_task_honestly():
     result = run_task(TaskRequest(task="Create a report"))
-    assert result.status == "succeeded"
+    assert result.status == "needs_tool"
     assert result.run_id
     assert result.plan_id
-    assert "safe baseline runtime" in result.output
+    assert "was not executed" in result.output
