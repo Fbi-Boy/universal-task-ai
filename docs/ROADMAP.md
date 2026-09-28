@@ -29,6 +29,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Tool permission model
 - [x] Tool input/output guardrails
 - [x] Audit event model
+- [x] Recursive audit metadata redaction for common secret-key naming variants and bounded values
 - [x] Calculator
 - [x] File reader policy
 - [x] Web search provider implementation
