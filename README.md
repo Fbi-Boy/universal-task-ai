@@ -25,11 +25,13 @@ Python 3.11+.
 ```bash
 python -m venv .venv
 pip install -e ".[dev]"
+python scripts/setup_local.py
 pytest
-uvicorn backend.api.main:app --reload
 ```
 
-Copy `.env.example` to `.env`, generate a random `UNIVERSAL_TASK_AI_API_KEY`, and never commit secrets. See [Secure local setup](docs/LOCAL_SETUP.md) for the Windows and Linux/macOS launchers, fail-closed preflight, and optional local/browser capability configuration.
+The setup helper creates `.env` with a fresh random API key and refuses to overwrite an existing configuration. It never displays the key. Then launch with `scripts/run-local.ps1` on Windows or `bash scripts/run-local.sh` on Linux/macOS. See [Secure local setup](docs/LOCAL_SETUP.md) for the full workflow and optional local/browser capability configuration.
+
+Never commit `.env`, API keys, provider tokens, cookies, or sandbox credentials.
 
 ## Production
 
