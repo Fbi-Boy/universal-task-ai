@@ -10,7 +10,7 @@ _MAX_TASK_LENGTH = 600
 _MAX_EXPRESSION_LENGTH = 500
 _PREFIX = re.compile(
     r"^\s*(?:hitung(?:kan)?|calculate|calc|berapa\s+hasil(?:\s+dari)?|what\s+is)"
-    r"\s*[:,-]?\s*(.+?)\s*$",
+    r"\s*[:,]?\s*(.+?)\s*$",
     re.IGNORECASE,
 )
 _ALLOWED_EXPRESSION = re.compile(r"[0-9\s()+\-*/.]+\Z")
