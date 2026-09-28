@@ -110,6 +110,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Distributed queue
 - [x] Secret management integration
 - [x] Full integration/security CI
+- [x] Production deployment accepts only immutable image digests and safely quotes validated remote commands
 
 ## Model authority rule
 
