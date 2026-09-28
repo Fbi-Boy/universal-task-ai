@@ -5,7 +5,9 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 ## Required controls
 
 - Explicit ToolInvocation objects; arbitrary callable references are not accepted.
-- Argument count, nesting depth, key length, and scalar size are bounded before execution.
+- Tool arguments must be JSON-compatible even when constructed by internal Python callers.
+- Argument count, nesting depth, object-key length, scalar size, numeric range, and aggregate UTF-8 string bytes are bounded before execution.
+- Non-finite floating-point values, non-string object keys, arbitrary Python objects, and oversized integers are rejected.
 - Tool results are bounded at the runtime boundary (nested values, collection sizes, scalar size, and error length) before they enter task output or downstream stages.
 - Registered-tool metadata is rechecked by the runtime boundary for capability and approval requirements.
 - Security-relevant lifecycle events are emitted to an injected AuditSink.
@@ -19,7 +21,6 @@ Tool execution is available only through RuntimeToolBoundary. TaskExecutor never
 A denied or malformed invocation fails the run and emits tool_denied plus task_failed. A tool returning success=false also fails the run.
 
 Approval is a state-machine concern and must never be smuggled through arbitrary tool arguments.
-
 
 ## Approval resume integrity
 
