@@ -141,6 +141,7 @@ def test_setup_generator_rejects_unsafe_templates(tmp_path):
         "UTA_BROWSER_ENABLED=false\n",
         "UNIVERSAL_TASK_AI_API_KEY=\nUNIVERSAL_TASK_AI_API_KEY=\n",
         "UNIVERSAL_TASK_AI_API_KEY=accidental-secret\n",
+        "UNIVERSAL_TASK_AI_API_KEY=\n  UNIVERSAL_TASK_AI_API_KEY=hidden-preset-secret\n",
     ):
         (root / ".env.example").write_text(template, encoding="utf-8")
         with pytest.raises(ValueError):
