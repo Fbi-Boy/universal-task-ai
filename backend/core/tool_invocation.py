@@ -1,5 +1,5 @@
 import math
-from typing import Any, Mapping
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -9,18 +9,19 @@ class ToolInvocation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    tool_name: str = Field(min_length=1, max_length=128)
-    arguments: Mapping[str, Any] = Field(default_factory=dict)
+    tool_name: str = Field(strict=True, min_length=1, max_length=128)
+    arguments: dict[str, Any] = Field(default_factory=dict, strict=True)
 
     def validate_bounds(self) -> None:
         """Reject non-JSON values and bound the complete argument tree.
 
-        This check is deliberately performed immediately before tool execution,
-        because internal callers can construct models without going through the
-        HTTP JSON parser.
+        This check runs immediately before tool execution because internal
+        callers can construct models without going through the HTTP JSON parser.
+        Exact built-in types are required to avoid custom collection/scalar
+        subclasses running user-defined methods during validation.
         """
-        if not isinstance(self.arguments, Mapping):
-            raise ValueError("tool arguments must be a JSON object")
+        if type(self.arguments) is not dict:
+            raise ValueError("tool arguments must be a plain JSON object")
         if len(self.arguments) > 32:
             raise ValueError("tool arguments are limited to 32 top-level keys")
 
@@ -40,36 +41,36 @@ def _validate_json_value(value: Any, *, depth: int, budget: dict[str, int]) -> N
     if budget["nodes"] > 256:
         raise ValueError("tool arguments exceed the maximum nested value count")
 
-    if value is None or isinstance(value, bool):
+    if value is None or type(value) is bool:
         return
-    if isinstance(value, str):
+    if type(value) is str:
         size = len(value.encode("utf-8"))
         if size > 64 * 1024:
             raise ValueError("tool argument value exceeds 64 KiB")
         budget["string_bytes"] += size
         return
-    if isinstance(value, int):
+    if type(value) is int:
         if value.bit_length() > 256:
             raise ValueError("tool integer exceeds the supported numeric bound")
         return
-    if isinstance(value, float):
+    if type(value) is float:
         if not math.isfinite(value):
             raise ValueError("tool arguments must not contain non-finite numbers")
         return
-    if isinstance(value, Mapping):
+    if type(value) is dict:
         if len(value) > 32 and depth == 0:
             raise ValueError("tool arguments are limited to 32 top-level keys")
         for key, item in value.items():
-            if not isinstance(key, str):
-                raise ValueError("tool argument object keys must be strings")
+            if type(key) is not str:
+                raise ValueError("tool argument object keys must be plain strings")
             key_size = len(key.encode("utf-8"))
             if key_size > 128:
                 raise ValueError("tool argument keys must be at most 128 UTF-8 bytes")
             budget["string_bytes"] += key_size
             _validate_json_value(item, depth=depth + 1, budget=budget)
         return
-    if isinstance(value, list):
+    if type(value) is list:
         for item in value:
             _validate_json_value(item, depth=depth + 1, budget=budget)
         return
-    raise ValueError("tool arguments must contain only JSON-compatible values")
+    raise ValueError("tool arguments must contain only plain JSON-compatible values")
