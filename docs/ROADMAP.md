@@ -30,6 +30,7 @@ The roadmap tracks implemented, verified milestones. A checkbox is marked comple
 - [x] Tool input/output guardrails
 - [x] Strict JSON-compatible runtime tool arguments with finite-number and aggregate-size bounds
 - [x] Plain built-in JSON types only for tool invocation, including strict tool-name validation
+- [x] Runtime tool boundary revalidates registration, permissions, approval, and arguments on every execution path
 - [x] Audit event model
 - [x] Recursive audit metadata redaction for common secret-key naming variants and bounded values
 - [x] Calculator
