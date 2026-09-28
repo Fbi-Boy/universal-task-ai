@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from backend.core.audit_sink import InMemoryAuditSink
-from backend.core.planner import ExecutionPlan
 from backend.core.run_lifecycle import RunStatus, can_transition, transition
 from backend.core.state_store import SQLiteRunStateStore
 from backend.core.task_executor import TaskExecutor
