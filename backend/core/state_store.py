@@ -1,6 +1,7 @@
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
+from threading import RLock
 
 
 @dataclass(frozen=True)
@@ -11,31 +12,38 @@ class RunState:
 
 
 class SQLiteRunStateStore:
+    """Thread-safe SQLite run store for sync API handlers and worker threads."""
+
     def __init__(self, path: Path) -> None:
-        self._conn = sqlite3.connect(path)
+        self._lock = RLock()
+        self._conn = sqlite3.connect(path, check_same_thread=False)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("CREATE TABLE IF NOT EXISTS runs (run_id TEXT PRIMARY KEY, status TEXT NOT NULL, payload TEXT NOT NULL)")
         self._conn.commit()
 
     def save(self, state: RunState) -> None:
-        self._conn.execute(
-            "INSERT INTO runs(run_id,status,payload) VALUES(?,?,?) ON CONFLICT(run_id) DO UPDATE SET status=excluded.status,payload=excluded.payload",
-            (state.run_id, state.status, state.payload),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO runs(run_id,status,payload) VALUES(?,?,?) ON CONFLICT(run_id) DO UPDATE SET status=excluded.status,payload=excluded.payload",
+                (state.run_id, state.status, state.payload),
+            )
+            self._conn.commit()
 
     def get(self, run_id: str) -> RunState | None:
-        row = self._conn.execute("SELECT run_id,status,payload FROM runs WHERE run_id=?", (run_id,)).fetchone()
+        with self._lock:
+            row = self._conn.execute("SELECT run_id,status,payload FROM runs WHERE run_id=?", (run_id,)).fetchone()
         return RunState(*row) if row else None
 
     def list(self, *, limit: int = 50) -> list[RunState]:
         if limit < 1 or limit > 100:
             raise ValueError("limit must be between 1 and 100")
-        rows = self._conn.execute(
-            "SELECT run_id,status,payload FROM runs ORDER BY rowid DESC LIMIT ?", (limit,)
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT run_id,status,payload FROM runs ORDER BY rowid DESC LIMIT ?", (limit,)
+            ).fetchall()
         return [RunState(*row) for row in rows]
 
     def ping(self) -> None:
-        """Verify that the run-state database is writable and responsive."""
-        self._conn.execute("SELECT 1").fetchone()
+        """Verify that the run-state database is responsive from any API worker."""
+        with self._lock:
+            self._conn.execute("SELECT 1").fetchone()
