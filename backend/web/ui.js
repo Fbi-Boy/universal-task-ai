@@ -65,7 +65,7 @@ function approvalDecisionBody() {
 
 async function loadTools() {
   const items = await json("/v1/tools");
-  tool.replaceChildren(new Option("No tool — safe baseline", ""));
+  tool.replaceChildren(new Option("Auto — safe intents only", ""));
   for (const item of items) {
     const label = item.name + (item.requires_approval ? " • approval" : "");
     tool.appendChild(new Option(label, item.name));
@@ -200,7 +200,8 @@ document.querySelector("#run").onclick = async () => {
       body: JSON.stringify({
         task: taskText,
         tool_invocations: invocations,
-        approval_required: approvalRequired.checked
+        approval_required: approvalRequired.checked,
+        auto_route_tools: !tool.value
       })
     });
     statusBox.textContent = response.status;
