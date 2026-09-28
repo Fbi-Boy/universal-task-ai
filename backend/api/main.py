@@ -42,6 +42,7 @@ class TaskRequest(BaseModel):
     task: str = Field(min_length=1, max_length=20_000)
     tool_invocations: list[ToolInvocation] = Field(default_factory=list, max_length=8)
     approval_required: bool = False
+    auto_route_tools: bool = True
 
 
 class TaskResponse(BaseModel):
@@ -140,6 +141,7 @@ def _run_task_endpoint(request: TaskRequest, http_request: Request) -> TaskRespo
             request.task,
             tool_invocations=tuple(request.tool_invocations),
             approval_required=request.approval_required,
+            auto_route_tools=request.auto_route_tools,
         )
     except PermissionError as exc:
         # Policy details may contain internal capability names; do not expose them.
