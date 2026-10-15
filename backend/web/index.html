@@ -3,86 +3,162 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Universal Task AI</title>
+<meta name="theme-color" content="#f7f8fc">
+<meta name="description" content="A secure, auditable workspace for planning and running AI-assisted tasks.">
+<title>Universal Task AI — Workspace</title>
 <link rel="stylesheet" href="/ui.css">
 </head>
 <body>
 <div class="app-shell">
-<aside class="sidebar">
-  <div class="brand">✦ <strong>Universal Task AI</strong></div>
-  <label class="search">⌕ <input placeholder="Search"></label>
-  <nav>
-    <button class="nav active">▣ AI Chat</button>
-    <button class="nav">▱ Projects</button>
-    <button class="nav">▤ Templates</button>
-    <button class="nav">▧ Documents <b>＋</b></button>
-    <button class="nav">◈ Community <em>NEW</em></button>
-    <button class="nav">◷ History</button>
-  </nav>
-  <div class="side-bottom">
-    <div class="nav">⚙ Settings</div>
-    <div class="nav">? Help</div>
-    <div class="profile"><span>F</span><strong>Universal User<small>local workspace</small></strong></div>
-  </div>
-</aside>
+  <aside class="sidebar" aria-label="Primary navigation">
+    <a class="brand" href="#workspace-chat" aria-label="Universal Task AI home">
+      <span class="brand-mark" aria-hidden="true">✦</span>
+      <span class="brand-copy"><strong>universal</strong><small>TASK AI</small></span>
+    </a>
 
-<main class="workspace">
-<header><h1>AI Chat</h1><div class="actions"><span id="health">checking…</span></div></header>
+    <div class="workspace-switcher">
+      <span class="workspace-avatar" aria-hidden="true">U</span>
+      <span><strong>Personal workspace</strong><small>Secure environment</small></span>
+      <span class="switcher-caret" aria-hidden="true">⌄</span>
+    </div>
 
-<section class="panel auth">
-  <h2>Connection <small>API key stays in this browser session</small></h2>
-  <div class="row">
-    <input id="api-key" type="password" autocomplete="off" placeholder="Bearer API key">
-    <input id="approval-actor" maxlength="128" autocomplete="off" placeholder="Approval actor ID" value="web-session">
-    <button id="save-key">Save session key</button>
-    <button id="clear-key">Clear</button>
-  </div>
-</section>
-
-<section class="welcome">
-  <h2>Welcome to Universal Task AI</h2>
-  <p>Describe a task. Explicit arithmetic requests can use the safe calculator automatically; select a tool only when you want to invoke it directly.</p>
-  <div class="quick">
-    <button data-template="Calculate: ">▣ <b>Calculate</b> ＋</button>
-    <button data-template="Read a local file: ">▱ <b>Read local file</b> ＋</button>
-    <button data-template="Browse a website: ">◉ <b>Browse website</b> ＋</button>
-    <button data-template="Write and test code for: ">⌘ <b>Write code</b> ＋</button>
-  </div>
-</section>
-
-<section class="composer">
-  <textarea id="task" maxlength="20000" placeholder="Describe the task…"></textarea>
-  <div class="execution-controls">
-    <label>Tool
-      <select id="tool"><option value="">Auto — safe intents only</option></select>
+    <label class="search" aria-label="Search this workspace">
+      <span aria-hidden="true">⌕</span>
+      <input placeholder="Search workspace" autocomplete="off">
+      <kbd>⌘ K</kbd>
     </label>
-    <label>Arguments JSON
-      <input id="arguments" value="{}" spellcheck="false">
-    </label>
-    <label class="check"><input id="approval-required" type="checkbox"> Require approval</label>
-  </div>
-  <div class="composer-actions">
-    <small id="counter">0 / 20,000</small>
-    <button id="analyze">Analyze</button>
-    <button id="run" class="send">Run task</button>
-  </div>
-  <p>Tool capabilities are allowlisted by the server. Browser and other side-effecting tools remain approval-gated.</p>
-</section>
 
-<section class="panel"><h2>Task result <small id="run-status">idle</small></h2><pre id="result">No task executed yet.</pre></section>
-<section class="panel"><h2>Task analysis <small>Planner → Tools → Review</small></h2><pre id="analysis">Your task analysis will appear here.</pre></section>
-<section class="panel"><h2>Pending approvals <small>Human approval required for risky actions</small></h2><div id="approvals">Loading…</div></section>
-<section class="panel"><h2>Run history <small>Recent executions</small></h2><div id="runs">Loading…</div></section>
-<section class="panel"><h2>Live run events <small>Audited execution stream</small></h2><input id="run-id" placeholder="Run UUID"><button id="watch">Watch</button><pre id="events"></pre></section>
-</main>
+    <p class="nav-label">WORKSPACE</p>
+    <nav class="primary-nav">
+      <a class="nav active" href="#workspace-chat" aria-label="AI workspace" title="AI workspace"><span class="nav-icon" aria-hidden="true">✧</span><span class="nav-text">AI workspace</span><span class="nav-current" aria-hidden="true"></span></a>
+      <a class="nav" href="#task-analysis" aria-label="Task plan" title="Task plan"><span class="nav-icon" aria-hidden="true">☷</span><span class="nav-text">Task plan</span></a>
+      <a class="nav" href="#run-history" aria-label="Run history" title="Run history"><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-text">Run history</span></a>
+      <a class="nav" href="#pending-approvals" aria-label="Approvals" title="Approvals"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-text">Approvals</span><span class="nav-count">Live</span></a>
+    </nav>
 
-<aside class="projects">
-  <h3>Capabilities</h3>
-  <div class="project"><b>Local workspace</b><small>Explicit roots, read-only</small></div>
-  <div class="project"><b>Browser</b><small>HTTPS allowlist, approval gated</small></div>
-  <div class="project"><b>Sandbox</b><small>Opt-in isolated Python runtime</small></div>
-  <div class="project"><b>Audit</b><small>Durable security events</small></div>
-</aside>
+    <p class="nav-label nav-label-spaced">SYSTEM</p>
+    <nav class="primary-nav">
+      <a class="nav" href="#connection" aria-label="Connections" title="Connections"><span class="nav-icon" aria-hidden="true">⌘</span><span class="nav-text">Connections</span></a>
+      <a class="nav" href="#capabilities" aria-label="Security and tools" title="Security and tools"><span class="nav-icon" aria-hidden="true">⬡</span><span class="nav-text">Security &amp; tools</span></a>
+      <a class="nav" href="#live-events" aria-label="Activity stream" title="Activity stream"><span class="nav-icon" aria-hidden="true">≋</span><span class="nav-text">Activity stream</span></a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="security-note"><span class="security-dot"></span><div><strong>Security-first runtime</strong><small>Capabilities stay permissioned</small></div></div>
+      <div class="profile">
+        <span class="profile-avatar">U</span>
+        <span class="profile-copy"><strong>Local user</strong><small>Personal workspace</small></span>
+        <span class="profile-menu" aria-hidden="true">•••</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-separator">/</span><strong>AI workspace</strong></div>
+      <div class="topbar-actions">
+        <span class="system-status"><span class="status-dot" id="health-dot"></span><span id="health">checking…</span></span>
+        <button class="icon-button" id="focus-task" type="button" aria-label="Focus task composer" title="Focus task composer">↳</button>
+        <span class="topbar-avatar" aria-label="Local user">U</span>
+      </div>
+    </header>
+
+    <div class="page-content" id="workspace-chat">
+      <section class="page-intro">
+        <div>
+          <div class="eyebrow"><span class="eyebrow-spark">✦</span> YOUR AI WORKSPACE</div>
+          <h1>Make space for <span>big ideas.</span></h1>
+          <p>One place to plan, run, and review work—with control over every capability.</p>
+        </div>
+        <div class="intro-badge"><span class="intro-badge-icon">◈</span><span><strong>Private by design</strong><small>Approval before sensitive actions</small></span></div>
+      </section>
+
+      <section class="connection-panel panel" id="connection" aria-labelledby="connection-title">
+        <div class="panel-heading">
+          <div class="panel-title-group"><span class="section-icon">⌘</span><div><h2 id="connection-title">Workspace connection</h2><p>Your API key is kept in this browser session only.</p></div></div>
+          <span class="panel-tag">LOCAL SESSION</span>
+        </div>
+        <div class="connection-fields">
+          <label class="field-label">API key
+            <input id="api-key" type="password" autocomplete="off" placeholder="Paste your local API key">
+          </label>
+          <label class="field-label">Approval actor
+            <input id="approval-actor" maxlength="128" autocomplete="off" placeholder="Approval actor ID" value="web-session">
+          </label>
+          <div class="connection-buttons"><button id="save-key" class="button button-primary" type="button">Connect workspace</button><button id="clear-key" class="button button-secondary" type="button">Disconnect</button></div>
+        </div>
+      </section>
+
+      <section class="task-starter" aria-labelledby="starter-title">
+        <div class="starter-heading"><div><span class="eyebrow">START SOMETHING</span><h2 id="starter-title">What are we working on?</h2><p>Describe the outcome. The planner will shape a safe, bounded approach.</p></div><span class="starter-decoration" aria-hidden="true">✳</span></div>
+        <div class="quick">
+          <button type="button" data-template="Calculate: "><span class="quick-icon quick-violet">∑</span><span><b>Calculate</b><small>Work through a formula</small></span><span class="quick-arrow">↗</span></button>
+          <button type="button" data-template="Read a local file: "><span class="quick-icon quick-blue">▤</span><span><b>Read a local file</b><small>Within approved folders</small></span><span class="quick-arrow">↗</span></button>
+          <button type="button" data-template="Browse a website: "><span class="quick-icon quick-teal">◎</span><span><b>Research the web</b><small>Use configured safe sources</small></span><span class="quick-arrow">↗</span></button>
+          <button type="button" data-template="Write and test code for: "><span class="quick-icon quick-orange">{ }</span><span><b>Build with code</b><small>Plan, implement, validate</small></span><span class="quick-arrow">↗</span></button>
+        </div>
+      </section>
+
+      <section class="composer panel" aria-labelledby="composer-title">
+        <div class="composer-title"><span class="composer-mark">✦</span><h2 id="composer-title">Task brief</h2><span class="composer-hint">Be as specific as you like</span></div>
+        <label class="sr-only" for="task">Describe your task</label>
+        <textarea id="task" maxlength="20000" placeholder="Tell your AI what you want to accomplish… Include context, requirements, and what a good result looks like."></textarea>
+        <div class="execution-controls">
+          <label class="field-label">Tool access
+            <select id="tool"><option value="">Auto — safe intents only</option></select>
+          </label>
+          <label class="field-label">Tool arguments (JSON)
+            <input id="arguments" value="{}" spellcheck="false" aria-label="Tool arguments JSON">
+          </label>
+          <label class="approval-toggle"><input id="approval-required" type="checkbox"><span class="toggle-visual"></span><span><strong>Require approval</strong><small>Pause before execution</small></span></label>
+        </div>
+        <div class="composer-footer">
+          <span id="counter" class="character-count">0 / 20,000</span>
+          <span class="composer-safety"><span class="tiny-shield">◇</span> Tool access is enforced by the server</span>
+          <div class="composer-actions"><button id="analyze" class="button button-secondary" type="button">Preview plan</button><button id="run" class="button button-primary button-run" type="button"><span>Run task</span><span aria-hidden="true">↗</span></button></div>
+        </div>
+      </section>
+
+      <section class="result-grid" aria-label="Task status and analysis">
+        <section class="panel result-panel" aria-labelledby="result-title">
+          <div class="panel-heading"><div class="panel-title-group"><span class="section-icon result-icon">↗</span><div><h2 id="result-title">Task result</h2><p>Output from the latest execution</p></div></div><span class="state-pill" id="run-status">IDLE</span></div>
+          <pre id="result" class="output-block">Your result will appear here after you run a task.</pre>
+        </section>
+        <section class="panel analysis-panel" id="task-analysis" aria-labelledby="analysis-title">
+          <div class="panel-heading"><div class="panel-title-group"><span class="section-icon plan-icon">☷</span><div><h2 id="analysis-title">Task plan</h2><p>Understand → plan → execute → review</p></div></div><span class="panel-tag">PLANNER</span></div>
+          <pre id="analysis" class="output-block">Preview a task to inspect its plan before execution.</pre>
+        </section>
+      </section>
+
+      <section class="panel list-panel" id="pending-approvals" aria-labelledby="approvals-title">
+        <div class="panel-heading"><div class="panel-title-group"><span class="section-icon approval-icon">◇</span><div><h2 id="approvals-title">Approval inbox</h2><p>Sensitive actions wait for a human decision.</p></div></div><span class="panel-tag">HUMAN IN THE LOOP</span></div>
+        <div id="approvals" class="list-content">Loading approvals…</div>
+      </section>
+
+      <section class="panel list-panel" id="run-history" aria-labelledby="runs-title">
+        <div class="panel-heading"><div class="panel-title-group"><span class="section-icon history-icon">◷</span><div><h2 id="runs-title">Recent runs</h2><p>Review recent task execution history.</p></div></div><span class="panel-tag">LATEST ACTIVITY</span></div>
+        <div id="runs" class="list-content">Loading run history…</div>
+      </section>
+
+      <section class="panel list-panel" id="live-events" aria-labelledby="events-title">
+        <div class="panel-heading"><div class="panel-title-group"><span class="section-icon events-icon">≋</span><div><h2 id="events-title">Live activity</h2><p>Audited events for a selected run.</p></div></div><span class="panel-tag">EVENT STREAM</span></div>
+        <div class="event-controls"><label class="field-label" for="run-id">Run ID<input id="run-id" placeholder="Paste a run UUID"></label><button id="watch" class="button button-secondary" type="button">Watch run <span aria-hidden="true">↗</span></button></div>
+        <pre id="events" class="output-block event-output">Select a run to watch its execution events.</pre>
+      </section>
+
+      <section class="panel capability-panel" id="capabilities" aria-labelledby="capabilities-title">
+        <div class="panel-heading"><div class="panel-title-group"><span class="section-icon security-icon">⬡</span><div><h2 id="capabilities-title">Security & capabilities</h2><p>Available capabilities depend on your local configuration.</p></div></div></div>
+        <div class="capability-grid">
+          <article class="capability"><span class="capability-symbol local-symbol">▤</span><div><strong>Local workspace</strong><p>Explicit roots, read-only access</p></div><span class="capability-state">Policy enforced</span></article>
+          <article class="capability"><span class="capability-symbol browser-symbol">◎</span><div><strong>Browser & web</strong><p>HTTPS allowlist and bounded requests</p></div><span class="capability-state">Policy enforced</span></article>
+          <article class="capability"><span class="capability-symbol sandbox-symbol">{ }</span><div><strong>Sandbox runtime</strong><p>Isolated, resource-bounded execution</p></div><span class="capability-state">Opt-in</span></article>
+          <article class="capability"><span class="capability-symbol audit-symbol">≋</span><div><strong>Audit trail</strong><p>Trace important runtime decisions</p></div><span class="capability-state">Audited</span></article>
+        </div>
+      </section>
+
+      <footer class="page-footer"><span>✦ Universal Task AI</span><span>Built for useful work. Designed around trust.</span><a href="https://github.com/Fbi-Boy/universal-task-ai" rel="noopener noreferrer" target="_blank">Repository ↗</a></footer>
+    </div>
+  </main>
 </div>
 <script src="/ui.js"></script>
 </body>

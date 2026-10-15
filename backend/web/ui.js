@@ -23,6 +23,18 @@ async function json(url, options = {}) {
   return response.json();
 }
 
+const healthDot = document.querySelector("#health-dot");
+const workspaceSearch = document.querySelector(".search input");
+const navLinks = Array.from(document.querySelectorAll(".primary-nav .nav"));
+
+function setHealthStatus(status, online) {
+  const health = document.querySelector("#health");
+  health.textContent = status;
+  healthDot.classList.toggle("is-online", Boolean(online));
+  healthDot.classList.toggle("is-offline", !online);
+  healthDot.setAttribute("aria-label", online ? "Service available" : "Service unavailable");
+}
+
 function setCounter() {
   counter.textContent = task.value.length.toLocaleString() + " / 20,000";
 }
@@ -43,6 +55,38 @@ document.querySelector("#save-key").onclick = () => {
   else sessionStorage.removeItem("uta_api_key");
   refresh();
 };
+
+document.querySelector("#focus-task").onclick = () => task.focus();
+
+workspaceSearch.oninput = () => {
+  const query = workspaceSearch.value.trim().toLocaleLowerCase();
+  navLinks.forEach(link => {
+    link.hidden = Boolean(query) && !link.textContent.toLocaleLowerCase().includes(query);
+  });
+};
+workspaceSearch.onkeydown = event => {
+  if (event.key === "Enter") {
+    const firstVisible = navLinks.find(link => !link.hidden);
+    if (firstVisible) firstVisible.click();
+  }
+  if (event.key === "Escape") {
+    workspaceSearch.value = "";
+    workspaceSearch.dispatchEvent(new Event("input"));
+    workspaceSearch.blur();
+  }
+};
+document.addEventListener("keydown", event => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+    event.preventDefault();
+    workspaceSearch.focus();
+  }
+});
+
+navLinks.forEach(link => {
+  link.addEventListener("click", () => {
+    navLinks.forEach(item => item.classList.toggle("active", item === link));
+  });
+});
 
 document.querySelector("#clear-key").onclick = () => {
   sessionStorage.removeItem("uta_api_key");
@@ -144,9 +188,10 @@ async function refreshRuns() {
 
 async function refresh() {
   try {
-    document.querySelector("#health").textContent = (await json("/health")).status;
+    const health = await json("/health");
+    setHealthStatus(health.status, health.status === "ok" || health.status === "ready");
   } catch {
-    document.querySelector("#health").textContent = "offline";
+    setHealthStatus("offline", false);
   }
   try {
     await loadTools();

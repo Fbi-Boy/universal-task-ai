@@ -8,6 +8,10 @@ The repository has a security-first core, planning pipeline, sandboxed execution
 
 The remaining roadmap milestone is an actual production rollout against configured infrastructure. The repository currently contains the protected deployment workflow and a passing ephemeral production rehearsal; a rehearsal is not treated as a real production deployment.
 
+## Product roadmap
+
+See [Premium Product Roadmap](docs/PREMIUM_PRODUCT_ROADMAP.md) for workstream completion estimates, detailed sub-tasks, acceptance criteria, and the remaining production go-live checklist. Percentages are explicitly marked as planning estimates until verified by tests and review.
+
 ## Principles
 
 - Security by design
