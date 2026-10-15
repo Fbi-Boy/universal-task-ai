@@ -40,9 +40,9 @@ class SafeCalculatorIntentRouter:
 class SafeTaskIntentRouter:
     """Route only narrow explicit intents; never infer authority from vague tasks.
 
-    Local file reads are routed only when the user explicitly names a relative
-    path and the filesystem read tool is already enabled by runtime configuration.
-    The local capability broker remains responsible for root containment and reads.
+    Calculator and local file reads are routed only when the requested tool is
+    already enabled by runtime configuration. The local capability broker remains
+    responsible for root containment and actual file reads.
     """
 
     def __init__(self, calculator_router: SafeCalculatorIntentRouter | None = None) -> None:
@@ -55,7 +55,7 @@ class SafeTaskIntentRouter:
         available_tools: Collection[str] = (),
     ) -> ToolInvocation | None:
         calculator = self._calculator.route(task_text)
-        if calculator is not None:
+        if calculator is not None and "calculator" in available_tools:
             return calculator
 
         if (
@@ -81,15 +81,15 @@ class SafeTaskIntentRouter:
 
 
 def _is_safe_relative_path(path: str) -> bool:
-    if not path or len(path) > _MAX_LOCAL_PATH_LENGTH or "\x00" in path:
+    if not path or len(path) > _MAX_LOCAL_PATH_LENGTH or "\\x00" in path:
         return False
-    if path.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", path):
+    if path.startswith(("/", "\\\\")) or re.match(r"^[A-Za-z]:", path):
         return False
     if any(ord(character) < 32 for character in path):
         return False
-    if re.search(r"[/\\]{2,}", path):
+    if re.search(r"[/\\\\]{2,}", path):
         return False
-    segments = re.split(r"[/\\]+", path)
+    segments = re.split(r"[/\\\\]+", path)
     return all(segment not in {"", ".", ".."} for segment in segments)
 
 
@@ -97,13 +97,13 @@ _MAX_TASK_LENGTH = 600
 _MAX_EXPRESSION_LENGTH = 500
 _MAX_LOCAL_PATH_LENGTH = 1024
 _CALCULATOR_PREFIX = re.compile(
-    r"^\s*(?:hitung(?:kan)?|calculate|calc|berapa\s+hasil(?:\s+dari)?|what\s+is)"
-    r"\s*[:,]?\s*(.+?)\s*$",
+    r"^\\s*(?:hitung(?:kan)?|calculate|calc|berapa\\s+hasil(?:\\s+dari)?|what\\s+is)"
+    r"\\s*[:,]?\\s*(.+?)\\s*$",
     re.IGNORECASE,
 )
-_ALLOWED_EXPRESSION = re.compile(r"[0-9\s()+\-*/.]+\Z")
+_ALLOWED_EXPRESSION = re.compile(r"[0-9\\s()+\\-*/.]+\\Z")
 _LOCAL_READ_PREFIX = re.compile(
-    r"^\s*(?:read\s+(?:a\s+)?local\s+file|read\s+file|baca\s+file(?:\s+lokal)?)"
-    r"\s*[:,]\s*(.+?)\s*$",
+    r"^\\s*(?:read\\s+(?:a\\s+)?local\\s+file|read\\s+file|baca\\s+file(?:\\s+lokal)?)"
+    r"\\s*[:,]\\s*(.+?)\\s*$",
     re.IGNORECASE,
 )
