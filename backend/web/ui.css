@@ -197,7 +197,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .app-shell { grid-template-columns: 74px minmax(0,1fr); }
   .sidebar { padding: 20px 10px 12px; align-items: center; }
   .brand { padding: 0 0 25px; }
-  .brand-copy, .workspace-switcher > span:not(.workspace-avatar), .search input, .search kbd, .nav-label, .nav:not(.active) { display: none; }
+  .brand-copy, .workspace-switcher > span:not(.workspace-avatar), .search input, .search kbd, .nav-label, .nav-text { display: none; }
   .workspace-switcher { padding: 5px; border: 0; background: transparent; }
   .search { justify-content: center; width: 42px; margin: 13px 0 22px; padding: 10px; border: 0; background: #f5f5fb; }
   .primary-nav { width: 100%; }
