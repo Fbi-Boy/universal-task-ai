@@ -30,17 +30,17 @@
 
     <p class="nav-label">WORKSPACE</p>
     <nav class="primary-nav">
-      <a class="nav active" href="#workspace-chat"><span class="nav-icon" aria-hidden="true">✧</span> AI workspace <span class="nav-current" aria-hidden="true"></span></a>
-      <a class="nav" href="#task-analysis"><span class="nav-icon" aria-hidden="true">☷</span> Task plan</a>
-      <a class="nav" href="#run-history"><span class="nav-icon" aria-hidden="true">◷</span> Run history</a>
-      <a class="nav" href="#pending-approvals"><span class="nav-icon" aria-hidden="true">◇</span> Approvals <span class="nav-count">Live</span></a>
+      <a class="nav active" href="#workspace-chat"><span class="nav-icon" aria-hidden="true">✧</span><span class="nav-text">AI workspace</span><span class="nav-current" aria-hidden="true"></span></a>
+      <a class="nav" href="#task-analysis"><span class="nav-icon" aria-hidden="true">☷</span><span class="nav-text">Task plan</span></a>
+      <a class="nav" href="#run-history"><span class="nav-icon" aria-hidden="true">◷</span><span class="nav-text">Run history</span></a>
+      <a class="nav" href="#pending-approvals"><span class="nav-icon" aria-hidden="true">◇</span><span class="nav-text">Approvals</span><span class="nav-count">Live</span></a>
     </nav>
 
     <p class="nav-label nav-label-spaced">SYSTEM</p>
     <nav class="primary-nav">
-      <a class="nav" href="#connection"><span class="nav-icon" aria-hidden="true">⌘</span> Connections</a>
-      <a class="nav" href="#capabilities"><span class="nav-icon" aria-hidden="true">⬡</span> Security & tools</a>
-      <a class="nav" href="#live-events"><span class="nav-icon" aria-hidden="true">≋</span> Activity stream</a>
+      <a class="nav" href="#connection"><span class="nav-icon" aria-hidden="true">⌘</span><span class="nav-text">Connections</span></a>
+      <a class="nav" href="#capabilities"><span class="nav-icon" aria-hidden="true">⬡</span><span class="nav-text">Security &amp; tools</span></a>
+      <a class="nav" href="#live-events"><span class="nav-icon" aria-hidden="true">≋</span><span class="nav-text">Activity stream</span></a>
     </nav>
 
     <div class="sidebar-bottom">
@@ -58,7 +58,7 @@
       <div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-separator">/</span><strong>AI workspace</strong></div>
       <div class="topbar-actions">
         <span class="system-status"><span class="status-dot" id="health-dot"></span><span id="health">checking…</span></span>
-        <button class="icon-button" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts">⌘</button>
+        <button class="icon-button" id="focus-task" type="button" aria-label="Focus task composer" title="Focus task composer">↳</button>
         <span class="topbar-avatar" aria-label="Local user">U</span>
       </div>
     </header>
