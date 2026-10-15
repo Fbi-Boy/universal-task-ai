@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
-@import "tailwindcss";
 
 :root{--ink:#202238;--muted:#85879b;--muted2:#65687e;--line:#ececf3;--canvas:#f7f8fc;--surface:#fff;--purple:#6c5ce7;--purple2:#8b7cf6;--green:#159b72;--shadow:0 8px 30px rgba(37,35,84,.035}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"DM Sans",sans-serif;color:var(--ink);background:var(--canvas)}button,input,textarea,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #9b91fa;outline-offset:3px}button:disabled{opacity:.5;cursor:not-allowed}
