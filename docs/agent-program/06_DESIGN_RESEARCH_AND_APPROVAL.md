@@ -11,7 +11,7 @@ The design agent must not start with “make it modern”. It begins with the ro
 3. **Evidence card per image:** screenshot, direct source URL, title/product/designer, date inspected, why it matches this task, pattern to borrow, pattern to reject, asset/license caveat.
 4. **Comparison matrix:** hierarchy, information density, navigation, interaction, accessibility, responsiveness, empty/error states, and fit to Universal Task AI.
 5. **Synthesis:** one recommended visual direction and wireframe/page structure. Do not present a collage with no conclusion.
-6. **System mapping:** existing semantic color tokens, typography, spacing, grid, component and icon system to reuse. Proposed global changes go through A0/A2 review.
+6. **System mapping:** existing semantic color tokens, typography, spacing, grid, component and icon system to reuse. Proposed global changes go through A0/A3 review.
 7. **Approval record:** owner accepts, accepts with changes or rejects; include comments and a stable link to the board/issue.
 8. **Implementation comparison:** screenshot of the real running page at desktop and mobile sizes, with intentional deviations documented.
 
