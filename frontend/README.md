@@ -6,11 +6,22 @@ A separate Next.js frontend workspace for the product dashboard and visual workf
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
 Open http://localhost:3000.
+
+## Validation
+
+```bash
+npm run lint
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+The Playwright smoke test launches the production build, checks that Overview renders, switches to the workflow editor, verifies that adding a draft step works, and captures desktop/mobile screenshots. It tests only prototype interactions, not backend persistence or real integrations.
 
 ## Current scope
 
