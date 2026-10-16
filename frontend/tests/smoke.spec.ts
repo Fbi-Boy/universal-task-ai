@@ -21,6 +21,16 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await expect(page.locator(".flow-node")).toHaveCount(initialCount + 2);
   await expect(page.getByText(/Step added to the visual draft/i)).toBeVisible();
 
+  const approvalSwitch = page.getByRole("switch", { name: "Require approval" });
+  await expect(approvalSwitch).toHaveAttribute("aria-checked", "true");
+  await approvalSwitch.click();
+  await expect(approvalSwitch).toHaveAttribute("aria-checked", "false");
+
+  const auditSwitch = page.getByRole("switch", { name: "Audit every step" });
+  await expect(auditSwitch).toHaveAttribute("aria-checked", "true");
+  await auditSwitch.click();
+  await expect(auditSwitch).toHaveAttribute("aria-checked", "false");
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await expect(page.locator(".sidebar-open")).toHaveCount(0);

@@ -8,7 +8,7 @@
 
 - **FUNCTIONAL (local UI):** the action has an observable effect in the running browser, but it may not persist or call the backend.
 - **PROTOTYPE:** the control is illustrative or only shows a message / changes a local route; its advertised product operation is not implemented. Do not describe it as a live integration.
-- **DISABLED:** the user cannot activate the control. A visual lock/disabled appearance is not equivalent to a semantic disabled state; the current prototype has decorative lock/toggle indicators noted below.
+- **DISABLED:** the user cannot activate the control. A visual lock is not equivalent to a semantic disabled state; the unrestricted-shell indicator remains a locked, informational marker.
 
 ## Overview and app shell
 
@@ -50,7 +50,9 @@
 | Zoom in / zoom out / fit canvas | PROTOTYPE | Shows notices only; canvas scale or layout is not changed. |
 | Node library entries | FUNCTIONAL (local UI) | Clicking a library entry adds that node type to the in-memory draft and shows a notice; drag-and-drop, node configuration, persistence and execution remain unimplemented. |
 | Execution mode select | PROTOTYPE (local form state only) | A value can be selected in the browser, but it is not saved or applied to an execution engine. |
-| “Require approval”, “Audit every step”, “Allow unrestricted shell” indicators | PROTOTYPE / informational | Rendered as visual spans, not real toggle controls. The restricted-shell marker is a policy illustration, not runtime enforcement. |
+| Require approval | FUNCTIONAL (local UI) | Accessible switch changes an in-memory draft boolean only; no runtime approval enforcement occurs. |
+| Audit every step | FUNCTIONAL (local UI) | Accessible switch changes an in-memory draft boolean only; no audit events or logs are emitted. |
+| Allow unrestricted shell | PROTOTYPE / informational | Remains visibly locked; no unrestricted shell is enabled. The marker is not a runtime policy control. |
 | “Drag-and-drop coming next” | PROTOTYPE / informational | Drag-and-drop is not implemented. |
 
 ## Placeholder modules
@@ -64,7 +66,7 @@
 ## Known gaps and acceptance boundary
 
 - No true authentication/session, multi-tenant workspace selection, task API, durable workflow storage, workflow runtime, AI-run API, real notification source, campus provider, WhatsApp integration or billing integration is connected by this frontend PR.
-- The settings indicators remain visual-only. Node-library entries add a selected node to the local draft, but this does not enable drag-and-drop, node configuration, persistence, or execution.
+- Approval and audit switches change local draft state only; runtime policy enforcement and audit logging are not connected. Unrestricted shell remains locked. Node-library entries add a selected node to the local draft, but this does not enable drag-and-drop, node configuration, persistence, or execution.
 - The smoke test checks a narrow path: Overview renders and shows the illustrative-data disclosure; local navigation opens the workflow canvas; adding a Webhook from the node library and adding a generic draft step both change the local node count; the mobile navigation drawer opens. It is not a comprehensive accessibility audit or full user-journey test.
 - Separate follow-up work is required before any control listed as PROTOTYPE is represented as live behavior. Add functional browser/contract tests for each newly connected API-backed operation.
 
