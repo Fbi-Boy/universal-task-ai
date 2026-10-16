@@ -40,7 +40,19 @@ jobs:
           path: frontend/package-lock.json
           if-no-files-found: error
           retention-days: 1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
       - name: Lint
         run: npm run lint
       - name: Production build
         run: npm run build
+      - name: Browser smoke test
+        run: npm run test:e2e
+      - name: Upload browser smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-browser-smoke
+          path: frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
