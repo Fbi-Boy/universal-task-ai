@@ -22,7 +22,7 @@ Program dependencies should be resolved in this order:
 |---|---|---|
 | Product research + visual research | Yes | Shared page/role requirements documented |
 | UI implementation + backend API | Yes, after G2 | Frozen OpenAPI/schema and named file owners |
-| Auth/data migration + task CRUD | Limited | Migration owner A3 only; task engineer uses approved schema |
+| Auth/data migration + task CRUD | Limited | Migration owner A5 only; task engineer uses approved schema |
 | AI runtime + frontend AI screen | Yes, after contract | Same run-state/status/API contract |
 | WhatsApp adapter + task service | Yes, after contract | Normalized command/event schema and stable task/run API |
 | Campus provider research + app shell | Yes | Research does not edit frontend/backend shared files |
@@ -34,11 +34,11 @@ Program dependencies should be resolved in this order:
 
 ## Mermaid dependency map
 
-A0 initializes the program and confirms requirements. Product/design research can proceed alongside source audit. API/data contracts gate frontend/backend parallel work. Integration and automation depend on durable identity, tasks/runs and event contracts. Independent QA reviews every slice and blocks incomplete work.
+A0 initializes the program and confirms requirements. A1 product research and A2 visual research can proceed alongside source audit. API/data contracts gate frontend/backend parallel work. Integration and automation depend on durable identity, tasks/runs and event contracts. Independent QA reviews every slice and blocks incomplete work.
 
 flowchart TD:
 - A0[Program audit and decisions] --> SPEC[Requirements, data/API contracts]
-- A1[Product/design research] --> VIS[Approved visual references and design system]
+- A2[Design reference research] --> VIS[Owner-approved references and design system]
 - SPEC --> ID[Identity, workspace and persistence]
 - VIS --> FE[Frontend shell and page components]
 - ID --> API[Real tenant-scoped APIs]
@@ -60,5 +60,5 @@ flowchart TD:
 - Every agent branches from the agreed latest base and opens a PR.
 - No parallel edit to the same migration, OpenAPI schema, shared types, shared tokens, app shell navigation or root instructions without A0 assigning one owner.
 - Contract changes are announced before dependent branches implement against them.
-- A0 merges the integration plan only after reviewing dependency completion, conflicts, CI and A7 report.
+- A0 merges the integration plan only after reviewing dependency completion, conflicts, CI and A12 report.
 - If a contract must change, stop dependent work, propose migration/backward-compatibility changes, then notify all affected agents.
