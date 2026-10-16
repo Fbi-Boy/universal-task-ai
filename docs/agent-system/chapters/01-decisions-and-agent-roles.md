@@ -3,7 +3,7 @@
 **Versi:** 1.0 · **Tanggal:** 16 Oktober 2026  
 **Repository:** https://github.com/Fbi-Boy/universal-task-ai  
 **Baseline:** `main` + review PR draft #173; baca status branch langsung sebelum setiap sprint.  
-**Pasangan dokumen:** `universal-task-ai-design-reference-board.html` dan `universal-task-ai-blueprint.md`.
+**Pasangan dokumen:** [Design Reference Board](../DESIGN_REFERENCE_BOARD.html), [Product Blueprint](../PRODUCT_BLUEPRINT.md), dan [Design Reference Matrix](../DESIGN_REFERENCE_MATRIX.md).
 
 > Dokumen ini adalah rulebook kerja untuk semua coding/research/design AI. Agent tidak boleh menganggap instruksi sebagai izin untuk menimpa kode, menggabungkan PR, menyentuh production, menggunakan kredensial, atau melewati persetujuan pemilik produk.
 
