@@ -1,7 +1,7 @@
 # Frontend Prototype — Control Inventory
 
-**Applies to:** PR #188, head `392f83a53d835642081468dba9f650a2383e934b`  
-**Reviewed source:** `frontend/app/page.tsx` and the passing Playwright smoke test in Frontend CI run [38921695815](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38921695815).  
+**Applies to:** PR #188, head `64ae085698996beab08dc5de39e976fc48c00453`  
+**Reviewed source:** `frontend/app/page.tsx` and the passing Playwright smoke test in Frontend CI run [38923253468](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253468).  
 **Purpose:** distinguish working local prototype interactions from actions that are not connected to real product services. This is not a production-readiness statement.
 
 ## Status definitions
@@ -70,8 +70,8 @@
 
 ## Latest verified evidence
 
-- [CI run 38921695937](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38921695937): PASS.
-- [Integration and Security run 38921695812](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38921695812): PASS.
-- [Frontend CI run 38921695815](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38921695815): PASS, including `npm ci`, lint, production build, Playwright smoke test, and screenshot artifact upload.
+- [CI run 38923253285](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253285): PASS.
+- [Integration and Security run 38923253283](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253283): PASS.
+- [Frontend CI run 38923253468](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253468): PASS, including `npm ci`, lint, production build, Playwright smoke test, and screenshot artifact upload.
 
 These results are for the cited PR #188 head only; refresh checks if that head changes.
