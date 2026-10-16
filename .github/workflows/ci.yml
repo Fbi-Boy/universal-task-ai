@@ -32,3 +32,43 @@ jobs:
 
       - name: Compile Python
         run: python -m compileall -q backend tests
+
+  frontend-bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend dependencies
+        run: npm install --no-audit --no-fund
+      - name: Export generated npm lockfile for bootstrap
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-package-lock-bootstrap
+          path: frontend/package-lock.json
+          if-no-files-found: error
+          retention-days: 1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Lint
+        run: npm run lint
+      - name: Build production bundle
+        run: npm run build
+      - name: Run browser smoke test
+        run: npm run test:e2e
+      - name: Upload browser smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-browser-smoke
+          path: frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
