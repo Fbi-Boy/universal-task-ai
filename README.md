@@ -46,10 +46,11 @@ Production deployment is intentionally protected by a GitHub Environment and req
 Do not mark production as deployed until a real target has been configured and a successful rollout has been verified.
 
 
-## AI Agent Governance & Product Blueprint
+## AI Agent Program, Governance & Product Blueprint
 
-This repository includes a canonical operating guide for all AI coding/design/research agents. New agents must read [AGENTS.md](AGENTS.md) before working.
+New agents must read [AGENTS.md](AGENTS.md) and the [Agent Program Workbook](docs/agent-program/README.md) before working. The workbook defines the active AI team size, workstreams, dependencies, contracts, ticket format, coordination process, quality gates and Sprint 0 runbook.
 
+- [Agent Program Workbook](docs/agent-program/README.md) — operational team plan, how many AI sessions to run, workstream owners, dependency map, templates, contract register, backlog, risk register and Sprint 0 steps.
 - [Agent Operating System](docs/agent-system/AGENT_OPERATING_SYSTEM.md) — A0–A13 ownership, mandatory startup rules, G0–G6 gates, security, quality, sprint coordination and specialist prompts.
 - [Product & Engineering Blueprint](docs/agent-system/PRODUCT_BLUEPRINT.md) — product vision, current-state caveats, architecture, domain map, data/API contracts, and delivery sequence.
 - [Design Reference Board](docs/agent-system/DESIGN_REFERENCE_BOARD.html) — screenshot gallery with original source links. Open in a browser with internet access; treat as research, not page approval.
