@@ -1,11 +1,11 @@
 # Universal Task AI — Design Reference Matrix
 
-This matrix is paired with [Agent Operating System](AGENT_OPERATING_SYSTEM.md) and the [Visual Reference Board](DESIGN_REFERENCE_BOARD.html). These are research starting points, not automatic design approval. Every page ticket must have its own reviewed board or an explicit recorded reuse decision.
+This matrix is paired with [Agent Operating System](AGENT_OPERATING_SYSTEM.md) and the [Visual Reference Board](DESIGN_REFERENCE_BOARD.html). These are research starting points, not automatic design approval. The Sprint 0 app-shell/overview and AI-workspace clusters have reference cards and are **READY FOR OWNER REVIEW**, not approved. See [product requirements draft PR #184](https://github.com/Fbi-Boy/universal-task-ai/pull/184). No production UI implementation is authorized until the owner approves the selected direction.
 
 | Screen area | Primary visual reference | Behavior/implementation reference | Direction to carry into UTA |
 |---|---|---|---|
-| Overview/app shell | [Planora dashboard](https://dribbble.com/shots/27758844-Planora-Project-Management-Dashboard), [AI task manager](https://dribbble.com/shots/25451888-AI-Task-Manager-SaaS-web-app) | [shadcn components](https://ui.shadcn.com/docs/components), [Next.js dashboard starter](https://github.com/Kiranism/next-shadcn-dashboard-starter) | Persistent sidebar/topbar, understated surfaces, genuine metrics only, shared spacing and typography |
-| AI workspace/chat | [AI chat dashboard](https://dribbble.com/shots/26609268-Case-Study-AI-Chat-Dashboard-Dark-Mode-UI) | Existing UTA run/approval APIs and [shadcn components](https://ui.shadcn.com/docs/components) | Composer + conversation history + project context + run/tool/status timeline + artifacts; permissions and errors visible |
+| Overview/app shell | [Planora dashboard](https://dribbble.com/shots/27758844-Planora-Project-Management-Dashboard), [AI task manager](https://dribbble.com/shots/25451888-AI-Task-Manager-SaaS-web-app), [Triangle responsive task dashboard](https://www.behance.net/gallery/120428393/SAAS-Task-Management-Dashboard-UXUI-Design), [Katonic Workroom](https://www.katonic.ai/workroom) — [section board](DESIGN_REFERENCE_BOARD.html#overview-shell) | [shadcn components](https://ui.shadcn.com/docs/components), [Next.js dashboard starter](https://github.com/Kiranism/next-shadcn-dashboard-starter) | Persistent sidebar/topbar, responsive task context, one restrained accent, understated surfaces, genuine metrics only; **READY FOR OWNER REVIEW** |
+| AI workspace/chat | [AI chat dashboard](https://dribbble.com/shots/26609268-Case-Study-AI-Chat-Dashboard-Dark-Mode-UI), [ChatFusion workspace](https://dribbble.com/shots/26980076-ChatFusion-AI-Workspace-Dashboard-UI), [Katonic Workroom](https://www.katonic.ai/workroom), [Katonic ACE chat](https://www.katonic.ai/), [TextFusionAI chat + document](https://www.textfusionai.com/) — [section board](DESIGN_REFERENCE_BOARD.html#ai-workspace) | Existing UTA run/approval APIs and [shadcn components](https://ui.shadcn.com/docs/components) | Composer + conversation history + project context + truthful run/tool/status timeline + saved artifact context; permissions/errors visible; do not assume screenshots prove API behavior; **READY FOR OWNER REVIEW** |
 | Tasks/kanban | [Kanban Board](https://dribbble.com/shots/11528230-Kanban-Board-White), [Flowboard](https://dribbble.com/shots/27058122-Flowboard-Project-Management-Dashboard-UI) | [ClickUp views](https://help.clickup.com/hc/en-us/articles/6310383076503-Task-views), [GitHub Projects](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects) | List/board/calendar are views over one task entity; consistent status, filters and pagination |
 | Campus Hub/assignment | AI task manager composition reference | [Moodle Web Services](https://docs.moodle.org/dev/Web_services) for one possible LMS; actual selected campus docs are authoritative | Course + source + deadline + sync state + consent + reminders; explicitly name each supported LMS |
 | Automation/workflow builder | [SaaS workflow canvas](https://dribbble.com/shots/27362769-UI-UX-for-SaaS) | [n8n docs](https://docs.n8n.io/), [xyflow/React Flow](https://github.com/xyflow/xyflow) | Node palette/canvas/inspector, typed I/O, graph validation, versions, separate executions view and safe runtime |
@@ -17,6 +17,32 @@ This matrix is paired with [Agent Operating System](AGENT_OPERATING_SYSTEM.md) a
 | Usage/plan | SaaS usage dashboard pattern | [Next.js dashboard starter](https://github.com/Kiranism/next-shadcn-dashboard-starter) for layout only | Real usage/quota/reset/entitlement/payment state; transparent limit/retry/cancel paths |
 | Workspace members/settings | [Next.js dashboard starter](https://github.com/Kiranism/next-shadcn-dashboard-starter) | [shadcn components](https://ui.shadcn.com/docs/components) | Role-aware forms, destructive confirmations, session revoke and tenant isolation |
 | Internal platform admin | Dashboard starter only as layout inspiration | Internal support workflow, audit and least privilege | Separate role surface, scoped support actions, explicit reason and audit; no silent tenant content access |
+
+## Sprint 0 reference review — 16 October 2026
+
+The current [Visual Reference Board](DESIGN_REFERENCE_BOARD.html) retains the ten original cards and adds page-specific evidence for the first two clusters. Source pages/images were checked on 16 October 2026. Where source publication dates were not stated, cards say so rather than inventing them.
+
+| Cluster | Screenshot references | Domain coverage | Research result | Decision |
+|---|---|---|---|---|
+| [App shell + Overview](DESIGN_REFERENCE_BOARD.html#overview-shell) | R01 Planora; R02 AI Task Manager; R11 Triangle responsive task dashboard; R12 Katonic Workroom | 4 references across Dribbble, Behance and Katonic official product page | Navigation, project/task hierarchy, responsive task context and history reviewed. See individual cards for adopt/reject and image/source notes. | **PROPOSED · READY FOR OWNER REVIEW** |
+| [AI Workspace + artifact context](DESIGN_REFERENCE_BOARD.html#ai-workspace) | R03 AI Chat Dashboard; R04 sem.chat SaaS settings/usage reference; R13 ChatFusion; R14 TextFusionAI; R15 Katonic ACE chat | 5 visual cards across Dribbble, TextFusionAI and Katonic; R04 sem.chat direct page could not be fetched in this pass and remains visual-only pending manual verification | Composer/history, tool affordance, chat/document context and status clarity reviewed. R04 supports settings/integration states rather than being treated as an AI-chat reference; do not rely on its interaction semantics until manually verified. | **PROPOSED · READY FOR OWNER REVIEW** |
+
+### Unified recommendation
+
+**Shared-token/component mapping (proposal only; A3 must confirm):**
+- Token families to reuse from the canonical design proposal: neutral `canvas`, white/light `surface`, subtle `border/line`, high-contrast `text/ink`, secondary `muted`, one `brand accent`, and separate semantic `success/warning/danger/info` statuses. Keep the existing typography family/scale, 4/8-based spacing, consistent radii/shadows and single icon family. Do not freeze new token values in this research PR.
+- Existing components to reuse/extend rather than duplicate per page: `AppShell`, `Sidebar`, `MobileNav`, `Topbar`, `Breadcrumbs`, `PageHeader`, `PrimaryAction`, `EmptyState`, `Skeleton`, `ErrorState`, `StatusBadge`, `PriorityIndicator`, `ChatMessage`, `ChatComposer`, `ToolCallRow`, `RunTimeline`, `ApprovalPanel`, and `ArtifactCard`.
+- Mapping reference: [canonical visual system + component inventory](chapters/02-quality-gates-design-and-screen-catalog.md). This is a consistency proposal, not a frozen design contract.
+
+- **Shell:** mostly light neutral canvas, persistent clear navigation, readable page title/primary action, one restrained brand accent, consistent semantic status colors and a compact information hierarchy.
+- **Overview:** show deadlines, tasks, runs and integration health only when backed by current APIs; empty/demo accounts must not show invented live metrics.
+- **AI workspace:** use a primary conversation/composer area with explicit run/tool/approval state and accessible source/artifact context; responsive mobile layout stacks context panels rather than squeezing desktop columns.
+- **Shared system:** reuse current typography/spacing/icon/component decisions. A darker, denser canvas can be considered for workflow/diagram editing but must use the same semantic tokens.
+- **Reject:** copying brands/assets, KPI filler, persistent arbitrary gradients, oversized hero content that pushes tasks down, unclear authorization controls, nonfunctional buttons and inconsistent per-page tokens.
+
+### Owner approval status
+
+`PROPOSED / READY FOR OWNER REVIEW` as of 2026-10-16; **not approved**. Product requirements are still draft in [PR #184](https://github.com/Fbi-Boy/universal-task-ai/pull/184). A0 reviews fit against journeys, A3 checks token/system consistency, and the product owner must explicitly approve or request changes before any production UI implementation. These screenshot references do not demonstrate backend integration, responsive correctness in UTA, accessibility compliance or license rights for reusing original assets.
 
 ## Mandatory expansion per ticket
 
