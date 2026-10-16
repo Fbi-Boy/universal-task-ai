@@ -22,7 +22,7 @@ READY → IN_PROGRESS → BLOCKED (when needed) → REVIEW → ACCEPTED → DONE
 - IN_PROGRESS: agent has assigned branch and is actively implementing.
 - BLOCKED: a real dependency/provider/owner decision/test environment is missing; report reason and requested action.
 - REVIEW: implementation is ready, PR is open and local self-review is done.
-- ACCEPTED: independent A7 findings resolved, tests/CI on current PR head pass and A0 accepts integration.
+- ACCEPTED: independent A12 findings resolved, tests/CI on current PR head pass and A0 accepts integration.
 - DONE: merged according to repository policy and relevant documentation/state updated.
 
 Do not skip states just to show progress. If only docs/code were written but tests are not run, it cannot pass the applicable test gate.
@@ -64,7 +64,7 @@ Each agent must report:
 
 At the start of a work session, A0 posts a short plan: milestone, issues unlocked, agent owner, blocked dependencies and gate required.
 
-When a ticket is ready for review, the implementer sends the required handoff packet and adds A7 as reviewer.
+When a ticket is ready for review, the implementer sends the required handoff packet and adds A12 as reviewer.
 
 At the end of a sprint, A0 updates program state and posts:
 - accepted items with merge links;
