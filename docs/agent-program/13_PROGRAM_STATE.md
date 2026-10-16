@@ -14,6 +14,18 @@
 - Active concurrent AI target: 4 during Sprint 0; 6 during normal development; practical cap 7.
 - High-priority risks: identity/tenant model, frontend prototype-vs-live boundary, WhatsApp inbound mapping, provider-specific campus auth, design consistency and parallel agent conflicts.
 
+## Last source/CI audit snapshot
+
+- Audit report: [Sprint 0 Repository Baseline Audit](audits/SPRINT_0_BASELINE.md), being delivered in [PR #183](https://github.com/Fbi-Boy/universal-task-ai/pull/183).
+- Audited `main` SHA: [`0f4151c067815106d6600f47bab403e5e674c64c`](https://github.com/Fbi-Boy/universal-task-ai/commit/0f4151c067815106d6600f47bab403e5e674c64c) on 16 October 2026.
+- On that exact SHA, [CI](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38912071438), [Integration and Security](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38912071471), and [Container Release](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38912071900) completed successfully.
+- Container Release success means an immutable image was built/pushed; it does **not** mean production deployment occurred. Production rollout remains unverified/incomplete.
+- PR #173 is still a frontend draft, not in `main`; its last recorded [Frontend CI](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38772286887) failed production build due an unclosed bracket in `frontend/app/globals.css`. See the audit report for exact evidence and the lockfile/browser-test gaps.
+- PR #165 remains open and non-mergeable, with an old base. It may overlap with merged PR #168; its diff is not identical, so compare file-by-file before deciding whether it is superseded. Do not merge it as-is.
+- Source-verified product gaps include global API-key authentication instead of user/workspace sessions, in-memory settings attached to `DEFAULT_USER`, unfinished WhatsApp inbound payload mapping, and no verified campus/LMS connector or durable visual-workflow API slice on the audited main tree.
+- GitHub Projects existence/visibility and write capability remain unverified. Issue #182 is blocked; no Project URL is recorded and no Project creation/linkage is claimed.
+- The audit is awaiting independent A12 review. Source inspection and CI evidence are not a substitute for browser checks, provider end-to-end tests or a production deployment.
+
 ## Current iteration
 - Sprint: 0 — Program and design baseline.
 - Objective: verify what exists; lock contracts and design decision process; create prioritized, dependency-safe tickets.
@@ -21,12 +33,13 @@
 - Owner approvals required: product scope, reference direction for representative pages, auth/session product choice, campus connector pilot, and any production action.
 
 ## Sprint 0 GitHub execution queue
+
 Snapshot recorded on 16 October 2026 against main SHA `0f4151c067815106d6600f47bab403e5e674c64c`; refresh the SHA and PR/check state before work starts.
 
-| Canonical issue | Work item | Role owner / reviewer | Status at setup |
+| Canonical issue | Work item | Role owner / reviewer | Status at audit update |
 |---|---|---|---|
-| [#177 — repository baseline audit](https://github.com/Fbi-Boy/universal-task-ai/issues/177) | Evidence-backed inventory of main, open PRs, CI and release status | A0 / A12 | NOT STARTED |
-| [#178 — frontend PR #173 validation](https://github.com/Fbi-Boy/universal-task-ai/issues/178) | Reproduce install/lint/build/browser findings on current PR head | A4 / A12 | NOT STARTED; depends on #177 |
+| [#177 — repository baseline audit](https://github.com/Fbi-Boy/universal-task-ai/issues/177) | Evidence-backed inventory of main, open PRs, CI and release status | A0 / A12 | IN REVIEW via PR #183; A12 review pending |
+| [#178 — frontend PR #173 validation](https://github.com/Fbi-Boy/universal-task-ai/issues/178) | Reproduce install/lint/build/browser findings on current PR head | A4 / A12 | NOT STARTED; acceptance of #177 and current-head rerun still needed |
 | [#179 — student workflows and decisions](https://github.com/Fbi-Boy/universal-task-ai/issues/179) | Define student journeys, roles, provider and product decisions | A1 / A0 | NOT STARTED |
 | [#180 — visual reference boards](https://github.com/Fbi-Boy/universal-task-ai/issues/180) | Audit/reuse existing board and complete page-specific references | A2 / A3 | NOT STARTED; depends on #179 |
 | [#181 — shared contract review](https://github.com/Fbi-Boy/universal-task-ai/issues/181) | Draft evidence-backed auth/workspace/state/error/integration contracts | A0 / A12 (consult A5) | NOT STARTED; depends on #177 |
@@ -34,16 +47,16 @@ Snapshot recorded on 16 October 2026 against main SHA `0f4151c067815106d6600f47b
 
 Important operating notes:
 - Issue numbers above are the canonical work-item IDs. Seed IDs like `UTA-P0-01` are traceability tags only.
-- An issue being open means only that it is not closed; it does **not** mean its work has started or been accepted. At setup, #177–#181 are NOT STARTED and #182 is BLOCKED.
+- An issue being open means only that it is not closed; it does **not** mean its work has started or been accepted.
 - A0–A13 are agent-role identifiers, not verified GitHub usernames. No GitHub assignees have been guessed or assigned.
 - The available GitHub connection could create and read Issues but did not expose a Projects write operation. Project existence/visibility could not be conclusively verified. No Project URL is recorded and no claim is made that the issues have been added to a Project. Before creating a new board, inspect and reuse a suitable existing one if present; see #182.
-- Creating this issue queue is program setup, not evidence that the audit, product research, design review, contract review, or any product implementation has completed.
+- Creating this issue queue is program setup, not evidence that product research, design approval, contract review, or product implementation has completed.
 
 ## Status legend
 - NOT STARTED — no work or evidence exists.
 - IN PROGRESS — scoped work underway with issue/branch.
 - BLOCKED — named missing decision/dependency/environment prevents progress.
-- IN REVIEW — PR exists and review/evidence is pending.
+- IN REVIEW — PR exists, with acceptance/evidence/review pending.
 - ACCEPTED — independent review and required evidence complete.
 - DONE — merged; code/docs/status verified.
 - NOT RUN — check was not executed; never equal to PASS.
