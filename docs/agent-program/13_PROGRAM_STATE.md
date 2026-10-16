@@ -5,11 +5,12 @@
 ## Baseline
 - Repository: Fbi-Boy/universal-task-ai
 - Default branch: main
-- Program workbook PR: create a link when this folder is merged.
+- Program workbook PR: [#175 — coordinated AI agent program workbook](https://github.com/Fbi-Boy/universal-task-ai/pull/175), merged 16 October 2026.
 - Existing governance folder: docs/agent-system/
 - New operational program folder: docs/agent-program/
-- Program folder status is determined from the live PR/main branch, not this file alone. Before merge it is proposed/reviewing; after merge A0 records the merge PR/SHA at the first Sprint 0 kickoff. Treat this document as a snapshot that must be refreshed against GitHub.
+- Program folder status: ACTIVE IN MAIN. Initial merge commit: d594a6c9c32d824b4c6c29add80dca4c558a9ac2. This is the documentation baseline, not a claim that any planned product feature is implemented. Treat this document as a snapshot that must be refreshed against GitHub.
 - Product milestone: Sprint 0, repository/PR/design/contracts/backlog audit.
+- Seed backlog: docs/agent-program/12_INITIAL_BACKLOG.md; convert unique tickets to real GitHub Issues and a Project before implementation starts.
 - Active concurrent AI target: 4 during Sprint 0; 6 during normal development; practical cap 7.
 - High-priority risks: identity/tenant model, frontend prototype-vs-live boundary, WhatsApp inbound mapping, provider-specific campus auth, design consistency and parallel agent conflicts.
 
