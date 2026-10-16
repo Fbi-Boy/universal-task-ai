@@ -19,6 +19,7 @@ This folder is the operational handbook for using multiple AI agents as one coor
 13. [Risk Register](11_RISK_REGISTER.md) — known cross-cutting risks.
 14. [Initial Backlog](12_INITIAL_BACKLOG.md) — first epics/tickets and dependencies.
 15. [Program State](13_PROGRAM_STATE.md) — baseline and update rules.
+16. [Owner Decision Packet](14_OWNER_DECISION_PACKET.md) — unresolved Sprint 0 decisions, recommended defaults, and exact gates blocking Sprint 1.
 
 ## Recommended operating model
 
