@@ -34,7 +34,7 @@
 | [#184 — product requirements draft](https://github.com/Fbi-Boy/universal-task-ai/pull/184) | `e1267861950384effc9d3e7170e490918b1fff58` | CI [run 38914939641](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38914939641) PASS; Integration/Security [run 38914939977](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38914939977) PASS | Open; no PR reviews recorded; owner product decisions and approval pending |
 | [#185 — visual reference review](https://github.com/Fbi-Boy/universal-task-ai/pull/185) | `358a3adb8f4c2d4bfaee8c71b13fb8fd1400b1c5` | CI [run 38916027636](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38916027636) PASS; Integration/Security [run 38916028728](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38916028728) PASS | Open; no PR reviews recorded; visual direction is PROPOSED, not owner-approved |
 
-A passing CI/security run is necessary but does not equal independent review, product-owner approval, acceptance, merge or production release. Refresh PR #183's run status after this change and do not mark any of these PRs accepted from checks alone.
+A passing CI/security run is necessary but does not equal independent review, product-owner approval, acceptance, merge or production release. PR #183’s baseline report is a point-in-time snapshot of the original audit; its later documentary corrections require checks on the final live PR head. Do not mark any of these PRs accepted from checks alone.
 
 ## Current iteration
 - Sprint: 0 — Program and design baseline.
@@ -48,7 +48,7 @@ Snapshot recorded on 16 October 2026 against main SHA `0f4151c067815106d6600f47b
 
 | Canonical issue | Work item | Role owner / reviewer | Status at audit update |
 |---|---|---|---|
-| [#177 — repository baseline audit](https://github.com/Fbi-Boy/universal-task-ai/issues/177) | Evidence-backed inventory of main, open PRs, CI and release status | A0 / A12 | A0 coordinator review recorded; PR #183 CI/security passed on latest recorded head before this state update; A12 independent review pending and reviewer identity not mapped |
+| [#177 — repository baseline audit](https://github.com/Fbi-Boy/universal-task-ai/issues/177) | Evidence-backed inventory of main, open PRs, CI and release status | A0 / A12 | A0 coordinator review recorded on an earlier audit head; audit PR #183 then received patch-level corrections to the #165/#168 comparison and snapshot wording. Recheck the latest PR #183 head before merge; A12 independent review pending and reviewer identity not mapped |
 | [#178 — frontend PR #173 validation](https://github.com/Fbi-Boy/universal-task-ai/issues/178) | Reproduce install/lint/build/browser findings on current PR head | A4 / A12 | NOT STARTED; acceptance of #177 and current-head rerun still needed |
 | [#179 — student workflows and decisions](https://github.com/Fbi-Boy/universal-task-ai/issues/179) | Define student journeys, roles, provider and product decisions | A1 / A0 | IN REVIEW via [PR #184](https://github.com/Fbi-Boy/universal-task-ai/pull/184); A0 review recorded; CI/security pass on head `e1267861950384effc9d3e7170e490918b1fff58`; A12 and owner decision pending |
 | [#180 — visual reference boards](https://github.com/Fbi-Boy/universal-task-ai/issues/180) | Audit/reuse existing board and complete page-specific references | A2 / A3 | IN REVIEW via [PR #185](https://github.com/Fbi-Boy/universal-task-ai/pull/185); A0 alignment review recorded; CI/security pass on head `358a3adb8f4c2d4bfaee8c71b13fb8fd1400b1c5`; A3 and owner approval pending |
