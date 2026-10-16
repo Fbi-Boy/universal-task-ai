@@ -1,7 +1,7 @@
 # Frontend Prototype — Control Inventory
 
-**Applies to:** PR #188, head `64ae085698996beab08dc5de39e976fc48c00453`  
-**Reviewed source:** `frontend/app/page.tsx` and the passing Playwright smoke test in Frontend CI run [38923253468](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253468).  
+**Applies to:** PR #188 frontend prototype. Node-library interaction is implemented in [`1de7f24`](https://github.com/Fbi-Boy/universal-task-ai/commit/1de7f24e0a84bf8bd50f351bd8b62956811db1b6); its smoke-test selector fix is in [`97d3014`](https://github.com/Fbi-Boy/universal-task-ai/commit/97d3014b8e3903a91a7a85f0905f38a6311ac794).  
+**Reviewed source:** `frontend/app/page.tsx` and the passing Playwright smoke test in Frontend CI run [38927084454](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38927084454).  
 **Purpose:** distinguish working local prototype interactions from actions that are not connected to real product services. This is not a production-readiness statement.
 
 ## Status definitions
@@ -65,13 +65,13 @@
 
 - No true authentication/session, multi-tenant workspace selection, task API, durable workflow storage, workflow runtime, AI-run API, real notification source, campus provider, WhatsApp integration or billing integration is connected by this frontend PR.
 - The settings indicators remain visual-only. Node-library entries add a selected node to the local draft, but this does not enable drag-and-drop, node configuration, persistence, or execution.
-- The smoke test checks a narrow path: Overview renders and shows the illustrative-data disclosure; local navigation opens the workflow canvas; adding a draft node changes the local node count; the mobile navigation drawer opens. It is not a comprehensive accessibility audit or full user-journey test.
+- The smoke test checks a narrow path: Overview renders and shows the illustrative-data disclosure; local navigation opens the workflow canvas; adding a Webhook from the node library and adding a generic draft step both change the local node count; the mobile navigation drawer opens. It is not a comprehensive accessibility audit or full user-journey test.
 - Separate follow-up work is required before any control listed as PROTOTYPE is represented as live behavior. Add functional browser/contract tests for each newly connected API-backed operation.
 
 ## Latest verified evidence
 
-- [CI run 38923253285](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253285): PASS.
-- [Integration and Security run 38923253283](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253283): PASS.
-- [Frontend CI run 38923253468](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38923253468): PASS, including `npm ci`, lint, production build, Playwright smoke test, and screenshot artifact upload.
+- [CI run 38927084549](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38927084549): PASS.
+- [Integration and Security run 38927084432](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38927084432): PASS.
+- [Frontend CI run 38927084454](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38927084454): PASS, including `npm ci`, lint, production build, Playwright smoke test, and screenshot artifact upload.
 
 These results are for the cited PR #188 head only; refresh checks if that head changes.
