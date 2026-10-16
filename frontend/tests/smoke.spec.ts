@@ -4,7 +4,7 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Good evening, builder/i })).toBeVisible();
-  await expect(page.getByText("Execution volume · illustrative preview")).toBeVisible();
+  await expect(page.getByText("Preview data only — metrics and activity are illustrative, not live workspace data.")).toBeVisible();
   await page.screenshot({ path: "test-results/overview-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: /Explore workflows/i }).first().click();
@@ -15,7 +15,10 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await expect(page.getByText(/Step added to the visual draft/i)).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".sidebar-open")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();
   await page.screenshot({ path: "test-results/workflow-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "Open navigation" }).click();
   await expect(page.locator(".sidebar-open .mobile-close")).toBeVisible();
+  await page.screenshot({ path: "test-results/navigation-mobile-open.png", fullPage: true });
 });
