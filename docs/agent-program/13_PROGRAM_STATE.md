@@ -26,6 +26,16 @@
 - GitHub Projects existence/visibility and write capability remain unverified. Issue #182 is blocked; no Project URL is recorded and no Project creation/linkage is claimed.
 - The audit is awaiting independent A12 review. Source inspection and CI evidence are not a substitute for browser checks, provider end-to-end tests or a production deployment.
 
+## Open documentation PR status — 16 October 2026
+
+| PR | Exact head checked | Latest recorded checks | Review / merge status |
+|---|---|---|---|
+| [#183 — baseline audit and issue queue](https://github.com/Fbi-Boy/universal-task-ai/pull/183) | Previous head `23f1d79b33893789f866c095e16daf0f25afcca5`; this Program State edit changes the PR again | Previous head CI [run 38914545845](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38914545845) PASS; Integration/Security [run 38914546166](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38914546166) PASS | Open; re-run status checks on the new head; independent A12 review pending |
+| [#184 — product requirements draft](https://github.com/Fbi-Boy/universal-task-ai/pull/184) | `e1267861950384effc9d3e7170e490918b1fff58` | CI [run 38914939641](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38914939641) PASS; Integration/Security [run 38914939977](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38914939977) PASS | Open; no PR reviews recorded; owner product decisions and approval pending |
+| [#185 — visual reference review](https://github.com/Fbi-Boy/universal-task-ai/pull/185) | `213c4457ff5104417a0459705f9efd00ee01ea59` | CI [run 38915754234](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38915754234) PASS; Integration/Security [run 38915753634](https://github.com/Fbi-Boy/universal-task-ai/actions/runs/38915753634) PASS | Open; no PR reviews recorded; visual direction is PROPOSED, not owner-approved |
+
+A passing CI/security run is necessary but does not equal independent review, product-owner approval, acceptance, merge or production release. Refresh PR #183's run status after this change and do not mark any of these PRs accepted from checks alone.
+
 ## Current iteration
 - Sprint: 0 — Program and design baseline.
 - Objective: verify what exists; lock contracts and design decision process; create prioritized, dependency-safe tickets.
@@ -40,8 +50,8 @@ Snapshot recorded on 16 October 2026 against main SHA `0f4151c067815106d6600f47b
 |---|---|---|---|
 | [#177 — repository baseline audit](https://github.com/Fbi-Boy/universal-task-ai/issues/177) | Evidence-backed inventory of main, open PRs, CI and release status | A0 / A12 | IN REVIEW via PR #183; A12 review pending |
 | [#178 — frontend PR #173 validation](https://github.com/Fbi-Boy/universal-task-ai/issues/178) | Reproduce install/lint/build/browser findings on current PR head | A4 / A12 | NOT STARTED; acceptance of #177 and current-head rerun still needed |
-| [#179 — student workflows and decisions](https://github.com/Fbi-Boy/universal-task-ai/issues/179) | Define student journeys, roles, provider and product decisions | A1 / A0 | NOT STARTED |
-| [#180 — visual reference boards](https://github.com/Fbi-Boy/universal-task-ai/issues/180) | Audit/reuse existing board and complete page-specific references | A2 / A3 | NOT STARTED; depends on #179 |
+| [#179 — student workflows and decisions](https://github.com/Fbi-Boy/universal-task-ai/issues/179) | Define student journeys, roles, provider and product decisions | A1 / A0 | IN REVIEW via [PR #184](https://github.com/Fbi-Boy/universal-task-ai/pull/184); CI/security pass on head `e1267861950384effc9d3e7170e490918b1fff58`, owner decision pending |
+| [#180 — visual reference boards](https://github.com/Fbi-Boy/universal-task-ai/issues/180) | Audit/reuse existing board and complete page-specific references | A2 / A3 | IN REVIEW via [PR #185](https://github.com/Fbi-Boy/universal-task-ai/pull/185); CI/security pass on head `213c4457ff5104417a0459705f9efd00ee01ea59`; owner approval pending |
 | [#181 — shared contract review](https://github.com/Fbi-Boy/universal-task-ai/issues/181) | Draft evidence-backed auth/workspace/state/error/integration contracts | A0 / A12 (consult A5) | NOT STARTED; depends on #177 |
 | [#182 — Project board verification/setup](https://github.com/Fbi-Boy/universal-task-ai/issues/182) | Verify/reuse a suitable board or create one only if absent; verify canonical issue links | A0 / A12 | BLOCKED: Project visibility/write capability not verified |
 
