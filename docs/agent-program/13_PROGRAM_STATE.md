@@ -8,7 +8,7 @@
 - Program workbook PR: create a link when this folder is merged.
 - Existing governance folder: docs/agent-system/
 - New operational program folder: docs/agent-program/
-- Initial status for the program folder: proposed for review until the current PR has been merged.
+- Program folder status is determined from the live PR/main branch, not this file alone. Before merge it is proposed/reviewing; after merge A0 records the merge PR/SHA at the first Sprint 0 kickoff. Treat this document as a snapshot that must be refreshed against GitHub.
 - Product milestone: Sprint 0, repository/PR/design/contracts/backlog audit.
 - Active concurrent AI target: 4 during Sprint 0; 6 during normal development; practical cap 7.
 - High-priority risks: identity/tenant model, frontend prototype-vs-live boundary, WhatsApp inbound mapping, provider-specific campus auth, design consistency and parallel agent conflicts.
