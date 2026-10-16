@@ -1,0 +1,130 @@
+name: AI Agent Work Item
+description: Assign one bounded task with dependencies, contract, acceptance criteria and evidence.
+title: "[UTA] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read AGENTS.md and docs/agent-program/README.md first. Search existing issues before creating duplicates. Keep scope to one reviewable vertical slice.
+  - type: input
+    id: ticket_id
+    attributes:
+      label: Program ticket / epic
+      description: Use the issue number as the canonical ID after GitHub creates the issue.
+      placeholder: UTA-P1-03 or parent issue number
+    validations:
+      required: true
+  - type: dropdown
+    id: primary_agent
+    attributes:
+      label: Primary agent role
+      options:
+        - A0 — Program Orchestrator
+        - A1 — Product Research
+        - A2 — Visual Reference Research
+        - A3 — Design System
+        - A4 — Frontend
+        - A5 — Identity and Data
+        - A6 — Tasks and Backlog
+        - A7 — AI Runs and Artifacts
+        - A8 — WhatsApp and Campus
+        - A9 — Workflow Automation
+        - A10 — Developer Studio
+        - A11 — Usage and Billing
+        - A12 — Independent QA and Security
+        - A13 — DevOps and Release
+    validations:
+      required: true
+  - type: input
+    id: reviewer
+    attributes:
+      label: Independent reviewer
+      description: Usually A12 for implementation work; name additional domain reviewers if required.
+      placeholder: A12 + domain owner
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and user value
+      description: Current verified behavior, persona, job-to-be-done, desired outcome.
+      placeholder: |
+        User/role:
+        Current behavior and evidence:
+        Expected outcome:
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and file ownership
+      description: Explicit scope in/out, allowed paths and paths that must not be touched.
+      placeholder: |
+        Included:
+        Excluded:
+        Allowed paths:
+        Do not modify:
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies_contract
+    attributes:
+      label: Dependencies and contracts
+      description: Link prerequisite issues, ADRs, API/data schema, status and permission contracts.
+      placeholder: |
+        Dependencies:
+        API/data/ADR contract:
+        Identity/workspace permissions:
+    validations:
+      required: true
+  - type: dropdown
+    id: design_gate
+    attributes:
+      label: Design gate
+      description: If user-visible, the page-specific image reference board must be approved before production UI coding.
+      options:
+        - Not applicable — backend/non-visual work
+        - Needs research
+        - Ready for owner review
+        - Approved
+        - Approved with changes
+        - Rejected / blocked
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Write testable Given/When/Then outcomes, not vague goals.
+      placeholder: |
+        1. Given ... when ... then ...
+        2. Given ... when ... then ...
+    validations:
+      required: true
+  - type: textarea
+    id: risks_tests
+    attributes:
+      label: Risks and verification plan
+      description: Include relevant security/failure cases, exact commands and evidence required.
+      placeholder: |
+        Security/permission/failure cases:
+        Unit/API/integration/browser tests:
+        Exact commands:
+        Screenshot/evidence needed:
+        Migration/rollback:
+    validations:
+      required: true
+  - type: textarea
+    id: handoff
+    attributes:
+      label: Completion handoff (fill before review)
+      description: Keep all results factual. Use NOT RUN when a check was not executed.
+      placeholder: |
+        Branch / PR / exact SHA:
+        Paths changed:
+        Acceptance PASS/FAIL/NOT RUN with evidence:
+        Tests run + results:
+        Known limitations/blockers:
+        Next dependency:
+    validations:
+      required: false
