@@ -179,7 +179,7 @@ Acceptance suggestion: at least 18/20 and no 0 in Authorization, Data Integrity,
 
 ## 14. Official and visual reference starting library
 
-Use the companion visual board to inspect screenshots. Reference links for verified implementation/pattern research:
+Use the [companion visual reference board](../DESIGN_REFERENCE_BOARD.html) to inspect screenshots. Reference links for verified implementation/pattern research:
 
 - [shadcn/ui official source](https://github.com/shadcn-ui/ui) — composable UI elements, source available for customization; check exact package/license and version.
 - [shadcn/ui component documentation](https://ui.shadcn.com/docs/components) — accessible interaction patterns and reusable primitives.
