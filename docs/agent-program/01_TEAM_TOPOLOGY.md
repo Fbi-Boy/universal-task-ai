@@ -2,52 +2,54 @@
 
 ## Recommendation
 
-Do not run 14 independent agents in parallel. Start with **4 active agents during Sprint 0**, then move to **6 active agents during implementation**. Keep **7 concurrent agents as the practical maximum** until coordination is measurably reliable. The number refers to active work sessions, not all prompt profiles available in the repository.
+The repository already defines canonical agent IDs A0–A13 in docs/agent-system/chapters/01-decisions-and-agent-roles.md. This program reuses those exact IDs. Do not renumber them or create a second incompatible A0–A7 system.
 
-The recommended steady-state team has these 8 role profiles. A role can be activated when needed; the team cap still applies.
+Do **not** run 14 independent agents simultaneously. Use **4 active agent sessions for Sprint 0**, then normally **6 active sessions during implementation**, with **7 as the practical maximum** until coordination is proven. All specialist roles remain available in the catalog, but they are activated only when their dependency is ready.
 
-| ID | Role | Owns | Must not do |
+## Canonical roles (reuse the existing IDs)
+
+| ID | Role | Primary output | Not allowed |
 |---|---|---|---|
-| A0 | Program Orchestrator / Chief Architect | issues, contracts, ADRs, dependencies, assignments, integration, program status | secretly change feature code while acting as reviewer of that same change; approve own design |
-| A1 | Product & Design Research | research, user flows, requirements, visual reference boards, evidence links | production UI implementation before owner design approval |
-| A2 | Frontend & Design System | tokens, shared shell/components, Next.js routes, API client/UI states | invent APIs, use fake live metrics, bypass server auth |
-| A3 | Identity & Backend Platform | accounts, sessions, workspace/RBAC, database, API schemas and tenant isolation | own all domain logic or let IDs from request bodies define access |
-| A4 | Student Tasks & AI Workspace | projects/tasks/backlog, conversations, runs, approvals, artifacts, model/runtime integration | bypass existing safe tool boundary or claim unsupported work succeeded |
-| A5 | Integrations Engineer | WhatsApp, notifications, campus connector pilot, source sync/checkpoints | assume all LMS platforms are the same or automate unauthorized official actions |
-| A6 | Automation & Developer Studio | workflow schema/builder/runtime, GitHub, ERD/DFD/flowchart/UML increments | treat a visual canvas or current regex validator as a safe, complete runtime |
-| A7 | Independent QA, Security & Release Readiness | tests, threat review, browser/a11y evidence, dependency risk, readiness and release checklist | review only from implementer claims, or waive product-owner release approval |
+| A0 | Chief Architect / Program Orchestrator | backlog, dependencies, ADRs, contracts, file ownership, integration decision | waive owner approval, claim evidence without checking, review own work as independent QA |
+| A1 | Product & Student Workflow Researcher | product requirements, user journey, personas/roles, acceptance criteria | implement production UI from unapproved assumptions |
+| A2 | Design Research & Visual Reference Curator | screenshot research, source-backed visual board, adopt/reject rationale | treat visual inspiration as proof of product behavior or license to copy artwork |
+| A3 | Design System Steward / Design QA | shared tokens/components, visual consistency, accessibility and screenshot review | add unrelated per-page design language |
+| A4 | Frontend Platform & App Shell Engineer | Next.js shell/routes, typed API client, truthful states, browser integration | invent API contracts or fake live data/status |
+| A5 | Identity, Workspace & Data Platform Engineer | auth/session, workspace/RBAC, migrations, tenant-safe data access | trust user/workspace IDs supplied by an untrusted request |
+| A6 | Student Tasks, Projects & Backlog Engineer | durable tasks, projects, views, dependencies, sprint/backlog | create separate inconsistent stores for different views |
+| A7 | AI Workspace, Runs & Artifact Engineer | conversations, AI run lifecycle, approvals, artifact versions/provenance | bypass permission boundary or claim unsupported work completed |
+| A8 | WhatsApp, Notification & Campus Connector Engineer | verified inbound/outbound messages, authorized campus sync, notification delivery | unauthorized scraping, hidden official actions or credential exposure |
+| A9 | Workflow Automation Engineer | versioned workflow schema, safe execution, run/step logs, retry/approval | let canvas or model grant itself runtime permission |
+| A10 | Developer Studio Engineer | GitHub scopes/repository access, diagrams, versioning and export | claim formats work without parser/render/export tests |
+| A11 | Subscription, Usage & Plans Engineer | usage ledger, quotas, entitlements, payment provider flows | invent pricing/usage/payment state or handle raw card data |
+| A12 | Independent QA, Security & Reliability Reviewer | reproducible findings, automated tests, threat/accessibility review | accept implementer self-report as proof or waive product-owner release approval |
+| A13 | DevOps / Release Steward | reproducible builds, migrations, monitoring, backups and rollback evidence | deploy or mutate production without explicit approval |
 
-DevOps/payment/licensing research is a specialist capability called on by A0 when the phase needs it; it does not require a dedicated always-running agent in the first phase. If a billing payment integration, production deployment or a new runtime system becomes active, split that responsibility into a dedicated temporary specialist and reduce other concurrency to stay under the cap.
+These are role profiles, not a requirement to maintain 14 separate always-on AI sessions.
 
 ## Active capacity by phase
 
-### Sprint 0: 4 active roles maximum
-- A0: current repo/PR/architecture audit and work breakdown.
-- A1: requirements, visual reference research and page catalog.
-- A2: inspect frontend PR and validate shared design system; no production feature build.
-- A7: independent repo/security/test gap review.
+### Sprint 0 — 4 active sessions maximum
+Use A0 (coordination), A1 (requirements), A4 (audit PR #173/current frontend and run build checks), and A12 (independent security/test review). A2 can take the next sequential ticket after A1 provides the page brief; do not add a fifth concurrent session simply to overlap research.
 
-A3–A6 remain inactive until contracts and dependency ownership are clear. This prevents premature parallel implementation.
+### Normal implementation — 6 active sessions
+A0 always coordinates and A12 provides independent review. Select up to four domain agents from A2–A11 whose dependencies are satisfied. The exact group depends on the sprint. Examples:
+- Auth/data vertical slice: A0 + A5 + A4 + A6 + A12 + one integration tester/domain specialist.
+- WhatsApp-to-artifact slice: A0 + A5 + A7 + A8 + A12 + A4.
+- Workflow slice: A0 + A7 + A9 + A4 + A12 + one relevant data/domain specialist.
 
-### Normal implementation: 6 active agents
-Always include A0 and A7 review capacity; select no more than four domain workers from A2–A6 for the tickets whose dependencies are satisfied. Asynchronous, independent research can be performed by A1 without creating overlapping code edits, but total active sessions should remain capped at six unless A0 explicitly records a reason.
+### Practical maximum — 7 active sessions
+A seventh session is permitted only if contracts and file ownership are stable, an independent reviewer is available, and each agent's changes can be integrated without overlapping shared files. If agents are waiting on each other or creating conflicting API/schema/style decisions, reduce parallelism.
 
-### Hard practical cap: 7 active
-Use a seventh slot only when every worker has independent paths/contracts and one integrator is available. If merge conflicts, duplicate API contracts, inconsistent styles, or unresolved handoffs increase, reduce parallelism instead of adding agents.
+### A11 and A13 are phase-activated
+Billing/payment integration (A11) and production release work (A13) are not needed in every sprint. Activate them only after usage/payment contracts or release prerequisites exist. A13 must not deploy without owner approval.
 
-## Reporting lines
+## Reporting and shared-file ownership
 
-Product Owner → A0 → domain owner(s) → A7 independent review → A0 integration decision → owner approval where required.
+Product Owner → A0 → domain owner → A12 independent review → A0 integration recommendation → product owner approval for high-risk choices.
 
-A0 cannot assign two agents the same file ownership in the same working window. Shared files (root AGENTS, API schema, design tokens, shared navigation, migrations, workflow state machine) have one named owner per ticket. Parallel work can touch those files only after an explicitly approved contract/change window.
+A0 must name one primary owner for any shared path in a work window. Examples: OpenAPI schemas, migrations, global design tokens, shared app shell, root AGENTS.md, workflow status schema, and program-state records. No two agents may write the same shared file in parallel without an explicit coordinated change.
 
-## When to create a new agent role
+## Rules for creating subagents
 
-Create a new specialist only if:
-1. It owns a substantial independent knowledge area.
-2. It has a separate deliverable, measurable acceptance criteria and test strategy.
-3. Existing roles cannot reasonably cover it without exceeding capacity.
-4. A0 has defined dependencies and file ownership.
-5. The work is important enough to justify the coordination cost.
-
-Do not spawn an agent for a tiny subtask; use a subtask under the appropriate domain issue.
+Create a temporary subagent only when the task is sizeable and independent, has a separate acceptance/test plan, has a clear owner/path scope, and saves more time than its coordination cost. Tiny subtasks remain under the parent ticket. Never spawn several agents to “review everything” without assigning distinct review checklists.
