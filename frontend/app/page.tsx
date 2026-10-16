@@ -7,6 +7,7 @@ import {
   GitBranch, Globe2, LayoutDashboard, LockKeyhole, MessageSquare, MoreHorizontal,
   Play, Plus, Search, Settings2, ShieldCheck, Sparkles, Workflow, Zap, Menu, X,
   PanelLeftClose, SlidersHorizontal, CircleDot, CheckCircle2, Timer, Webhook,
+  type LucideIcon,
 } from "lucide-react";
 
 type PageKey = "Overview" | "AI Workspace" | "Workflows" | "Agents" | "Runs" | "Approvals" | "Integrations" | "Settings";
@@ -22,7 +23,16 @@ const navigation: { label: PageKey; icon: typeof LayoutDashboard; group: string 
   { label: "Settings", icon: Settings2, group: "BUILD" },
 ];
 
-const initialNodes = [
+type WorkflowNode = {
+  id: number;
+  type: string;
+  label: string;
+  detail: string;
+  icon: LucideIcon;
+  color: string;
+};
+
+const initialNodes: WorkflowNode[] = [
   { id: 1, type: "trigger", label: "When a task arrives", detail: "Chat / webhook trigger", icon: Zap, color: "violet" },
   { id: 2, type: "agent", label: "Understand the goal", detail: "Task Analyzer", icon: Sparkles, color: "blue" },
   { id: 3, type: "agent", label: "Plan & route", detail: "Orchestrator", icon: GitBranch, color: "teal" },
@@ -39,7 +49,7 @@ const activities = [
 
 export default function Home() {
   const [activePage, setActivePage] = useState<PageKey>("Overview");
-  const [nodes, setNodes] = useState(initialNodes);
+  const [nodes, setNodes] = useState<WorkflowNode[]>(initialNodes);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [workflowName, setWorkflowName] = useState("Universal task pipeline");
   const [toast, setToast] = useState("");
@@ -54,6 +64,12 @@ export default function Home() {
     const id = Math.max(0, ...nodes.map((node) => node.id)) + 1;
     setNodes([...nodes, { id, type: "action", label: "New workflow step", detail: "Configure this step", icon: Blocks, color: "blue" }]);
     notify("Step added to the visual draft. Save/run integration is not connected yet.");
+  }
+
+  function addLibraryNode(node: Omit<WorkflowNode, "id">) {
+    const id = Math.max(0, ...nodes.map((item) => item.id)) + 1;
+    setNodes([...nodes, { ...node, id }]);
+    notify(`${node.label} added to the visual draft. Save/run integration is not connected yet.`);
   }
 
   const isWorkflow = activePage === "Workflows";
@@ -130,7 +146,7 @@ export default function Home() {
 
           {isWorkflow && <section className="workflow-editor">
             <div className="editor-toolbar surface"><div className="workflow-name"><span className="workflow-name-icon"><Workflow size={17}/></span><input aria-label="Workflow name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/><span className="draft-pill">DRAFT</span></div><div className="editor-actions"><button className="btn btn-secondary" onClick={addNode}><Plus size={15}/> Add step</button><button className="btn btn-primary" onClick={() => notify("Workflow execution is not connected yet. This canvas is a visual draft.")}><Play size={15} fill="currentColor"/> Test workflow</button><button className="icon-btn" onClick={() => notify("Workflow save API is not connected yet")} aria-label="More workflow actions"><MoreHorizontal size={18}/></button></div></div>
-            <div className="workflow-layout"><aside className="node-library surface"><div className="library-heading"><div><h3>Node library</h3><p>Drag-and-drop coming next</p></div><Search size={16}/></div><div className="node-search"><Search size={15}/><span>Find a node...</span></div><p className="library-label">TRIGGERS</p><LibraryNode icon={Webhook} title="Webhook" detail="Incoming HTTP event" tone="violet"/><LibraryNode icon={Clock3} title="Schedule" detail="Run at a set time" tone="orange"/><LibraryNode icon={MessageSquare} title="Chat message" detail="User starts a task" tone="blue"/><p className="library-label">AI & LOGIC</p><LibraryNode icon={Sparkles} title="AI Agent" detail="Reason and plan" tone="violet"/><LibraryNode icon={GitBranch} title="Condition" detail="Branch by a rule" tone="teal"/><LibraryNode icon={Cpu} title="Code step" detail="Sandboxed execution" tone="blue"/><p className="library-label">ACTIONS</p><LibraryNode icon={Globe2} title="HTTP request" detail="Allowlisted endpoints" tone="teal"/><LibraryNode icon={FileText} title="Create artifact" detail="Code, ERD, document" tone="green"/><LibraryNode icon={ShieldCheck} title="Human approval" detail="Pause for review" tone="orange"/></aside>
+            <div className="workflow-layout"><aside className="node-library surface"><div className="library-heading"><div><h3>Node library</h3><p>Drag-and-drop coming next</p></div><Search size={16}/></div><div className="node-search"><Search size={15}/><span>Find a node...</span></div><p className="library-label">TRIGGERS</p><LibraryNode icon={Webhook} title="Webhook" detail="Incoming HTTP event" tone="violet" nodeType="trigger" onAdd={addLibraryNode}/><LibraryNode icon={Clock3} title="Schedule" detail="Run at a set time" tone="orange" nodeType="trigger" onAdd={addLibraryNode}/><LibraryNode icon={MessageSquare} title="Chat message" detail="User starts a task" tone="blue" nodeType="trigger" onAdd={addLibraryNode}/><p className="library-label">AI & LOGIC</p><LibraryNode icon={Sparkles} title="AI Agent" detail="Reason and plan" tone="violet" nodeType="agent" onAdd={addLibraryNode}/><LibraryNode icon={GitBranch} title="Condition" detail="Branch by a rule" tone="teal" nodeType="condition" onAdd={addLibraryNode}/><LibraryNode icon={Cpu} title="Code step" detail="Sandboxed execution" tone="blue" nodeType="action" onAdd={addLibraryNode}/><p className="library-label">ACTIONS</p><LibraryNode icon={Globe2} title="HTTP request" detail="Allowlisted endpoints" tone="teal" nodeType="action" onAdd={addLibraryNode}/><LibraryNode icon={FileText} title="Create artifact" detail="Code, ERD, document" tone="green" nodeType="output" onAdd={addLibraryNode}/><LibraryNode icon={ShieldCheck} title="Human approval" detail="Pause for review" tone="orange" nodeType="approval" onAdd={addLibraryNode}/></aside>
               <div className="canvas-shell"><div className="canvas-top"><div><span className="canvas-live-dot"/><b>Workflow canvas</b><span className="canvas-sub">· Visual builder</span></div><div className="canvas-controls"><button className="icon-btn" onClick={() => notify("Zoom controls will be added with canvas interactions")} aria-label="Zoom out">−</button><span>100%</span><button className="icon-btn" onClick={() => notify("Zoom controls will be added with canvas interactions")} aria-label="Zoom in">+</button><button className="icon-btn" onClick={() => notify("Canvas layout is fit to screen")} aria-label="Fit canvas"><PanelLeftClose size={16}/></button></div></div>
                 <div className="canvas-grid"><div className="flow-column">{nodes.map((node, index) => { const Icon = node.icon; return <div className="node-and-link" key={node.id}><button className="flow-node" onClick={() => notify(`Selected step: ${node.label}. Step configuration is not wired yet.`)}><span className={`node-icon ${node.color}`}><Icon size={18}/></span><span className="node-copy"><b>{node.label}</b><small>{node.detail}</small></span><MoreHorizontal size={16} className="node-more"/></button>{index < nodes.length - 1 && <div className="node-link"><span/><i/></div>}</div>; })}<button className="add-node" onClick={addNode}><Plus size={16}/> Add another step</button></div><div className="canvas-note"><span><LockKeyhole size={14}/></span><b>Safety boundary</b><p>Tool actions must pass policy checks. Sensitive steps pause for human approval.</p></div></div>
               </div><aside className="properties-panel surface"><div className="properties-heading"><div><h3>Workflow settings</h3><p>Pipeline configuration</p></div><Settings2 size={16}/></div><label className="setting-label">Workflow name<input value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/></label><label className="setting-label">Execution mode<select defaultValue="approval"><option value="approval">Approval-first</option><option value="manual">Manual trigger</option><option value="schedule">Scheduled</option></select></label><div className="settings-divider"/><div className="setting-row"><span><b>Require approval</b><small>For sensitive actions</small></span><span className="toggle on"/></div><div className="setting-row"><span><b>Audit every step</b><small>Keep execution history</small></span><span className="toggle on"/></div><div className="setting-row"><span><b>Allow unrestricted shell</b><small>Disabled by policy</small></span><span className="toggle locked"><LockKeyhole size={12}/></span></div><div className="properties-foot"><ShieldCheck size={16}/><span>Least privilege enabled</span></div></aside></div>
@@ -151,6 +167,13 @@ function Metric({ icon: Icon, label, value, change, tone, note }: { icon: typeof
   return <article className="metric-card"><div className="metric-top"><span className={`metric-icon ${tone}`}><Icon size={18}/></span><button className="icon-btn" aria-label={`More about ${label}`}><MoreHorizontal size={17}/></button></div><span className="metric-label">{label}</span><div className="metric-value-row"><strong>{value}</strong><span className={`metric-change ${tone}`}>{tone === "green" || tone === "violet" ? <ArrowUpRight size={13}/> : <ArrowDownRight size={13}/>} {change}</span></div><small>{note}</small></article>;
 }
 
-function LibraryNode({ icon: Icon, title, detail, tone }: { icon: typeof Activity; title: string; detail: string; tone: string }) {
-  return <button className="library-node" onClick={() => { /* library catalog is intentionally non-mutating until node configuration is implemented */ }}><span className={`node-icon ${tone}`}><Icon size={16}/></span><span><b>{title}</b><small>{detail}</small></span><Plus size={14}/></button>;
+function LibraryNode({ icon: Icon, title, detail, tone, nodeType, onAdd }: {
+  icon: LucideIcon;
+  title: string;
+  detail: string;
+  tone: string;
+  nodeType: string;
+  onAdd: (node: Omit<WorkflowNode, "id">) => void;
+}) {
+  return <button className="library-node" onClick={() => onAdd({ type: nodeType, label: title, detail, icon: Icon, color: tone })}><span className={`node-icon ${tone}`}><Icon size={16}/></span><span><b>{title}</b><small>{detail}</small></span><Plus size={14}/></button>;
 }

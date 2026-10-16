@@ -48,7 +48,7 @@
 | “Test workflow” | PROTOTYPE | Shows a notice that execution is not connected. No workflow run is started. |
 | Workflow “more” action | PROTOTYPE | Shows a notice that the workflow save API is not connected. No save occurs. |
 | Zoom in / zoom out / fit canvas | PROTOTYPE | Shows notices only; canvas scale or layout is not changed. |
-| Node library entries | PROTOTYPE / inert | Buttons currently have a non-mutating handler; clicking them does not add/configure a node. |
+| Node library entries | FUNCTIONAL (local UI) | Clicking a library entry adds that node type to the in-memory draft and shows a notice; drag-and-drop, node configuration, persistence and execution remain unimplemented. |
 | Execution mode select | PROTOTYPE (local form state only) | A value can be selected in the browser, but it is not saved or applied to an execution engine. |
 | “Require approval”, “Audit every step”, “Allow unrestricted shell” indicators | PROTOTYPE / informational | Rendered as visual spans, not real toggle controls. The restricted-shell marker is a policy illustration, not runtime enforcement. |
 | “Drag-and-drop coming next” | PROTOTYPE / informational | Drag-and-drop is not implemented. |
@@ -64,7 +64,7 @@
 ## Known gaps and acceptance boundary
 
 - No true authentication/session, multi-tenant workspace selection, task API, durable workflow storage, workflow runtime, AI-run API, real notification source, campus provider, WhatsApp integration or billing integration is connected by this frontend PR.
-- Decorative switches and node-library entries are not semantic disabled controls. They are called out here as prototype items instead of implying that they work.
+- The settings indicators remain visual-only. Node-library entries add a selected node to the local draft, but this does not enable drag-and-drop, node configuration, persistence, or execution.
 - The smoke test checks a narrow path: Overview renders and shows the illustrative-data disclosure; local navigation opens the workflow canvas; adding a draft node changes the local node count; the mobile navigation drawer opens. It is not a comprehensive accessibility audit or full user-journey test.
 - Separate follow-up work is required before any control listed as PROTOTYPE is represented as live behavior. Add functional browser/contract tests for each newly connected API-backed operation.
 
