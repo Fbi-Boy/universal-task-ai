@@ -44,3 +44,15 @@ Never commit `.env`, API keys, provider tokens, cookies, or sandbox credentials.
 Production deployment is intentionally protected by a GitHub Environment and required deployment secrets. See `docs/operations/PRODUCTION_DEPLOYMENT.md` for the deployment boundary and rehearsal details.
 
 Do not mark production as deployed until a real target has been configured and a successful rollout has been verified.
+
+
+## AI Agent Governance & Product Blueprint
+
+This repository includes a canonical operating guide for all AI coding/design/research agents. New agents must read [AGENTS.md](AGENTS.md) before working.
+
+- [Agent Operating System](docs/agent-system/AGENT_OPERATING_SYSTEM.md) — A0–A13 ownership, mandatory startup rules, G0–G6 gates, security, quality, sprint coordination and specialist prompts.
+- [Product & Engineering Blueprint](docs/agent-system/PRODUCT_BLUEPRINT.md) — product vision, current-state caveats, architecture, domain map, data/API contracts, and delivery sequence.
+- [Design Reference Board](docs/agent-system/DESIGN_REFERENCE_BOARD.html) — screenshot gallery with original source links. Open in a browser with internet access; treat as research, not page approval.
+- [Design Reference Matrix](docs/agent-system/DESIGN_REFERENCE_MATRIX.md) — reference/behavior mapping for dashboard, AI workspace, task management, campus, automations, diagrams and billing.
+
+Visual pages require a page-specific screenshot board and explicit owner approval before production UI implementation. Check the live branch, code and CI each sprint; documentation does not mean a planned feature has shipped.
