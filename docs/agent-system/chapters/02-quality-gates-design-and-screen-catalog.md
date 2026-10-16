@@ -173,13 +173,13 @@ Role app yang disarankan:
 
 ### Design approval register (starting state)
 
-Status berikut sengaja dimulai sebagai `NEEDS RESEARCH`; screenshot di board awal adalah arah visual lintas domain, bukan approval tiap page. A0 menjaga tabel ini tetap canonical dan A2 mengisi link board sebelum tiket UI masuk coding.
+Status berikut diperbarui pada 16 Oktober 2026 untuk dua cluster Sprint 0. `READY FOR OWNER REVIEW` berarti referensi sudah dikumpulkan, belum berarti owner menyetujui desain. Board ini tetap `PROPOSED`; no production UI implementation before owner approval. PR #184 berisi product brief yang juga masih DRAFT FOR OWNER REVIEW.
 
 | Screen/cluster | Role variants requiring visual check | Status | Board / approval record |
 |---|---|---|---|
 | Auth / onboarding | Student, Workspace Owner | NEEDS RESEARCH | Belum dibuat |
-| App shell + Overview | Student, Owner/Admin | NEEDS RESEARCH | Baseline references only |
-| AI Workspace | Student, Member; viewer state if shared | NEEDS RESEARCH | Baseline references only |
+| App shell + Overview | Student, Owner/Admin | READY FOR OWNER REVIEW | [Board section](../DESIGN_REFERENCE_BOARD.html#overview-shell); PROPOSED, owner decision pending (16 Oct 2026) |
+| AI Workspace | Student, Member; viewer state if shared | READY FOR OWNER REVIEW | [Board section](../DESIGN_REFERENCE_BOARD.html#ai-workspace); PROPOSED, owner decision pending (16 Oct 2026) |
 | Tasks / Task Detail | Student, Member, Reviewer | NEEDS RESEARCH | Baseline references only |
 | Project / Backlog | Owner/Admin, Member, Viewer | NEEDS RESEARCH | Baseline references only |
 | Calendar / Campus Hub | Student; linked account/sync errors | NEEDS RESEARCH | Belum dibuat |
