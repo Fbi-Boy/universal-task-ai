@@ -29,6 +29,11 @@ The current [Visual Reference Board](DESIGN_REFERENCE_BOARD.html) retains the te
 
 ### Unified recommendation
 
+**Shared-token/component mapping (proposal only; A3 must confirm):**
+- Token families to reuse from the canonical design proposal: neutral `canvas`, white/light `surface`, subtle `border/line`, high-contrast `text/ink`, secondary `muted`, one `brand accent`, and separate semantic `success/warning/danger/info` statuses. Keep the existing typography family/scale, 4/8-based spacing, consistent radii/shadows and single icon family. Do not freeze new token values in this research PR.
+- Existing components to reuse/extend rather than duplicate per page: `AppShell`, `Sidebar`, `MobileNav`, `Topbar`, `Breadcrumbs`, `PageHeader`, `PrimaryAction`, `EmptyState`, `Skeleton`, `ErrorState`, `StatusBadge`, `PriorityIndicator`, `ChatMessage`, `ChatComposer`, `ToolCallRow`, `RunTimeline`, `ApprovalPanel`, and `ArtifactCard`.
+- Mapping reference: [canonical visual system + component inventory](chapters/02-quality-gates-design-and-screen-catalog.md). This is a consistency proposal, not a frozen design contract.
+
 - **Shell:** mostly light neutral canvas, persistent clear navigation, readable page title/primary action, one restrained brand accent, consistent semantic status colors and a compact information hierarchy.
 - **Overview:** show deadlines, tasks, runs and integration health only when backed by current APIs; empty/demo accounts must not show invented live metrics.
 - **AI workspace:** use a primary conversation/composer area with explicit run/tool/approval state and accessible source/artifact context; responsive mobile layout stacks context panels rather than squeezing desktop columns.
