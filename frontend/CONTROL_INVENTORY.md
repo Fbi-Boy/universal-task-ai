@@ -48,6 +48,7 @@
 | “Test workflow” | PROTOTYPE | Shows a notice that execution is not connected. No workflow run is started. |
 | Workflow “more” action | PROTOTYPE | Shows a notice that the workflow save API is not connected. No save occurs. |
 | Zoom in / zoom out / fit canvas | PROTOTYPE | Shows notices only; canvas scale or layout is not changed. |
+| Node library search | FUNCTIONAL (local UI) | Filters node definitions by category, title and detail; it does not search persisted workflows or backend data. |
 | Node library entries | FUNCTIONAL (local UI) | Clicking a library entry adds that node type to the in-memory draft and shows a notice; drag-and-drop, node configuration, persistence and execution remain unimplemented. |
 | Execution mode select | PROTOTYPE (local form state only) | A value can be selected in the browser, but it is not saved or applied to an execution engine. |
 | Require approval | FUNCTIONAL (local UI) | Accessible switch changes an in-memory draft boolean only; no runtime approval enforcement occurs. |

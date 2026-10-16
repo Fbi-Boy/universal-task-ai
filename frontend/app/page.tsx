@@ -32,6 +32,31 @@ type WorkflowNode = {
   color: string;
 };
 
+type LibraryCategory = "TRIGGERS" | "AI & LOGIC" | "ACTIONS";
+
+type LibraryNodeDefinition = {
+  category: LibraryCategory;
+  nodeType: string;
+  title: string;
+  detail: string;
+  icon: LucideIcon;
+  tone: string;
+};
+
+const libraryCategories: LibraryCategory[] = ["TRIGGERS", "AI & LOGIC", "ACTIONS"];
+
+const nodeCatalog: LibraryNodeDefinition[] = [
+  { category: "TRIGGERS", nodeType: "trigger", title: "Webhook", detail: "Incoming HTTP event", icon: Webhook, tone: "violet" },
+  { category: "TRIGGERS", nodeType: "trigger", title: "Schedule", detail: "Run at a set time", icon: Clock3, tone: "orange" },
+  { category: "TRIGGERS", nodeType: "trigger", title: "Chat message", detail: "User starts a task", icon: MessageSquare, tone: "blue" },
+  { category: "AI & LOGIC", nodeType: "agent", title: "AI Agent", detail: "Reason and plan", icon: Sparkles, tone: "violet" },
+  { category: "AI & LOGIC", nodeType: "condition", title: "Condition", detail: "Branch by a rule", icon: GitBranch, tone: "teal" },
+  { category: "AI & LOGIC", nodeType: "action", title: "Code step", detail: "Sandboxed execution", icon: Cpu, tone: "blue" },
+  { category: "ACTIONS", nodeType: "action", title: "HTTP request", detail: "Allowlisted endpoints", icon: Globe2, tone: "teal" },
+  { category: "ACTIONS", nodeType: "output", title: "Create artifact", detail: "Code, ERD, document", icon: FileText, tone: "green" },
+  { category: "ACTIONS", nodeType: "approval", title: "Human approval", detail: "Pause for review", icon: ShieldCheck, tone: "orange" },
+];
+
 const initialNodes: WorkflowNode[] = [
   { id: 1, type: "trigger", label: "When a task arrives", detail: "Chat / webhook trigger", icon: Zap, color: "violet" },
   { id: 2, type: "agent", label: "Understand the goal", detail: "Task Analyzer", icon: Sparkles, color: "blue" },
@@ -56,6 +81,7 @@ export default function Home() {
   const [taskPrompt, setTaskPrompt] = useState("");
   const [requireApproval, setRequireApproval] = useState(true);
   const [auditEveryStep, setAuditEveryStep] = useState(true);
+  const [nodeSearch, setNodeSearch] = useState("");
 
   function notify(message: string) {
     setToast(message);
@@ -73,6 +99,11 @@ export default function Home() {
     setNodes([...nodes, { ...node, id }]);
     notify(`${node.label} added to the visual draft. Save/run integration is not connected yet.`);
   }
+
+  const normalizedNodeSearch = nodeSearch.trim().toLowerCase();
+  const filteredLibraryNodes = nodeCatalog.filter((node) =>
+    `${node.category} ${node.title} ${node.detail}`.toLowerCase().includes(normalizedNodeSearch),
+  );
 
   const isWorkflow = activePage === "Workflows";
   const pageHeading = activePage === "Overview" ? "Good evening, builder." : activePage;
@@ -148,7 +179,7 @@ export default function Home() {
 
           {isWorkflow && <section className="workflow-editor">
             <div className="editor-toolbar surface"><div className="workflow-name"><span className="workflow-name-icon"><Workflow size={17}/></span><input aria-label="Workflow name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/><span className="draft-pill">DRAFT</span></div><div className="editor-actions"><button className="btn btn-secondary" onClick={addNode}><Plus size={15}/> Add step</button><button className="btn btn-primary" onClick={() => notify("Workflow execution is not connected yet. This canvas is a visual draft.")}><Play size={15} fill="currentColor"/> Test workflow</button><button className="icon-btn" onClick={() => notify("Workflow save API is not connected yet")} aria-label="More workflow actions"><MoreHorizontal size={18}/></button></div></div>
-            <div className="workflow-layout"><aside className="node-library surface"><div className="library-heading"><div><h3>Node library</h3><p>Drag-and-drop coming next</p></div><Search size={16}/></div><div className="node-search"><Search size={15}/><span>Find a node...</span></div><p className="library-label">TRIGGERS</p><LibraryNode icon={Webhook} title="Webhook" detail="Incoming HTTP event" tone="violet" nodeType="trigger" onAdd={addLibraryNode}/><LibraryNode icon={Clock3} title="Schedule" detail="Run at a set time" tone="orange" nodeType="trigger" onAdd={addLibraryNode}/><LibraryNode icon={MessageSquare} title="Chat message" detail="User starts a task" tone="blue" nodeType="trigger" onAdd={addLibraryNode}/><p className="library-label">AI & LOGIC</p><LibraryNode icon={Sparkles} title="AI Agent" detail="Reason and plan" tone="violet" nodeType="agent" onAdd={addLibraryNode}/><LibraryNode icon={GitBranch} title="Condition" detail="Branch by a rule" tone="teal" nodeType="condition" onAdd={addLibraryNode}/><LibraryNode icon={Cpu} title="Code step" detail="Sandboxed execution" tone="blue" nodeType="action" onAdd={addLibraryNode}/><p className="library-label">ACTIONS</p><LibraryNode icon={Globe2} title="HTTP request" detail="Allowlisted endpoints" tone="teal" nodeType="action" onAdd={addLibraryNode}/><LibraryNode icon={FileText} title="Create artifact" detail="Code, ERD, document" tone="green" nodeType="output" onAdd={addLibraryNode}/><LibraryNode icon={ShieldCheck} title="Human approval" detail="Pause for review" tone="orange" nodeType="approval" onAdd={addLibraryNode}/></aside>
+            <div className="workflow-layout"><aside className="node-library surface"><div className="library-heading"><div><h3>Node library</h3><p>Drag-and-drop coming next</p></div><Search size={16}/></div><label className="node-search"><Search size={15} aria-hidden="true"/><input type="search" aria-label="Find a node" placeholder="Find a node..." value={nodeSearch} onChange={(event) => setNodeSearch(event.target.value)}/></label>{libraryCategories.map((category) => { const entries = filteredLibraryNodes.filter((node) => node.category === category); if (entries.length === 0) return null; return <div className="library-category" key={category}><p className="library-label">{category}</p>{entries.map((node) => <LibraryNode key={node.title} icon={node.icon} title={node.title} detail={node.detail} tone={node.tone} nodeType={node.nodeType} onAdd={addLibraryNode}/>)}</div>; })}{filteredLibraryNodes.length === 0 && <p className="library-empty" role="status">No nodes match “{nodeSearch.trim()}”.</p>}</aside>
               <div className="canvas-shell"><div className="canvas-top"><div><span className="canvas-live-dot"/><b>Workflow canvas</b><span className="canvas-sub">· Visual builder</span></div><div className="canvas-controls"><button className="icon-btn" onClick={() => notify("Zoom controls will be added with canvas interactions")} aria-label="Zoom out">−</button><span>100%</span><button className="icon-btn" onClick={() => notify("Zoom controls will be added with canvas interactions")} aria-label="Zoom in">+</button><button className="icon-btn" onClick={() => notify("Canvas layout is fit to screen")} aria-label="Fit canvas"><PanelLeftClose size={16}/></button></div></div>
                 <div className="canvas-grid"><div className="flow-column">{nodes.map((node, index) => { const Icon = node.icon; return <div className="node-and-link" key={node.id}><button className="flow-node" onClick={() => notify(`Selected step: ${node.label}. Step configuration is not wired yet.`)}><span className={`node-icon ${node.color}`}><Icon size={18}/></span><span className="node-copy"><b>{node.label}</b><small>{node.detail}</small></span><MoreHorizontal size={16} className="node-more"/></button>{index < nodes.length - 1 && <div className="node-link"><span/><i/></div>}</div>; })}<button className="add-node" onClick={addNode}><Plus size={16}/> Add another step</button></div><div className="canvas-note"><span><LockKeyhole size={14}/></span><b>Policy preview only</b><p>These local settings do not enforce policy. A real runtime must enforce approvals before any live tool action.</p></div></div>
               </div><aside className="properties-panel surface"><div className="properties-heading"><div><h3>Workflow settings</h3><p>Pipeline configuration</p></div><Settings2 size={16}/></div><label className="setting-label">Workflow name<input value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/></label><label className="setting-label">Execution mode<select defaultValue="approval"><option value="approval">Approval-first</option><option value="manual">Manual trigger</option><option value="schedule">Scheduled</option></select></label><div className="settings-divider"/><div className="setting-row"><span><b>Require approval</b><small>For sensitive actions</small></span><button type="button" role="switch" aria-label="Require approval" aria-checked={requireApproval} className={`toggle ${requireApproval ? "on" : ""}`} onClick={() => setRequireApproval((current) => !current)}/></div><div className="setting-row"><span><b>Audit every step</b><small>Keep execution history</small></span><button type="button" role="switch" aria-label="Audit every step" aria-checked={auditEveryStep} className={`toggle ${auditEveryStep ? "on" : ""}`} onClick={() => setAuditEveryStep((current) => !current)}/></div><div className="setting-row"><span><b>Allow unrestricted shell</b><small>Disabled by policy</small></span><span className="toggle locked" aria-label="Unrestricted shell disabled"><LockKeyhole size={12}/></span></div><div className="properties-foot"><ShieldCheck size={16}/><span>Local policy preview</span></div></aside></div>

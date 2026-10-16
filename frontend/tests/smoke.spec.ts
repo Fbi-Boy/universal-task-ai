@@ -17,6 +17,16 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await expect(addedNode).toContainText("Webhook");
   await expect(page.getByText(/Webhook added to the visual draft/i)).toBeVisible();
 
+  const library = page.locator(".node-library");
+  const librarySearch = page.getByRole("searchbox", { name: "Find a node" });
+  await librarySearch.fill("schedule");
+  await expect(library.getByRole("button", { name: /Schedule Run at a set time/i })).toBeVisible();
+  await expect(library.getByRole("button", { name: /Webhook Incoming HTTP event/i })).toHaveCount(0);
+  await librarySearch.fill("no-such-node");
+  await expect(library.getByRole("status")).toContainText(/No nodes match/i);
+  await librarySearch.fill("");
+  await expect(library.getByRole("button", { name: /Webhook Incoming HTTP event/i })).toBeVisible();
+
   await page.getByRole("button", { name: /Add step/i }).click();
   await expect(page.locator(".flow-node")).toHaveCount(initialCount + 2);
   await expect(page.getByText(/Step added to the visual draft/i)).toBeVisible();
