@@ -17,5 +17,5 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: "test-results/workflow-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "Open navigation" }).click();
-  await expect(page.getByRole("button", { name: "Close navigation" })).toBeVisible();
+  await expect(page.locator(".sidebar-open .mobile-close")).toBeVisible();
 });
