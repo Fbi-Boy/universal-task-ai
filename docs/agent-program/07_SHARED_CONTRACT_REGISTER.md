@@ -41,24 +41,24 @@ The following are **target API groups, not claims of current implementation**:
 
 | Contract ID | Definition | Owner | Consumers | Initial status |
 |---|---|---|---|---|
-| C-001 | Authenticated actor/session/workspace context | A3 | all APIs, workers, integrations | NEEDS DESIGN |
-| C-002 | Role + resource/action permission policy | A3 | all domain APIs and background jobs | NEEDS DESIGN |
-| C-003 | Error envelope, request ID, validation errors | A0 + A3 | frontend and all APIs | NEEDS DESIGN |
-| C-004 | Common task/project identifiers and tenant ownership | A3 + A4 | Tasks, Campus, AI, Developer Studio | NEEDS DESIGN |
-| C-005 | Task status and transition rules | A4 + A0 | frontend, campus and automation | NEEDS DESIGN |
-| C-006 | Run/job state machine and async response | A4 | UI, workers, notifications, workflows | NEEDS DESIGN |
-| C-007 | Artifact ownership/version/download contract | A4 + A3 | AI, tasks, notifications, developer tools | NEEDS DESIGN |
-| C-008 | Integration connection/credential/revoke schema | A3 + A5 | campus, WhatsApp, GitHub, model providers | NEEDS DESIGN |
-| C-009 | Inbound/outbound notification event and delivery state | A5 | campus, WhatsApp, task/run | NEEDS DESIGN |
-| C-010 | Campus event normalize/dedupe/checkpoint schema | A5 + A4 | campus connector, task service | NEEDS DESIGN |
-| C-011 | Workflow node/edge/input/output schema | A6 + A0 | canvas, validator, executor | NEEDS DESIGN |
-| C-012 | Workflow run/step status/retry/approval | A6 + A4 | builder, workers, notification | NEEDS DESIGN |
-| C-013 | Diagram source/version/format/export contract | A6 + A0 | diagram editors, artifact storage | NEEDS DESIGN |
-| C-014 | GitHub connection scopes and repository ownership | A6 + A3 | Developer Studio | NEEDS DESIGN |
-| C-015 | Usage event/quota/entitlement semantics | A0 + A4 + A3 | worker, billing, UI | NEEDS DESIGN |
-| C-016 | Owner-approved design tokens/components | A1 + A2 | all UI pages and roles | NEEDS APPROVAL |
-| C-017 | Webhook signature/idempotency/replay protection | A5 + A3 | WhatsApp and provider callbacks | NEEDS DESIGN |
-| C-018 | Audit event and redaction schema | A3 + A7 | security-sensitive domain operations | NEEDS REVIEW |
+| C-001 | Authenticated actor/session/workspace context | A5 | all APIs, workers, integrations | NEEDS DESIGN |
+| C-002 | Role + resource/action permission policy | A5 | all domain APIs and background jobs | NEEDS DESIGN |
+| C-003 | Error envelope, request ID, validation errors | A0 + A5 | frontend and all APIs | NEEDS DESIGN |
+| C-004 | Common task/project identifiers and tenant ownership | A5 + A6 | Tasks, Campus, AI, Developer Studio | NEEDS DESIGN |
+| C-005 | Task status and transition rules | A6 + A0 | frontend, campus and automation | NEEDS DESIGN |
+| C-006 | Run/job state machine and async response | A7 | UI, workers, notifications, workflows | NEEDS DESIGN |
+| C-007 | Artifact ownership/version/download contract | A7 + A5 | AI, tasks, notifications, developer tools | NEEDS DESIGN |
+| C-008 | Integration connection/credential/revoke schema | A5 + A8 | campus, WhatsApp, GitHub, model providers | NEEDS DESIGN |
+| C-009 | Inbound/outbound notification event and delivery state | A8 | campus, WhatsApp, task/run | NEEDS DESIGN |
+| C-010 | Campus event normalize/dedupe/checkpoint schema | A8 + A6 | campus connector, task service | NEEDS DESIGN |
+| C-011 | Workflow node/edge/input/output schema | A9 + A0 | canvas, validator, executor | NEEDS DESIGN |
+| C-012 | Workflow run/step status/retry/approval | A9 + A7 | builder, workers, notification | NEEDS DESIGN |
+| C-013 | Diagram source/version/format/export contract | A10 + A0 | diagram editors, artifact storage | NEEDS DESIGN |
+| C-014 | GitHub connection scopes and repository ownership | A10 + A5 | Developer Studio | NEEDS DESIGN |
+| C-015 | Usage event/quota/entitlement semantics | A0 + A7 + A5 | worker, billing, UI | NEEDS DESIGN |
+| C-016 | Owner-approved design tokens/components | A2 + A3 | all UI pages and roles | NEEDS APPROVAL |
+| C-017 | Webhook signature/idempotency/replay protection | A8 + A5 | WhatsApp and provider callbacks | NEEDS DESIGN |
+| C-018 | Audit event and redaction schema | A5 + A12 | security-sensitive domain operations | NEEDS REVIEW |
 
 ## Contract record template
 
