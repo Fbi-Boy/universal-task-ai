@@ -4,10 +4,7 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /Good evening, builder/i })).toBeVisible();
-  await expect(page.getByText("Execution volume · illustrative preview")).toBeVisible().catch(() => {
-    // The chart copy lives in the workflow panel in some prototype iterations;
-    // the README and in-app copy remain the source of truth for data limitations.
-  });
+  await expect(page.getByText("Execution volume · illustrative preview")).toBeVisible();
   await page.screenshot({ path: "test-results/overview-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: /Explore workflows/i }).first().click();
