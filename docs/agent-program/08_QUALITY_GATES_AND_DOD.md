@@ -5,11 +5,11 @@
 | Gate | Required outcome | Approver | Stop condition |
 |---|---|---|---|
 | G0 — Problem | persona, goal, scope, edge cases, acceptance criteria | A0 + owner if scope decision | unclear outcome or unauthorized goal |
-| G1 — Design | 3–5 image/screenshot references, coherent synthesis, design-system mapping, owner approval | Owner + A0/A2 | no page-specific approval |
-| G2 — Contract | API/data/state/permission/error contracts and dependencies frozen | A0 + domain owners + A7 | schema or ownership ambiguity |
+| G1 — Design | 3–5 image/screenshot references, coherent synthesis, design-system mapping, owner approval | Owner + A0/A2/A3 | no page-specific approval |
+| G2 — Contract | API/data/state/permission/error contracts and dependencies frozen | A0 + domain owners + A12 | schema or ownership ambiguity |
 | G3 — Implementation | scoped branch, allowed files, working vertical slice, tests/docs | workstream owner | scope creep or security shortcut |
-| G4 — Independent review | diff, failure modes, accessibility, permissions, dependencies reviewed | A7 + appropriate domain reviewer | unresolved blocker/high-severity issue |
-| G5 — Evidence | exact test outputs, API/E2E evidence, screenshots; checks correctly marked | A7 | missing/failed required test or false claim |
+| G4 — Independent review | diff, failure modes, accessibility, permissions, dependencies reviewed | A12 + appropriate domain reviewer | unresolved blocker/high-severity issue |
+| G5 — Evidence | exact test outputs, API/E2E evidence, screenshots; checks correctly marked | A12 | missing/failed required test or false claim |
 | G6 — Integration/release | latest-head CI passes, migrations/rollback checked, docs updated | A0; owner for high risk | unverified release, unsafe migration or missing owner approval |
 
 Backend-only work may mark G1 not applicable only with a reason. Any change visible to a user must follow G1, even if called a quick fix; small accessibility/content changes may reuse an existing approved board if the visual direction does not change.
