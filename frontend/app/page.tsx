@@ -76,6 +76,7 @@ export default function Home() {
   const [activePage, setActivePage] = useState<PageKey>("Overview");
   const [nodes, setNodes] = useState<WorkflowNode[]>(initialNodes);
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [nodeLabelDraft, setNodeLabelDraft] = useState("");
   const [canvasZoom, setCanvasZoom] = useState(100);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [workflowName, setWorkflowName] = useState("Universal task pipeline");
@@ -92,8 +93,10 @@ export default function Home() {
 
   function addNode() {
     const id = Math.max(0, ...nodes.map((node) => node.id)) + 1;
-    setNodes([...nodes, { id, type: "action", label: "New workflow step", detail: "Configure this step", icon: Blocks, color: "blue" }]);
+    const newNode = { id, type: "action", label: "New workflow step", detail: "Configure this step", icon: Blocks, color: "blue" };
+    setNodes([...nodes, newNode]);
     setSelectedNodeId(id);
+    setNodeLabelDraft(newNode.label);
     notify("Step added to the visual draft. Save/run integration is not connected yet.");
   }
 
@@ -101,7 +104,26 @@ export default function Home() {
     const id = Math.max(0, ...nodes.map((item) => item.id)) + 1;
     setNodes([...nodes, { ...node, id }]);
     setSelectedNodeId(id);
+    setNodeLabelDraft(node.label);
     notify(`${node.label} added to the visual draft. Save/run integration is not connected yet.`);
+  }
+
+  function selectNode(nodeId: number) {
+    const node = nodes.find((item) => item.id === nodeId);
+    if (!node) return;
+    setSelectedNodeId(nodeId);
+    setNodeLabelDraft(node.label);
+  }
+
+  function saveSelectedNodeLabel() {
+    const nextLabel = nodeLabelDraft.trim();
+    if (!selectedNode || !nextLabel) return;
+
+    setNodes((current) => current.map((node) =>
+      node.id === selectedNode.id ? { ...node, label: nextLabel } : node,
+    ));
+    setNodeLabelDraft(nextLabel);
+    notify("Node name updated in the local workflow draft.");
   }
 
   const normalizedNodeSearch = nodeSearch.trim().toLowerCase();
@@ -111,6 +133,9 @@ export default function Home() {
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId) ?? null;
   const SelectedNodeIcon = selectedNode?.icon;
+  const normalizedNodeLabel = nodeLabelDraft.trim();
+  const nodeLabelError = normalizedNodeLabel.length === 0 ? "Node name is required." : "";
+  const canSaveNodeLabel = Boolean(selectedNode && normalizedNodeLabel && normalizedNodeLabel !== selectedNode.label);
   const isWorkflow = activePage === "Workflows";
   const pageHeading = activePage === "Overview" ? "Good evening, builder." : activePage;
   const pageSubheading = activePage === "Overview"
@@ -187,8 +212,8 @@ export default function Home() {
             <div className="editor-toolbar surface"><div className="workflow-name"><span className="workflow-name-icon"><Workflow size={17}/></span><input aria-label="Workflow name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/><span className="draft-pill">DRAFT</span></div><div className="editor-actions"><button className="btn btn-secondary" onClick={addNode}><Plus size={15}/> Add step</button><button className="btn btn-primary" onClick={() => notify("Workflow execution is not connected yet. This canvas is a visual draft.")}><Play size={15} fill="currentColor"/> Test workflow</button><button className="icon-btn" onClick={() => notify("Workflow save API is not connected yet")} aria-label="More workflow actions"><MoreHorizontal size={18}/></button></div></div>
             <div className="workflow-layout"><aside className="node-library surface"><div className="library-heading"><div><h3>Node library</h3><p>Drag-and-drop coming next</p></div><Search size={16}/></div><label className="node-search"><Search size={15} aria-hidden="true"/><input type="search" aria-label="Find a node" placeholder="Find a node..." value={nodeSearch} onChange={(event) => setNodeSearch(event.target.value)}/></label>{libraryCategories.map((category) => { const entries = filteredLibraryNodes.filter((node) => node.category === category); if (entries.length === 0) return null; return <div className="library-category" key={category}><p className="library-label">{category}</p>{entries.map((node) => <LibraryNode key={node.title} icon={node.icon} title={node.title} detail={node.detail} tone={node.tone} nodeType={node.nodeType} onAdd={addLibraryNode}/>)}</div>; })}{filteredLibraryNodes.length === 0 && <p className="library-empty" role="status">No nodes match “{nodeSearch.trim()}”.</p>}</aside>
               <div className="canvas-shell"><div className="canvas-top"><div><span className="canvas-live-dot"/><b>Workflow canvas</b><span className="canvas-sub">· Visual builder</span></div><div className="canvas-controls"><button className="icon-btn" onClick={() => setCanvasZoom((zoom) => Math.max(60, zoom - 10))} aria-label="Zoom out" disabled={canvasZoom <= 60}>−</button><span aria-live="polite">{canvasZoom}%</span><button className="icon-btn" onClick={() => setCanvasZoom((zoom) => Math.min(140, zoom + 10))} aria-label="Zoom in" disabled={canvasZoom >= 140}>+</button><button className="icon-btn" onClick={() => setCanvasZoom(100)} aria-label="Reset zoom" disabled={canvasZoom === 100}><RotateCcw size={15}/></button></div></div>
-                <div className="canvas-grid" style={{ zoom: canvasZoom / 100 }}><div className="flow-column">{nodes.map((node, index) => { const Icon = node.icon; return <div className="node-and-link" key={node.id}><button className={selectedNodeId === node.id ? "flow-node flow-node-selected" : "flow-node"} aria-pressed={selectedNodeId === node.id} onClick={() => setSelectedNodeId(node.id)}><span className={"node-icon " + node.color}><Icon size={18}/></span><span className="node-copy"><b>{node.label}</b><small>{node.detail}</small></span><MoreHorizontal size={16} className="node-more"/></button>{index < nodes.length - 1 && <div className="node-link"><span/><i/></div>}</div>; })}<button className="add-node" onClick={addNode}><Plus size={16}/> Add another step</button></div><div className="canvas-note"><span><LockKeyhole size={14}/></span><b>Policy preview only</b><p>These local settings do not enforce policy. A real runtime must enforce approvals before any live tool action.</p></div></div>
-              </div><aside className="properties-panel surface"><div className="properties-heading"><div><h3>Workflow settings</h3><p>Pipeline configuration</p></div><Settings2 size={16}/></div>{selectedNode && SelectedNodeIcon ? <section className="selected-node-summary" aria-live="polite"><div className="selected-node-heading"><span className={"node-icon " + selectedNode.color}><SelectedNodeIcon size={16}/></span><div><span className="selected-node-eyebrow">SELECTED NODE</span><h4>{selectedNode.label}</h4></div></div><p>{selectedNode.detail}</p><span className="selected-node-type">Type: {selectedNode.type}</span><p className="selected-node-note">Selection only — node configuration is not implemented yet.</p></section> : <div className="selected-node-empty" role="status">Select a node on the canvas to inspect its summary.</div>}<label className="setting-label">Workflow name<input value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/></label><label className="setting-label">Execution mode<select defaultValue="approval"><option value="approval">Approval-first</option><option value="manual">Manual trigger</option><option value="schedule">Scheduled</option></select></label><div className="settings-divider"/><div className="setting-row"><span><b>Require approval</b><small>For sensitive actions</small></span><button type="button" role="switch" aria-label="Require approval" aria-checked={requireApproval} className={`toggle ${requireApproval ? "on" : ""}`} onClick={() => setRequireApproval((current) => !current)}/></div><div className="setting-row"><span><b>Audit every step</b><small>Keep execution history</small></span><button type="button" role="switch" aria-label="Audit every step" aria-checked={auditEveryStep} className={`toggle ${auditEveryStep ? "on" : ""}`} onClick={() => setAuditEveryStep((current) => !current)}/></div><div className="setting-row"><span><b>Allow unrestricted shell</b><small>Disabled by policy</small></span><span className="toggle locked" aria-label="Unrestricted shell disabled"><LockKeyhole size={12}/></span></div><div className="properties-foot"><ShieldCheck size={16}/><span>Local policy preview</span></div></aside></div>
+                <div className="canvas-grid" style={{ zoom: canvasZoom / 100 }}><div className="flow-column">{nodes.map((node, index) => { const Icon = node.icon; return <div className="node-and-link" key={node.id}><button className={selectedNodeId === node.id ? "flow-node flow-node-selected" : "flow-node"} aria-pressed={selectedNodeId === node.id} onClick={() => selectNode(node.id)}><span className={"node-icon " + node.color}><Icon size={18}/></span><span className="node-copy"><b>{node.label}</b><small>{node.detail}</small></span><MoreHorizontal size={16} className="node-more"/></button>{index < nodes.length - 1 && <div className="node-link"><span/><i/></div>}</div>; })}<button className="add-node" onClick={addNode}><Plus size={16}/> Add another step</button></div><div className="canvas-note"><span><LockKeyhole size={14}/></span><b>Policy preview only</b><p>These local settings do not enforce policy. A real runtime must enforce approvals before any live tool action.</p></div></div>
+              </div><aside className="properties-panel surface"><div className="properties-heading"><div><h3>Workflow settings</h3><p>Pipeline configuration</p></div><Settings2 size={16}/></div>{selectedNode && SelectedNodeIcon ? <section className="selected-node-summary" aria-live="polite"><div className="selected-node-heading"><span className={"node-icon " + selectedNode.color}><SelectedNodeIcon size={16}/></span><div><span className="selected-node-eyebrow">SELECTED NODE</span><h4>{selectedNode.label}</h4></div></div><p>{selectedNode.detail}</p><span className="selected-node-type">Type: {selectedNode.type}</span><label className="setting-label selected-node-label">Node name<input aria-label="Node name" aria-invalid={Boolean(nodeLabelError)} aria-describedby={nodeLabelError ? "node-name-error" : undefined} value={nodeLabelDraft} maxLength={60} onChange={(event) => setNodeLabelDraft(event.target.value)} /><small className="field-hint">{nodeLabelDraft.length}/60 characters</small>{nodeLabelError && <span id="node-name-error" className="field-error" role="alert">{nodeLabelError}</span>}</label><button type="button" className="btn btn-secondary btn-small save-node-name" onClick={saveSelectedNodeLabel} disabled={!canSaveNodeLabel}>Save node name</button><p className="selected-node-note">Name edits affect this local draft only; no workflow save API is connected.</p></section> : <div className="selected-node-empty" role="status">Select a node on the canvas to inspect its summary.</div>}<label className="setting-label">Workflow name<input value={workflowName} onChange={(e) => setWorkflowName(e.target.value)}/></label><label className="setting-label">Execution mode<select defaultValue="approval"><option value="approval">Approval-first</option><option value="manual">Manual trigger</option><option value="schedule">Scheduled</option></select></label><div className="settings-divider"/><div className="setting-row"><span><b>Require approval</b><small>For sensitive actions</small></span><button type="button" role="switch" aria-label="Require approval" aria-checked={requireApproval} className={`toggle ${requireApproval ? "on" : ""}`} onClick={() => setRequireApproval((current) => !current)}/></div><div className="setting-row"><span><b>Audit every step</b><small>Keep execution history</small></span><button type="button" role="switch" aria-label="Audit every step" aria-checked={auditEveryStep} className={`toggle ${auditEveryStep ? "on" : ""}`} onClick={() => setAuditEveryStep((current) => !current)}/></div><div className="setting-row"><span><b>Allow unrestricted shell</b><small>Disabled by policy</small></span><span className="toggle locked" aria-label="Unrestricted shell disabled"><LockKeyhole size={12}/></span></div><div className="properties-foot"><ShieldCheck size={16}/><span>Local policy preview</span></div></aside></div>
             <div className="editor-disclaimer"><CircleDot size={14}/> Visual editor prototype — nodes, draft name, and approval/audit preview switches are interactive. These switches do not enforce runtime policy or emit audit logs; persistent save, drag-and-drop, and live execution are not connected.</div>
           </section>}
 

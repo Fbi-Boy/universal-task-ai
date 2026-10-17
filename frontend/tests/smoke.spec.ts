@@ -30,6 +30,22 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await expect(page.locator(".selected-node-summary")).toContainText("Webhook");
   await expect(page.getByText(/Webhook added to the visual draft/i)).toBeVisible();
 
+  const nodeNameInput = page.getByRole("textbox", { name: "Node name" });
+  const saveNodeName = page.getByRole("button", { name: "Save node name" });
+  await expect(nodeNameInput).toHaveValue("Webhook");
+  await expect(saveNodeName).toBeDisabled();
+  await nodeNameInput.fill("Webhook intake");
+  await expect(saveNodeName).toBeEnabled();
+  await saveNodeName.click();
+  await expect(addedNode).toContainText("Webhook intake");
+  await expect(page.locator(".selected-node-summary")).toContainText("Webhook intake");
+  await expect(saveNodeName).toBeDisabled();
+
+  await nodeNameInput.fill("   ");
+  await expect(page.getByRole("alert")).toContainText("Node name is required.");
+  await expect(saveNodeName).toBeDisabled();
+  await nodeNameInput.fill("Webhook intake");
+
   const library = page.locator(".node-library");
   const librarySearch = page.getByRole("searchbox", { name: "Find a node" });
   await librarySearch.fill("schedule");

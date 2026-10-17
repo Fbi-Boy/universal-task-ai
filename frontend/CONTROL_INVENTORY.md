@@ -44,7 +44,8 @@
 |---|---|---|
 | Workflow name input | FUNCTIONAL (local UI) | Updates the name displayed in this in-memory draft only. It is not persisted. |
 | “Add step” / “Add another step” | FUNCTIONAL (local UI) | Adds a node to the in-memory draft and shows a notice. Playwright smoke verifies the node count increases. |
-| Workflow node selection | FUNCTIONAL (local UI) | Clicking a node marks it selected, exposes `aria-pressed`, highlights the node, and updates a summary in the side panel. Detailed node configuration remains unimplemented. New nodes become selected automatically. |
+| Workflow node selection | FUNCTIONAL (local UI) | Clicking a node marks it selected, exposes `aria-pressed`, highlights the node, and updates a summary in the side panel. New nodes become selected automatically. |
+| Selected node name editor | FUNCTIONAL (local UI) | Edits the selected node label in the in-memory draft, trims whitespace and rejects an empty name; maximum length is 60 characters. Edits are not persisted. Other node properties remain uneditable. |
 | “Test workflow” | PROTOTYPE | Shows a notice that execution is not connected. No workflow run is started. |
 | Workflow “more” action | PROTOTYPE | Shows a notice that the workflow save API is not connected. No save occurs. |
 | Zoom in / zoom out / reset zoom | FUNCTIONAL (local UI) | Changes the canvas display scale between 60% and 140%, in 10-point increments. Reset returns to 100%; the zoom is not persisted. |
