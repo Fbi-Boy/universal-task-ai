@@ -41,6 +41,17 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await auditSwitch.click();
   await expect(auditSwitch).toHaveAttribute("aria-checked", "false");
 
+  const canvasControls = page.locator(".canvas-controls");
+  await expect(canvasControls.getByText("100%")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(canvasControls.getByText("110%")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom out" }).click();
+  await expect(canvasControls.getByText("100%")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom out" }).click();
+  await expect(canvasControls.getByText("90%")).toBeVisible();
+  await page.getByRole("button", { name: "Reset zoom" }).click();
+  await expect(canvasControls.getByText("100%")).toBeVisible();
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
   await expect(page.locator(".sidebar-open")).toHaveCount(0);
