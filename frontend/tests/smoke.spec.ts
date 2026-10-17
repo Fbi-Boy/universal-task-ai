@@ -10,12 +10,41 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await page.getByRole("button", { name: /Explore workflows/i }).first().click();
   await expect(page.getByText("Workflow canvas")).toBeVisible();
   const initialCount = await page.locator(".flow-node").count();
+  const firstNode = page.locator(".flow-node").first();
+  const secondNode = page.locator(".flow-node").nth(1);
+  await expect(firstNode).toHaveAttribute("aria-pressed", "false");
+  await firstNode.click();
+  await expect(firstNode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".selected-node-summary")).toContainText("When a task arrives");
+  await secondNode.click();
+  await expect(firstNode).toHaveAttribute("aria-pressed", "false");
+  await expect(secondNode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".selected-node-summary")).toContainText("Understand the goal");
+
   await page.getByRole("button", { name: /Webhook Incoming HTTP event/i }).click();
   await expect(page.locator(".flow-node")).toHaveCount(initialCount + 1);
   const addedNode = page.locator(".flow-node").nth(initialCount);
   await expect(addedNode).toBeVisible();
   await expect(addedNode).toContainText("Webhook");
+  await expect(addedNode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".selected-node-summary")).toContainText("Webhook");
   await expect(page.getByText(/Webhook added to the visual draft/i)).toBeVisible();
+
+  const nodeNameInput = page.getByRole("textbox", { name: "Node name" });
+  const saveNodeName = page.getByRole("button", { name: "Save node name" });
+  await expect(nodeNameInput).toHaveValue("Webhook");
+  await expect(saveNodeName).toBeDisabled();
+  await nodeNameInput.fill("Webhook intake");
+  await expect(saveNodeName).toBeEnabled();
+  await saveNodeName.click();
+  await expect(addedNode).toContainText("Webhook intake");
+  await expect(page.locator(".selected-node-summary")).toContainText("Webhook intake");
+  await expect(saveNodeName).toBeDisabled();
+
+  await nodeNameInput.fill("   ");
+  await expect(page.locator("#node-name-error")).toContainText("Node name is required.");
+  await expect(saveNodeName).toBeDisabled();
+  await nodeNameInput.fill("Webhook intake");
 
   const library = page.locator(".node-library");
   const librarySearch = page.getByRole("searchbox", { name: "Find a node" });
@@ -40,6 +69,17 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await expect(auditSwitch).toHaveAttribute("aria-checked", "true");
   await auditSwitch.click();
   await expect(auditSwitch).toHaveAttribute("aria-checked", "false");
+
+  const canvasControls = page.locator(".canvas-controls");
+  await expect(canvasControls.getByText("100%")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom in" }).click();
+  await expect(canvasControls.getByText("110%")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom out" }).click();
+  await expect(canvasControls.getByText("100%")).toBeVisible();
+  await page.getByRole("button", { name: "Zoom out" }).click();
+  await expect(canvasControls.getByText("90%")).toBeVisible();
+  await page.getByRole("button", { name: "Reset zoom" }).click();
+  await expect(canvasControls.getByText("100%")).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
