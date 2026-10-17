@@ -42,7 +42,7 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await expect(saveNodeName).toBeDisabled();
 
   await nodeNameInput.fill("   ");
-  await expect(page.getByRole("alert")).toContainText("Node name is required.");
+  await expect(page.locator("#node-name-error")).toContainText("Node name is required.");
   await expect(saveNodeName).toBeDisabled();
   await nodeNameInput.fill("Webhook intake");
 
