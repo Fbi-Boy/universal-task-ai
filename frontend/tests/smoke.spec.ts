@@ -10,11 +10,24 @@ test("overview loads and workflow draft supports adding a step", async ({ page }
   await page.getByRole("button", { name: /Explore workflows/i }).first().click();
   await expect(page.getByText("Workflow canvas")).toBeVisible();
   const initialCount = await page.locator(".flow-node").count();
+  const firstNode = page.locator(".flow-node").first();
+  const secondNode = page.locator(".flow-node").nth(1);
+  await expect(firstNode).toHaveAttribute("aria-pressed", "false");
+  await firstNode.click();
+  await expect(firstNode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".selected-node-summary")).toContainText("When a task arrives");
+  await secondNode.click();
+  await expect(firstNode).toHaveAttribute("aria-pressed", "false");
+  await expect(secondNode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".selected-node-summary")).toContainText("Understand the goal");
+
   await page.getByRole("button", { name: /Webhook Incoming HTTP event/i }).click();
   await expect(page.locator(".flow-node")).toHaveCount(initialCount + 1);
   const addedNode = page.locator(".flow-node").nth(initialCount);
   await expect(addedNode).toBeVisible();
   await expect(addedNode).toContainText("Webhook");
+  await expect(addedNode).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".selected-node-summary")).toContainText("Webhook");
   await expect(page.getByText(/Webhook added to the visual draft/i)).toBeVisible();
 
   const library = page.locator(".node-library");
